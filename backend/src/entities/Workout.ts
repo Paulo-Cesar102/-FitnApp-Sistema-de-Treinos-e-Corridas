@@ -1,4 +1,4 @@
-import { CompletedWorkout } from './CompletedWorkout';
+import { CompletedWorkout } from './CompletedWorkout.js';
 
 export interface IWorkout {
   id?: string;

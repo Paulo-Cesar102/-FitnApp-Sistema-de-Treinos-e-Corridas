@@ -1,4 +1,4 @@
-import { UserBadge } from './UserBadge';
+import { UserBadge } from './UserBadge.js';
 
 export interface Badge {
   id?: string;

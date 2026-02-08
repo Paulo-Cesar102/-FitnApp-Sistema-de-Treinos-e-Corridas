@@ -1,6 +1,6 @@
 import { Role } from '@prisma/client';
-import { CompletedWorkout } from './Workout.js';
-import { UserBadge } from './Badge.js';
+import { CompletedWorkout } from './CompletedWorkout.js';
+import type { UserBadge } from './UserBadge.js'; 
 import { Feedback } from './Feedback.js';
 
 export interface IUser {
