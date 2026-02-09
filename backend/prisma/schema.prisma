@@ -31,6 +31,8 @@ model User {
   completedWorkouts CompletedWorkout[]
   badges             UserBadge[]
   feedbacks          Feedback[]
+
+  workouts           UserWorkout[]
 }
 
 model Workout {
@@ -75,4 +77,51 @@ model Feedback {
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
+}
+model Category {
+  id        String     @id @default(uuid())
+  name      String
+
+  exercises Exercise[]
+  workouts  UserWorkout[]
+}
+
+model Exercise {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+
+  workoutExercises UserWorkoutExercise[]
+}
+
+model UserWorkout {
+  id         String   @id @default(uuid())
+  name       String
+  createdAt  DateTime @default(now())
+
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  exercises  UserWorkoutExercise[]
+}
+
+model UserWorkoutExercise {
+  id             String @id @default(uuid())
+
+  userWorkoutId  String
+  exerciseId     String
+
+  sets           Int
+  reps           Int
+
+  userWorkout UserWorkout @relation(fields: [userWorkoutId], references: [id])
+  exercise    Exercise    @relation(fields: [exerciseId], references: [id])
+
+  @@unique([userWorkoutId, exerciseId])
 }

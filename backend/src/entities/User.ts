@@ -9,7 +9,7 @@ export interface IUser {
   email: string;
   password: string;
   level?: number; // opcional, default 1
-  xp?: number;    // opcional, default 0
+  xp?: number;    // opcional, default 0cd
   role?: Role;    // opcional, default USER
   createdAt?: Date;
 

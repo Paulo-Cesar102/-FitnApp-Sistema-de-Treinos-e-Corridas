@@ -10,7 +10,8 @@
     "start": "node ./dist/server.js"
   },
   "dependencies": {
-    "@prisma/client": "^4.15.0",
+    "@prisma/client": "^4.16.2",
+    "@types/config": "^3.3.5",
     "cors": "^2.8.6",
     "dotenv": "^17.2.4",
     "express": "^5.2.1"
