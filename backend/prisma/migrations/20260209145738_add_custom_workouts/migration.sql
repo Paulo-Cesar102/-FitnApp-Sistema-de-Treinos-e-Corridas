@@ -12,7 +12,7 @@ CREATE TABLE "Exercise" (
     "name" TEXT NOT NULL,
     "description" TEXT,
     "categoryId" TEXT NOT NULL,
-
+    
     CONSTRAINT "Exercise_pkey" PRIMARY KEY ("id")
 );
 

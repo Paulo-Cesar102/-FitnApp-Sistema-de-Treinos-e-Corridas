@@ -1,38 +1,55 @@
-import { PrismaClient } from "@prisma/client";
 import { IUser } from "../entities/User";
 import { IUserRepository } from "./IUserRepository";
 import { ICreateUserDTO } from "../dtos/ICreateUserDTO";
-
-const prisma = new PrismaClient();
+import { prisma } from "../database/prisma";
 
 export class UserRepository implements IUserRepository {
 
   async create(data: ICreateUserDTO): Promise<IUser> {
     const user = await prisma.user.create({
-      data
+      data: {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+
+        // garante valor seguro mesmo se DTO vier zoado
+        role: data.role ?? "USER"
+      }
     });
 
     return user;
-  } 
+  }
 
   async findById(id: string): Promise<IUser | null> {
-    return await prisma.user.findUnique({
+    return prisma.user.findUnique({
       where: { id }
     });
   }
 
   async findByEmail(email: string): Promise<IUser | null> {
-    return await prisma.user.findUnique({
+    return prisma.user.findUnique({
       where: { email }
     });
   }
 
   async findAll(): Promise<IUser[]> {
-    return await prisma.user.findMany();
+    return prisma.user.findMany({
+      // 🔒 nunca vazar senha
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        level: true,
+        xp: true,
+        role: true,
+        createdAt: true
+      }
+    }) as unknown as IUser[];
   }
 
   async delete(id: string): Promise<void> {
-    await prisma.user.delete({
+    // não explode erro se não existir
+    await prisma.user.deleteMany({
       where: { id }
     });
   }
