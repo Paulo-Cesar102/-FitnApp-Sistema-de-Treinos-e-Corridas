@@ -10,6 +10,7 @@ const prisma = new PrismaClient();
 app.use(express.json());
 
 app.use("/users", userRoutes);
+app.use("/feedbacks", feedbackRoutes);
 
 app.get('/', (_req, res) => {
   res.json({ message: 'Servidor rodando!' });
@@ -17,7 +18,7 @@ app.get('/', (_req, res) => {
 
 
 
-app.use("/feedbacks", feedbackRoutes);
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
