@@ -2,6 +2,7 @@ import 'dotenv/config'; // carrega variáveis do .env automaticamente
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { userRoutes } from "./src/routes/user.routes";
+import { feedbackRoutes } from './src/routes/feedback.routes';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -13,6 +14,10 @@ app.use("/users", userRoutes);
 app.get('/', (_req, res) => {
   res.json({ message: 'Servidor rodando!' });
 });
+
+
+
+app.use("/feedbacks", feedbackRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
