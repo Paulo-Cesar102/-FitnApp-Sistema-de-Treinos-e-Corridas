@@ -4,6 +4,7 @@ import type { UserBadge } from './UserBadge.js';
 import { Feedback } from './Feedback.js';
 
 export interface IUser {
+  
   id?: string; 
   name: string;
   email: string;

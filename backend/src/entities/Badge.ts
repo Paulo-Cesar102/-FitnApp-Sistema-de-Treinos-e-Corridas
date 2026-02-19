@@ -5,4 +5,4 @@ export interface Badge {
   name: string;
 
   users?: UserBadge[];
-}
+} 
