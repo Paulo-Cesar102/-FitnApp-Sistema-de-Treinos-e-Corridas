@@ -1,8 +1,13 @@
-import { Role } from "@prisma/client";
+import { Role, Sex  } from "@prisma/client";
 
 export interface ICreateUserDTO {
+  id: string;
   name: string;
   email: string;
   password: string;
-  role?: Role;
+  sex: Sex;
+  level: number;
+  xp: number;
+  role: Role;
+  createdAt: Date;
 }

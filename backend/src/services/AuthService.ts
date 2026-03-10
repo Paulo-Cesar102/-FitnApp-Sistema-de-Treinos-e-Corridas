@@ -21,7 +21,6 @@ export class AuthService {
     if (!passwordMatch)
       throw new Error("Invalid credentials");
 
-    // 🔐 Gerar token
     const token = jwt.sign(
       {
         id: user.id,

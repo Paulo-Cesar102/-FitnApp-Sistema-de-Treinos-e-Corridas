@@ -9,6 +9,7 @@ export interface IUser {
   name: string;
   email: string;
   password: string;
+  sex: string;
   level?: number; 
   xp?: number;    
   role?: Role;    
