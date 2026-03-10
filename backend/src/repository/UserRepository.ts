@@ -6,15 +6,14 @@ import { prisma } from "../database/prisma";
 export class UserRepository implements IUserRepository {
 
   async create(data: ICreateUserDTO): Promise<IUser> {
-    const user = await prisma.user.create({
-      data: {
-        name: data.name,
-        email: data.email,
-        password: data.password,
-
-        // garante valor seguro mesmo se DTO vier zoado
-        role: data.role ?? "USER"
-      }
+      const user = await prisma.user.create({
+        data: {
+          name: data.name,
+          email: data.email,
+          password: data.password,  
+          sex: data.sex,
+          role: data.role ?? "USER"
+        }
     });
 
     return user;
@@ -34,11 +33,12 @@ export class UserRepository implements IUserRepository {
 
   async findAll(): Promise<IUser[]> {
     return prisma.user.findMany({
-      // 🔒 nunca vazar senha
+    
       select: {
         id: true,
         name: true,
         email: true,
+        sex: true,
         level: true,
         xp: true,
         role: true,
@@ -48,7 +48,7 @@ export class UserRepository implements IUserRepository {
   }
 
   async delete(id: string): Promise<void> {
-    // não explode erro se não existir
+    
     await prisma.user.deleteMany({
       where: { id }
     });

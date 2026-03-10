@@ -23,6 +23,7 @@ model User {
   name      String
   email     String   @unique
   password  String
+  sex       Sex      @default(M)
   level     Int      @default(1)
   xp        Int      @default(0)
   role      Role     @default(USER)
@@ -33,6 +34,11 @@ model User {
   feedbacks          Feedback[]
 
   workouts           UserWorkout[]
+}
+
+enum Sex {
+  M
+  F
 }
 
 model Workout {
