@@ -8,7 +8,17 @@ export class WorkoutController {
   async create(req: Request, res: Response) {
     const { name } = req.body;
 
-    const workout = await this.workoutService.create({ name });
+
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Usuário não identificado" });
+    }
+
+    const workout = await this.workoutService.create({
+      name,
+      userId
+    });
 
     return res.status(201).json(workout);
   }

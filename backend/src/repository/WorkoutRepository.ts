@@ -6,25 +6,31 @@ import { IWorkoutRepository } from "./IWorkoutRepository";
 export class WorkoutRepository implements IWorkoutRepository {
 
   async create(data: ICreateWorkoutDTO): Promise<IWorkout> {
-    const workout = await prisma.workout.create({
-      data
+    const workout = await prisma.userWorkout.create({
+      data: {
+        name: data.name,
+
+        user: {
+          connect: {id: data.userId}
+        }
+      }
     });
 
     return workout;
   }
 
   async findAll(): Promise<IWorkout[]> {
-    return prisma.workout.findMany();
+    return prisma.userWorkout.findMany();
   }
 
   async findById(id: string): Promise<IWorkout | null> {
-    return prisma.workout.findUnique({
+    return prisma.userWorkout.findUnique({
       where: { id }
     });
   }
 
   async delete(id: string): Promise<void> {
-    await prisma.workout.delete({
+    await prisma.userWorkout.delete({
       where: { id }
     });
   }
