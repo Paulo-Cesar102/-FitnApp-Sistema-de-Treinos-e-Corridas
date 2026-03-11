@@ -1,147 +1,74 @@
+
 import React, { useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom"; // Hook para navegar entre páginas
 import "./Register.css";
 
 export default function Register() {
-
+  const navigate = useNavigate(); // Inicializa o redirecionador
+  
   const [formData, setFormData] = useState({
-<<<<<<< HEAD
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
-    age: "",
     gender: ""
   });
 
-  const [status, setStatus] = useState({
-    message: "",
-    type: ""
-=======
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    sexo: 'true' 
->>>>>>> 2a035b22841ea822c46be2d6451a4d4ec5ec6436
-  });
-
+  const [status, setStatus] = useState({ message: "", type: "" });
   const [loading, setLoading] = useState(false);
 
-  function handleChange(e) {
+  const handleChange = (e) => {
     const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value
-    }));
-  }
-
-  function validateForm() {
-
-    if (!formData.name || !formData.email || !formData.password) {
-      return "Preencha todos os campos obrigatórios.";
-    }
-
-    if (formData.password.length < 6) {
-      return "A senha deve ter pelo menos 6 caracteres.";
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      return "As senhas não coincidem.";
-    }
-
-    // gênero é opcional na API, mas se preenchido deve ser válido
-    if (
-      formData.gender &&
-      !["male", "female", "other"].includes(formData.gender)
-    ) {
-      return "Gênero inválido.";
-    }
-
-    return null;
-  }
-
-  async function handleSubmit(e) {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const error = validateForm();
-
-    if (error) {
-      setStatus({
-        message: error,
-        type: "error"
-      });
-      return;
+    
+    // Validação de senhas
+    if (formData.password !== formData.confirmPassword) {
+      return setStatus({ message: "As senhas não coincidem", type: "error" });
     }
 
     try {
       setLoading(true);
-
-      // monta payload compatível com o backend (/users)
+      
       const payload = {
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        // somente envia sex se o usuário escolheu masculino ou feminino;
-        // no banco o default é "M" quando o campo não é enviado, portanto
-        // "other" ou vazio resultam em M também
-        sex:
-          formData.gender === "male"
-            ? "M"
-            : formData.gender === "female"
-            ? "F"
-            : undefined
+        sex: formData.gender === "male" ? "M" : "F"
       };
 
-      const response = await fetch("http://localhost:3000/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
+      // CONEXÃO COM A SUA API
+      await axios.post("http://localhost:3000/users/register", payload);
 
-      const data = await response.json();
+      setStatus({ message: "Usuário cadastrado com sucesso! Redirecionando...", type: "success" });
+      
+      // Limpa os campos
+      setFormData({ name: "", email: "", password: "", confirmPassword: "", gender: "" });
 
-      if (!response.ok) {
-        throw new Error(data.error || "Erro ao registrar.");
-      }
-
-      setStatus({
-        message: "Conta criada com sucesso!",
-        type: "success"
-      });
-
-      setFormData({
-        name: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-        age: "",
-        gender: ""
-      });
+      // REDIRECIONAMENTO: Espera 2 segundos para o usuário ver o sucesso e pula pro login
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
 
     } catch (error) {
-
-      setStatus({
-        message: "Erro ao registrar usuário.",
-        type: "error"
-      });
-
+      const msg = error.response?.data?.error || "Erro ao conectar com o servidor";
+      setStatus({ message: msg, type: "error" });
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="register-container">
-
       <div className="register-card">
-
-        <div className="header">
+        <header className="header">
           <h2>Criar Conta</h2>
-          <p>Preencha seus dados para começar</p>
-        </div>
+          <p>Acesse ao nosso portal de Treinos</p>
+        </header>
 
         {status.message && (
           <div className={`status-message ${status.type}`}>
@@ -150,97 +77,79 @@ export default function Register() {
         )}
 
         <form onSubmit={handleSubmit}>
-
           <div className="form-group">
-            <label>Nome</label>
+            <label>Nome Completo</label>
             <input
               type="text"
               name="name"
+              placeholder="Digite seu nome"
               value={formData.name}
               onChange={handleChange}
-              placeholder="Seu nome"
+              required
             />
           </div>
 
           <div className="form-group">
-            <label>Email</label>
+            <label>E-mail</label>
             <input
               type="email"
               name="email"
+              placeholder="seu@email.com"
               value={formData.email}
               onChange={handleChange}
-              placeholder="seu@email.com"
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Senha</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="******"
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Confirmar Senha</label>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="******"
+              required
             />
           </div>
 
           <div className="form-row">
-
             <div className="form-group half">
-              <label>Idade</label>
+              <label>Senha</label>
               <input
-                type="number"
-                name="age"
-                value={formData.age}
+                type="password"
+                name="password"
+                placeholder="••••••"
+                value={formData.password}
                 onChange={handleChange}
-                placeholder="18"
+                required
               />
             </div>
-
             <div className="form-group half">
-              <label>Gênero</label>
-              <select
-                name="gender"
-                value={formData.gender}
+              <label>Confirmar</label>
+              <input
+                type="password"
+                name="confirmPassword"
+                placeholder="••••••"
+                value={formData.confirmPassword}
                 onChange={handleChange}
-                className="select-input"
-              >
-                <option value="">Selecione</option>
-                <option value="male">Masculino</option>
-                <option value="female">Feminino</option>
-                <option value="other">Outro</option>
-              </select>
+                required
+              />
             </div>
-
           </div>
 
-          <button
-            type="submit"
-            className="submit-btn"
-            disabled={loading}
-          >
-            {loading ? "Criando..." : "Criar Conta"}
-          </button>
+          <div className="form-group">
+            <label>Gênero</label>
+            <select
+              name="gender"
+              className="select-input"
+              value={formData.gender}
+              onChange={handleChange}
+              required
+            >
+              <option value="">Selecione</option>
+              <option value="male">Masculino</option>
+              <option value="female">Feminino</option>
+            </select>
+          </div>
 
+          <button type="submit" className="submit-btn" disabled={loading}>
+            {loading ? "Processando..." : "Finalizar Cadastro"}
+          </button>
         </form>
 
-        <div className="register-footer">
-          Já possui conta? <a href="/login">Entrar</a>
-        </div>
-
+        <footer className="register-footer">
+          Já tem uma conta? <a href="/login" onClick={(e) => { e.preventDefault(); navigate("/login"); }}>Faça Login</a>
+        </footer>
       </div>
-
     </div>
   );
 }

@@ -1,19 +1,16 @@
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Inter:wght@300;400;600&display=swap');
 
 :root {
-  /* Paleta de Cores do Site */
-  --color-primary: #cc0c0c;
-  --color-success: #349b34;
-  --color-dark: #2c2424;
-  --color-brown: #582c20;
-  --color-olive: #5c7820;
+  --color-primary: #ff1f1f; /* Um vermelho mais vibrante, "sangue" */
+  --color-success: #00ff88;
+  --color-dark-bg: #0a0a0a;
+  --color-card: rgba(20, 20, 20, 0.85);
   --color-white: #ffffff;
-  --color-gray-light: #e2e8f0;
-  --color-gray-border: #e0e0e0;
-  --color-primary-dark: #a00a0a;
+  --color-text-dim: #b3b3b3;
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-primary-glow: rgba(255, 31, 31, 0.4);
 }
 
-/* Reset básico para garantir consistência */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -25,192 +22,170 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  /* Gradiente sutil para dar profundidade e modernidade */
-  background: radial-gradient(circle at center, var(--color-dark) 0%, #1a1616 100%);
-  font-family: 'Roboto', sans-serif;
+  /* Fundo escuro com um detalhe de iluminação no canto */
+  background: radial-gradient(circle at 0% 0%, #220000 0%, var(--color-dark-bg) 50%);
+  font-family: 'Inter', sans-serif;
   padding: 1rem;
 }
 
 .register-card {
-  background: var(--color-white);
-  padding: 2rem 1.5rem;
-  border-radius: 8px; /* Cantos um pouco menos arredondados para um look mais "forte" */
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); /* Sombra mais marcada */
+  background: var(--color-card);
+  backdrop-filter: blur(12px); /* Efeito de vidro */
+  padding: 3rem 2rem;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
   width: 100%;
+  max-width: 450px;
   position: relative;
-  overflow: hidden;
-  border-top: 5px solid var(--color-primary); /* Detalhe de design no topo */
+  animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Linha de destaque no topo com neon */
+.register-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
 }
 
 .header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
 }
 
 .header h2 {
-  font-family: 'Oswald', sans-serif; /* Fonte fitness clássica */
-  color: var(--color-dark);
-  font-size: 2rem;
+  font-family: 'Oswald', sans-serif;
+  color: var(--color-white);
+  font-size: 2.5rem;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 0.5rem;
-  margin-top: 0;
+  font-weight: 700;
+  letter-spacing: -1px;
+  margin-bottom: 0.2rem;
 }
 
 .header p {
-  margin-top: 0.5rem;
-  color: var(--color-brown);
-  font-size: 0.95rem;
-  font-weight: 500;
+  color: var(--color-text-dim);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .form-group {
-  margin-bottom: 1.2rem;
-}
-
-/* Mobile First: Layout de coluna por padrão */
-.form-row {
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
-}
-
-.form-group.half {
-  width: 100%;
+  margin-bottom: 1.5rem;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 0.4rem;
-  color: var(--color-dark);
-  font-size: 0.85rem;
-  font-weight: 700;
-  text-transform: uppercase; /* Labels em caixa alta para estilo técnico */
-  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+  color: var(--color-white);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.8;
 }
 
 .form-group input,
 .form-group .select-input {
   width: 100%;
-  padding: 0.9rem;
-  border: 2px solid var(--color-gray-border); /* Borda mais espessa */
-  border-radius: 4px; /* Cantos mais retos */
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
   font-size: 1rem;
-  font-family: 'Roboto', sans-serif;
-  color: var(--color-dark);
-  background-color: #f9f9f9;
-  transition: border-color 0.3s ease, background-color 0.3s ease;
+  color: var(--color-white);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .form-group input:focus,
 .form-group .select-input:focus {
+  background: rgba(255, 255, 255, 0.08);
   border-color: var(--color-primary);
-  background-color: #fff;
   outline: none;
-  box-shadow: none;
-}
-
-.help-text {
-  display: block;
-  font-size: 0.75rem;
-  color: #666;
-  margin-top: 0.4rem;
-  font-style: italic;
+  box-shadow: 0 0 15px var(--color-primary-glow);
 }
 
 .submit-btn {
   width: 100%;
-  padding: 1rem; /* Botão maior para facilitar o toque */
+  padding: 1.2rem;
   background-color: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 4px; /* Consistente com inputs */
+  border-radius: 6px;
   font-family: 'Oswald', sans-serif;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 1.5rem;
-  box-shadow: 0 4px 6px rgba(204, 12, 12, 0.2);
+  transition: all 0.4s;
+  margin-top: 1rem;
 }
 
-.submit-btn:hover {
-  background-color: var(--color-primary-dark);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(204, 12, 12, 0.3);
+.submit-btn:hover:not(:disabled) {
+  background-color: #ff3d3d;
+  box-shadow: 0 0 25px var(--color-primary-glow);
+  transform: scale(1.02);
 }
 
-.submit-btn:active {
-  transform: translateY(0);
-}
-
-.submit-btn:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-/* Mensagens de Feedback */
 .status-message {
   padding: 1rem;
-  border-radius: 4px;
-  margin-bottom: 1.5rem;
+  border-radius: 6px;
+  margin-bottom: 2rem;
   font-size: 0.9rem;
   text-align: center;
-  font-weight: 500;
-  border-left: 5px solid transparent;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
 .status-message.error {
-  background-color: #fff0f0;
-  color: var(--color-primary);
-  border-left-color: var(--color-primary);
-  border: none;
-  border-left: 5px solid var(--color-primary);
+  background: rgba(255, 31, 31, 0.15);
+  color: #ff8080;
+  border: 1px solid rgba(255, 31, 31, 0.3);
 }
 
 .status-message.success {
-  background-color: #f0fff4;
+  background: rgba(0, 255, 136, 0.15);
   color: var(--color-success);
-  border: none;
-  border-left: 5px solid var(--color-success);
-}
-
-/* Responsividade para telas maiores (Tablets e Desktops) */
-@media (min-width: 768px) {
-  .register-card {
-    max-width: 500px;
-    padding: 3rem 2.5rem;
-  }
-
-  .form-row {
-    flex-direction: row; /* Volta para linha em telas maiores */
-    gap: 1rem;
-  }
-
-  .form-group.half {
-    flex: 1;
-  }
+  border: 1px solid rgba(0, 255, 136, 0.3);
 }
 
 .register-footer {
   text-align: center;
-  margin-top: 1.5rem;
-  color: var(--color-brown);
-  font-size: 0.9rem;
+  margin-top: 2rem;
+  color: var(--color-text-dim);
+  font-size: 0.85rem;
 }
 
 .register-footer a {
   color: var(--color-primary);
-  font-weight: 700;
   text-decoration: none;
-  transition: color 0.2s;
+  font-weight: 600;
+  margin-left: 5px;
 }
 
 .register-footer a:hover {
-  color: var(--color-primary-dark);
   text-decoration: underline;
+}
+
+/* Ajuste fino para o layout de linha */
+@media (min-width: 768px) {
+  .form-row {
+    display: flex;
+    gap: 1rem;
+  }
+  .form-group.half { flex: 1; }
 }
