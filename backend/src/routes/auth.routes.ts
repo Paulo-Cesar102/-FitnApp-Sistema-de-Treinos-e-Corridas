@@ -1,9 +1,10 @@
 import { Router } from "express";
-import { AuthController } from "../controller/AuthController";
+import { UserController } from "../controller/UserController";
+import { authMiddleware } from "../middlewares/auth";
 
 const router = Router();
-const controller = new AuthController();
+const controller = new UserController();
 
-router.post("/login", controller.login.bind(controller));
+router.get("/users", authMiddleware, controller.findAll.bind(controller));
 
 export default router;
