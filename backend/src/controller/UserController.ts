@@ -1,40 +1,36 @@
 import { Request, Response } from "express";
 import { UserService } from "../services/UserService";
+import { Sex } from "@prisma/client";
 
 export class UserController {
 
   private userService = new UserService();
 
-  // ==============================
-  // Criar usuário
-  // ==============================
-  async create(req: Request, res: Response): Promise<Response> {
-    try {
 
-      // 🔹 Desestruturação do body
-      const { name, email, password } = req.body;
+ async create(req: Request, res: Response): Promise<Response> {
+  try {
 
-      const user = await this.userService.create({
-        name,
-        email,
-        password
-      });
+    const { name, email, password, sex } = req.body;
 
-      return res.status(201).json(user);
+    const user = await this.userService.create({
+      name,
+      email,
+      password,
+      sex: sex.toUpperCase() as Sex,
+      role: "USER"
+    });
 
-    } catch (error) {
+    return res.status(201).json(user);
 
-      // 🔹 Padronização de erro
-      return res.status(400).json({
-        error: (error as Error).message
-      });
+  } catch (error) {
 
-    }
+    return res.status(400).json({
+      error: (error as Error).message
+    });
+
   }
+}
 
-  // ==============================
-  // Buscar todos
-  // ==============================
   async findAll(req: Request, res: Response): Promise<Response> {
     try {
 
@@ -51,17 +47,15 @@ export class UserController {
     }
   }
 
-  // ==============================
-  // Buscar por ID
-  // ==============================
+
   async findById(
-    req: Request<{ id: string }>,   // ⭐ MELHORIA PRINCIPAL
+    req: Request<{ id: string }>,   
     res: Response
   ): Promise<Response> {
 
     try {
 
-      const { id } = req.params;   // agora id é STRING garantido
+      const { id } = req.params;   
 
       const user = await this.userService.findById(id);
 
@@ -82,11 +76,8 @@ export class UserController {
     }
   }
 
-  // ==============================
-  // Deletar usuário
-  // ==============================
   async delete(
-    req: Request<{ id: string }>,   // ⭐ MESMA MELHORIA
+    req: Request<{ id: string }>,   
     res: Response
   ): Promise<Response> {
 

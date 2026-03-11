@@ -2,6 +2,7 @@ import { IUser } from "../entities/User";
 import { IUserRepository } from "./IUserRepository";
 import { ICreateUserDTO } from "../dtos/ICreateUserDTO";
 import { prisma } from "../database/prisma";
+import { Sex } from "@prisma/client";
 
 export class UserRepository implements IUserRepository {
 
@@ -12,6 +13,7 @@ export class UserRepository implements IUserRepository {
           email: data.email,
           password: data.password,  
           sex: data.sex,
+          
           role: data.role ?? "USER"
         }
     });
