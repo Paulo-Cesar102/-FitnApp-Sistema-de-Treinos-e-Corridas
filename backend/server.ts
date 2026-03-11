@@ -6,6 +6,8 @@ import { userRoutes } from "./src/routes/user.routes";
 import { feedbackRoutes } from './src/routes/feedback.routes';
 import authRoutes from "./src/routes/auth.routes";
 import exerciseRoutes from "./src/routes/exercise.routes";
+import { workoutRoutes } from "./src/routes/workout.routes";
+
 
 
 const app = express();
@@ -17,6 +19,7 @@ app.use(express.json());
 app.use("/api", exerciseRoutes);
 app.use("/users", userRoutes);
 app.use("/feedbacks", feedbackRoutes);
+app.use("/workouts", workoutRoutes);
 app.use("/auth", authRoutes);
 
 app.get('/', (_req, res) => {
