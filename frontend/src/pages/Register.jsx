@@ -4,6 +4,7 @@ import "./Register.css";
 export default function Register() {
 
   const [formData, setFormData] = useState({
+<<<<<<< HEAD
     name: "",
     email: "",
     password: "",
@@ -15,6 +16,13 @@ export default function Register() {
   const [status, setStatus] = useState({
     message: "",
     type: ""
+=======
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    sexo: 'true' 
+>>>>>>> 2a035b22841ea822c46be2d6451a4d4ec5ec6436
   });
 
   const [loading, setLoading] = useState(false);
