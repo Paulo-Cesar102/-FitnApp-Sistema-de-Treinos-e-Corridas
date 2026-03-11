@@ -13,13 +13,14 @@ export class UserRepository implements IUserRepository {
           email: data.email,
           password: data.password,  
           sex: data.sex,
-          
           role: data.role ?? "USER"
         }
     });
 
     return user;
   }
+
+  
 
   async findById(id: string): Promise<IUser | null> {
     return prisma.user.findUnique({
