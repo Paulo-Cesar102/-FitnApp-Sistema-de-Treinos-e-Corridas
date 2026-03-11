@@ -1,6 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap');
+
+:root {
+  /* Paleta de Cores do Site */
+  --color-primary: #cc0c0c;
+  --color-success: #349b34;
+  --color-dark: #2c2424;
+  --color-brown: #582c20;
+  --color-olive: #5c7820;
+  --color-white: #ffffff;
+  --color-gray-light: #e2e8f0;
+  --color-gray-border: #e0e0e0;
+  --color-primary-dark: #a00a0a;
+}
+
 /* Reset básico para garantir consistência */
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 .register-container {
@@ -8,18 +25,21 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Gradiente sutil para dar profundidade e modernidade */
+  background: radial-gradient(circle at center, var(--color-dark) 0%, #1a1616 100%);
+  font-family: 'Roboto', sans-serif;
   padding: 1rem;
 }
 
 .register-card {
-  background: #ffffff;
-  padding: 2.5rem;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  background: var(--color-white);
+  padding: 2rem 1.5rem;
+  border-radius: 8px; /* Cantos um pouco menos arredondados para um look mais "forte" */
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); /* Sombra mais marcada */
   width: 100%;
-  max-width: 450px;
+  position: relative;
+  overflow: hidden;
+  border-top: 5px solid var(--color-primary); /* Detalhe de design no topo */
 }
 
 .header {
@@ -28,121 +48,169 @@
 }
 
 .header h2 {
-  margin: 0;
-  color: #1a202c;
-  font-size: 1.75rem;
-  font-weight: 700;
+  font-family: 'Oswald', sans-serif; /* Fonte fitness clássica */
+  color: var(--color-dark);
+  font-size: 2rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.5rem;
+  margin-top: 0;
 }
 
 .header p {
   margin-top: 0.5rem;
-  color: #718096;
+  color: var(--color-brown);
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
 .form-group {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.2rem;
 }
 
-/* Layout para senha lado a lado */
+/* Mobile First: Layout de coluna por padrão */
 .form-row {
   display: flex;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 1.2rem;
 }
 
 .form-group.half {
-  flex: 1;
+  width: 100%;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 0.5rem;
-  color: #4a5568;
-  font-size: 0.9rem;
-  font-weight: 600;
+  margin-bottom: 0.4rem;
+  color: var(--color-dark);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase; /* Labels em caixa alta para estilo técnico */
+  letter-spacing: 0.5px;
 }
 
 .form-group input,
 .form-group .select-input {
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  padding: 0.9rem;
+  border: 2px solid var(--color-gray-border); /* Borda mais espessa */
+  border-radius: 4px; /* Cantos mais retos */
   font-size: 1rem;
-  color: #2d3748;
-  background-color: #fff;
-  transition: all 0.2s;
+  font-family: 'Roboto', sans-serif;
+  color: var(--color-dark);
+  background-color: #f9f9f9;
+  transition: border-color 0.3s ease, background-color 0.3s ease;
 }
 
 .form-group input:focus,
 .form-group .select-input:focus {
-  border-color: #3182ce;
+  border-color: var(--color-primary);
+  background-color: #fff;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+  box-shadow: none;
 }
 
 .help-text {
   display: block;
   font-size: 0.75rem;
-  color: #a0aec0;
-  margin-top: 0.25rem;
+  color: #666;
+  margin-top: 0.4rem;
+  font-style: italic;
 }
 
 .submit-btn {
   width: 100%;
-  padding: 0.875rem;
-  background-color: #3182ce;
+  padding: 1rem; /* Botão maior para facilitar o toque */
+  background-color: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 6px;
-  font-size: 1rem;
+  border-radius: 4px; /* Consistente com inputs */
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.1rem;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
-  margin-top: 0.5rem;
+  transition: all 0.3s ease;
+  margin-top: 1.5rem;
+  box-shadow: 0 4px 6px rgba(204, 12, 12, 0.2);
 }
 
 .submit-btn:hover {
-  background-color: #2b6cb0;
+  background-color: var(--color-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(204, 12, 12, 0.3);
 }
 
 .submit-btn:active {
-  transform: translateY(1px);
+  transform: translateY(0);
 }
 
 .submit-btn:disabled {
-  background-color: #cbd5e0;
+  background-color: #ccc;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* Mensagens de Feedback */
 .status-message {
-  padding: 0.75rem;
-  border-radius: 6px;
-  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
   font-size: 0.9rem;
   text-align: center;
+  font-weight: 500;
+  border-left: 5px solid transparent;
 }
 
 .status-message.error {
-  background-color: #fff5f5;
-  color: #c53030;
-  border: 1px solid #feb2b2;
+  background-color: #fff0f0;
+  color: var(--color-primary);
+  border-left-color: var(--color-primary);
+  border: none;
+  border-left: 5px solid var(--color-primary);
 }
 
 .status-message.success {
   background-color: #f0fff4;
-  color: #276749;
-  border: 1px solid #9ae6b4;
+  color: var(--color-success);
+  border: none;
+  border-left: 5px solid var(--color-success);
 }
 
-/* Responsividade para telas muito pequenas */
-@media (max-width: 480px) {
+/* Responsividade para telas maiores (Tablets e Desktops) */
+@media (min-width: 768px) {
   .register-card {
-    padding: 1.5rem;
+    max-width: 500px;
+    padding: 3rem 2.5rem;
   }
-  
+
   .form-row {
-    flex-direction: column;
-    gap: 0;
+    flex-direction: row; /* Volta para linha em telas maiores */
+    gap: 1rem;
   }
+
+  .form-group.half {
+    flex: 1;
+  }
+}
+
+.register-footer {
+  text-align: center;
+  margin-top: 1.5rem;
+  color: var(--color-brown);
+  font-size: 0.9rem;
+}
+
+.register-footer a {
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.register-footer a:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
 }

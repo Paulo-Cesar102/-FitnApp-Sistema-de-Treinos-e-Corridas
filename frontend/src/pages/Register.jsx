@@ -1,161 +1,238 @@
-import React, { useState } from 'react';
-import './Register.css';
+import React, { useState } from "react";
+import "./Register.css";
 
-const Register = () => {
+export default function Register() {
+
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    sexo: 'true' // Valor padrão inicial (String para controlar o select)
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    age: "",
+    gender: ""
   });
 
-  const [status, setStatus] = useState({ type: '', message: '' });
+  const [status, setStatus] = useState({
+    message: "",
+    type: ""
+  });
+
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
+  function handleChange(e) {
     const { name, value } = e.target;
+
     setFormData((prev) => ({
       ...prev,
       [name]: value
     }));
-  };
+  }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setStatus({ type: '', message: '' });
+  function validateForm() {
+
+    if (!formData.name || !formData.email || !formData.password) {
+      return "Preencha todos os campos obrigatórios.";
+    }
+
+    if (formData.password.length < 6) {
+      return "A senha deve ter pelo menos 6 caracteres.";
+    }
 
     if (formData.password !== formData.confirmPassword) {
-      setStatus({ type: 'error', message: 'As senhas não coincidem.' });
+      return "As senhas não coincidem.";
+    }
+
+    // gênero é opcional na API, mas se preenchido deve ser válido
+    if (
+      formData.gender &&
+      !["male", "female", "other"].includes(formData.gender)
+    ) {
+      return "Gênero inválido.";
+    }
+
+    return null;
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    const error = validateForm();
+
+    if (error) {
+      setStatus({
+        message: error,
+        type: "error"
+      });
       return;
     }
 
-    setLoading(true);
-
     try {
-      // Converte a string do select para boolean real antes de enviar
+      setLoading(true);
+
+      // monta payload compatível com o backend (/users)
       const payload = {
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        sexo: formData.sexo === 'true'
+        // somente envia sex se o usuário escolheu masculino ou feminino;
+        // no banco o default é "M" quando o campo não é enviado, portanto
+        // "other" ou vazio resultam em M também
+        sex:
+          formData.gender === "male"
+            ? "M"
+            : formData.gender === "female"
+            ? "F"
+            : undefined
       };
 
-      const response = await fetch('http://localhost:3000/users', {
-        method: 'POST',
+      const response = await fetch("http://localhost:3000/users", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(payload)
       });
 
       const data = await response.json();
 
-      if (response.ok) {
-        setStatus({ type: 'success', message: 'Conta criada! Bora treinar!' });
-        setFormData({ name: '', email: '', password: '', confirmPassword: '', sexo: 'true' });
-      } else {
-        setStatus({ type: 'error', message: data.error || 'Erro ao criar conta.' });
+      if (!response.ok) {
+        throw new Error(data.error || "Erro ao registrar.");
       }
+
+      setStatus({
+        message: "Conta criada com sucesso!",
+        type: "success"
+      });
+
+      setFormData({
+        name: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        age: "",
+        gender: ""
+      });
+
     } catch (error) {
-      setStatus({ type: 'error', message: 'Erro de conexão com o servidor.' });
+
+      setStatus({
+        message: "Erro ao registrar usuário.",
+        type: "error"
+      });
+
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
     <div className="register-container">
+
       <div className="register-card">
+
         <div className="header">
-          <h2>Crie sua conta</h2>
-          <p>Junte-se ao time e comece a evoluir.</p>
+          <h2>Criar Conta</h2>
+          <p>Preencha seus dados para começar</p>
         </div>
 
+        {status.message && (
+          <div className={`status-message ${status.type}`}>
+            {status.message}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
+
           <div className="form-group">
-            <label htmlFor="name">Nome Completo</label>
+            <label>Nome</label>
             <input
               type="text"
-              id="name"
               name="name"
               value={formData.name}
               onChange={handleChange}
-              placeholder="Ex: João Silva"
-              required
+              placeholder="Seu nome"
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="email">E-mail</label>
+            <label>Email</label>
             <input
               type="email"
-              id="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="exemplo@email.com"
-              required
+              placeholder="seu@email.com"
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="sexo">Sexo</label>
-            <select
-              id="sexo"
-              name="sexo"
-              value={formData.sexo}
+            <label>Senha</label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
               onChange={handleChange}
-              className="select-input"
-            >
-              <option value="true">Masculino</option>
-              <option value="false">Feminino</option>
-            </select>
-            <small className="help-text">Usado para cálculo de métricas corporais.</small>
+              placeholder="******"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Confirmar Senha</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              placeholder="******"
+            />
           </div>
 
           <div className="form-row">
+
             <div className="form-group half">
-              <label htmlFor="password">Senha</label>
+              <label>Idade</label>
               <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
+                type="number"
+                name="age"
+                value={formData.age}
                 onChange={handleChange}
-                placeholder="********"
-                required
-                minLength={6}
+                placeholder="18"
               />
             </div>
 
             <div className="form-group half">
-              <label htmlFor="confirmPassword">Confirmar</label>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                value={formData.confirmPassword}
+              <label>Gênero</label>
+              <select
+                name="gender"
+                value={formData.gender}
                 onChange={handleChange}
-                placeholder="********"
-                required
-              />
+                className="select-input"
+              >
+                <option value="">Selecione</option>
+                <option value="male">Masculino</option>
+                <option value="female">Feminino</option>
+                <option value="other">Outro</option>
+              </select>
             </div>
+
           </div>
 
-          {status.message && (
-            <div className={`status-message ${status.type}`}>
-              {status.message}
-            </div>
-          )}
-
-          <button type="submit" disabled={loading} className="submit-btn">
-            {loading ? 'Cadastrando...' : 'Criar Conta'}
+          <button
+            type="submit"
+            className="submit-btn"
+            disabled={loading}
+          >
+            {loading ? "Criando..." : "Criar Conta"}
           </button>
+
         </form>
+
+        <div className="register-footer">
+          Já possui conta? <a href="/login">Entrar</a>
+        </div>
+
       </div>
+
     </div>
   );
-};
-
-export default Register;
+}

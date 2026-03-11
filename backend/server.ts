@@ -1,5 +1,6 @@
 import 'dotenv/config'; // carrega variáveis do .env automaticamente
 import express from 'express';
+import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
 import { userRoutes } from "./src/routes/user.routes";
 import { feedbackRoutes } from './src/routes/feedback.routes';
@@ -7,6 +8,7 @@ import { feedbackRoutes } from './src/routes/feedback.routes';
 const app = express();
 const prisma = new PrismaClient();
 
+app.use(cors());
 app.use(express.json());
 
 app.use("/users", userRoutes);
