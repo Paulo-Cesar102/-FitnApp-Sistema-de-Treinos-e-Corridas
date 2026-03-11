@@ -1,11 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 generator client {
   provider = "prisma-client-js"
-
 }
 
 datasource db {
@@ -16,6 +10,11 @@ datasource db {
 enum Role {
   USER
   ADMIN
+}
+
+enum Sex {
+  M
+  F
 }
 
 model User {
@@ -29,67 +28,17 @@ model User {
   role      Role     @default(USER)
   createdAt DateTime @default(now())
 
-  completedWorkouts CompletedWorkout[]
+  workouts           UserWorkout[]
+  completedWorkouts  CompletedWorkout[]
   badges             UserBadge[]
   feedbacks          Feedback[]
-
-  workouts           UserWorkout[]
 }
 
-enum Sex {
-  M
-  F
-}
-
-model Workout {
-  id    String @id @default(uuid())
-  name  String
-
-  completedBy CompletedWorkout[]
-}
-
-model CompletedWorkout {
-  id        String   @id @default(uuid())
-  userId    String
-  workoutId String
-  doneAt    DateTime @default(now())
-
-  user    User    @relation(fields: [userId], references: [id])
-  workout Workout @relation(fields: [workoutId], references: [id])
-}
-
-model Badge {
-  id   String @id @default(uuid())
-  name String
-
-  users UserBadge[]
-}
-
-model UserBadge {
-  id        String   @id @default(uuid())
-  userId    String
-  badgeId   String
-  earnedAt  DateTime @default(now())
-
-  user  User  @relation(fields: [userId], references: [id])
-  badge Badge @relation(fields: [badgeId], references: [id])
-}
-
-model Feedback {
-  id        String   @id @default(uuid())
-  userId    String
-  message   String
-  rating    Int
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id])
-}
 model Category {
-  id        String     @id @default(uuid())
+  id        String   @id @default(uuid())
   name      String
 
   exercises Exercise[]
-  workouts  UserWorkout[]
 }
 
 model Exercise {
@@ -111,10 +60,9 @@ model UserWorkout {
   userId     String
   user       User     @relation(fields: [userId], references: [id])
 
-  categoryId String
-  category   Category @relation(fields: [categoryId], references: [id])
-
   exercises  UserWorkoutExercise[]
+
+  completedWorkouts CompletedWorkout[]
 }
 
 model UserWorkoutExercise {
@@ -130,4 +78,46 @@ model UserWorkoutExercise {
   exercise    Exercise    @relation(fields: [exerciseId], references: [id])
 
   @@unique([userWorkoutId, exerciseId])
+}
+
+model CompletedWorkout {
+  id         String   @id @default(uuid())
+
+  userId     String
+  workoutId  String
+
+  xpEarned   Int
+  doneAt     DateTime @default(now())
+
+  user       User        @relation(fields: [userId], references: [id])
+  workout    UserWorkout @relation(fields: [workoutId], references: [id])
+}
+
+model Badge {
+  id   String @id @default(uuid())
+  name String
+
+  users UserBadge[]
+}
+
+model UserBadge {
+  id        String   @id @default(uuid())
+
+  userId    String
+  badgeId   String
+  earnedAt  DateTime @default(now())
+
+  user      User  @relation(fields: [userId], references: [id])
+  badge     Badge @relation(fields: [badgeId], references: [id])
+}
+
+model Feedback {
+  id        String   @id @default(uuid())
+
+  userId    String
+  message   String
+  rating    Int
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
 }

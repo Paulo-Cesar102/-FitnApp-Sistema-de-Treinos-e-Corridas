@@ -7,7 +7,7 @@ const Register = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    sexo: 'true' // Valor padrão inicial (String para controlar o select)
+    sexo: 'true' 
   });
 
   const [status, setStatus] = useState({ type: '', message: '' });
