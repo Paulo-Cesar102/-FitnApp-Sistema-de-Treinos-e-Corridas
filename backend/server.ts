@@ -23,7 +23,7 @@ app.use("/auth", authRoutes);
 app.get('/', (_req, res) => {
   res.json({ 
     status: 'online',
-    message: 'Server conectado com sucesso!' 
+    message: 'Server deAcademia rodando a todo vapor! 🚀' 
   });
 });
 
