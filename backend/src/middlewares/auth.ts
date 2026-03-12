@@ -17,14 +17,13 @@ export function authMiddleware(
 
   const token = authHeader.split(" ")[1];
 
-  try {
-  const decoded = jwt.verify(
-    token,
-    "segredo-super-secreto"
-  ) as { id: string }; // Aqui você força o TS a entender o que tem dentro do token
+ try {
+  const decoded = jwt.verify(token, "segredo-super-secreto") as any; 
+  
+ 
+  req.user = decoded; 
 
-  req.user = decoded; // Agora o TS para de chorar
-
+  console.log("Token decodificado:", req.user); 
   return next();
 } catch {
   return res.status(401).json({ message: "Invalid token" });
