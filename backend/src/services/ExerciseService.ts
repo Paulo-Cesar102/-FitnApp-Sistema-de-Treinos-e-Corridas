@@ -2,26 +2,33 @@ import { ExerciseRepository } from "../repository/ExerciseRepository";
 
 export class ExerciseService {
 
-  private exerciseRepository = new ExerciseRepository();
+  private repository = new ExerciseRepository();
 
-  async create(data: {
-    name: string;
-    description?: string;
-    categoryId: string;
-  }) {
+  // =============================
+  // LISTAR TODOS
+  // =============================
+  async getAllExercises() {
 
-    if (!data.name)
-      throw new Error("Exercise name is required");
+    return this.repository.findAll();
 
-    return this.exerciseRepository.create(data);
   }
 
-  async findAll() {
-    return this.exerciseRepository.findAll();
+  // =============================
+  // BUSCAR POR ID
+  // =============================
+  async getExerciseById(id: string) {
+
+    return this.repository.findById(id);
+
   }
 
-  async delete(id: string) {
-    return this.exerciseRepository.delete(id);
+  // =============================
+  // BUSCAR POR CATEGORIA
+  // =============================
+  async getExercisesByCategory(categoryId: string) {
+
+    return this.repository.findByCategory(categoryId);
+
   }
 
 }

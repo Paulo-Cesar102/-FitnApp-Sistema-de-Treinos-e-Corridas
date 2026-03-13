@@ -1,5 +1,8 @@
 {
   "name": "backend",
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
   "version": "1.0.0",
   "description": "",
   "main": "server.ts",
@@ -28,4 +31,6 @@
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.3"
   }
+
+  
 }

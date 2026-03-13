@@ -6,11 +6,7 @@ const workoutRoutes = Router();
 const workoutController = new WorkoutController();
 
 // ADICIONE O authMiddleware AQUI ANTES DO CONTROLLER
-workoutRoutes.post(
-  "/create", 
-  authMiddleware, // O segurança da porta
-  (req, res) => workoutController.create(req, res)
-);
+workoutRoutes.post("/create", authMiddleware, (req, res) => workoutController.create(req, res));
 
 workoutRoutes.get("/list", authMiddleware, (req, res) => workoutController.findAll(req, res));
 workoutRoutes.delete("/:id", authMiddleware, (req, res) => workoutController.delete(req, res));

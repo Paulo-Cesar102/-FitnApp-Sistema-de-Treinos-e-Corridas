@@ -11,7 +11,7 @@ const app = express();
 app.use(cors()); 
 app.use(express.json()); 
 
-
+app.use(exerciseRoutes);
 app.use("/api", exerciseRoutes);
 app.use("/users", userRoutes);
 app.use("/feedbacks", feedbackRoutes);

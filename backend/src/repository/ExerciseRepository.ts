@@ -1,17 +1,6 @@
 import { prisma } from "../database/prisma";
 
-
 export class ExerciseRepository {
-
-  async create(data: {
-    name: string;
-    description?: string;
-    categoryId: string;
-  }) {
-    return prisma.exercise.create({
-      data
-    });
-  }
 
   async findAll() {
     return prisma.exercise.findMany({
@@ -30,9 +19,11 @@ export class ExerciseRepository {
     });
   }
 
-  async delete(id: string) {
-    return prisma.exercise.delete({
-      where: { id }
+  async findByCategory(categoryId: string) {
+    return prisma.exercise.findMany({
+      where: {
+        categoryId
+      }
     });
   }
 

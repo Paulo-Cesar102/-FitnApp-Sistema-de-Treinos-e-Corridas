@@ -32,6 +32,7 @@ model User {
   completedWorkouts  CompletedWorkout[]
   badges             UserBadge[]
   feedbacks          Feedback[]
+  exercises          Exercise[]
 }
 
 model Category {
@@ -49,7 +50,74 @@ model Exercise {
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id])
 
+  primaryMuscleId String
+  primaryMuscle   MuscleGroup @relation("PrimaryMuscle", fields: [primaryMuscleId], references: [id])
+
+  secondaryMuscles ExerciseMuscle[]
+
+  userId      String?
+  user        User? @relation(fields: [userId], references: [id])
+
   workoutExercises UserWorkoutExercise[]
+}
+model WorkoutSet {
+  id String @id @default(uuid())
+
+  userId String
+  exerciseId String
+
+  reps Int
+  weight Float
+
+  createdAt DateTime @default(now())
+}
+model TrainingProgram {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+
+  durationWeeks Int
+
+  createdAt DateTime @default(now())
+
+  workouts ProgramWorkout[]
+  
+}
+
+model ProgramWorkout {
+  id String @id @default(uuid())
+
+  programId String
+  workoutId String
+
+  week Int
+  day  Int
+
+  program TrainingProgram @relation(fields: [programId], references: [id])
+  workout UserWorkout     @relation(fields: [workoutId], references: [id])
+}
+
+model MuscleGroup {
+  id   String @id @default(uuid())
+  name String @unique
+
+  primaryExercises   Exercise[] @relation("PrimaryMuscle")
+  secondaryExercises ExerciseMuscle[]
+}
+model ExerciseMuscle {
+  id        String @id @default(uuid())
+
+  exerciseId String
+  muscleId   String
+
+  exercise Exercise @relation(fields: [exerciseId], references: [id])
+  muscle   MuscleGroup @relation(fields: [muscleId], references: [id])
+}
+
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
 }
 
 model UserWorkout {
@@ -63,6 +131,8 @@ model UserWorkout {
   exercises  UserWorkoutExercise[]
 
   completedWorkouts CompletedWorkout[]
+
+  programWorkouts ProgramWorkout[]
 }
 
 model UserWorkoutExercise {
