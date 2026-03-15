@@ -19,9 +19,13 @@ export class WorkoutRepository implements IWorkoutRepository {
     return workout;
   }
 
-  async findAll(): Promise<IWorkout[]> {
-    return prisma.userWorkout.findMany();
-  }
+ async findAll(userId: string): Promise<IWorkout[]> {
+  return prisma.userWorkout.findMany({
+    where: {
+      userId: userId
+    }
+  });
+}
 
   async findById(id: string): Promise<IWorkout | null> {
     return prisma.userWorkout.findUnique({

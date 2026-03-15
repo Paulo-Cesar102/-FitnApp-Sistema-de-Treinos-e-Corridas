@@ -24,10 +24,19 @@ export class WorkoutController {
   }
 
   async findAll(req: Request, res: Response) {
-    const workouts = await this.workoutService.findAll();
 
-    return res.json(workouts);
+  const userId = req.user?.id;
+
+  if (!userId) {
+    return res.status(401).json({
+      message: "Usuário não identificado"
+    });
   }
+
+  const workouts = await this.workoutService.findAll(userId);
+
+  return res.json(workouts);
+}
 
   async delete(req: Request, res: Response) {
     const { id } = req.params;

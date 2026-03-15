@@ -14,9 +14,9 @@ export class WorkoutService {
     return this.workoutRepository.create(data);
   }
 
-  async findAll(): Promise<IWorkout[]> {
-    return this.workoutRepository.findAll();
-  }
+ async findAll(userId: string): Promise<IWorkout[]> {
+  return this.workoutRepository.findAll(userId);
+}
 
   async delete(id: string): Promise<void> {
 
