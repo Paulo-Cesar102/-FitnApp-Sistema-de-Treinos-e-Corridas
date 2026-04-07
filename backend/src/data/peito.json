@@ -1,0 +1,38 @@
+[
+  {
+    "id": "peito-init-1",
+    "title": "Treino Peito Iniciante",
+    "muscleGroup": "peito",
+    "level": "iniciante",
+    "duration": "35-45 min",
+    "description": "Base peitoral",
+    "exercises": [
+      { "name": "Supino Reto", "sets": "3 séries", "reps": "10-12", "rest": "90s" },
+      { "name": "Crucifixo", "sets": "3 séries", "reps": "12-15", "rest": "45s" }
+    ]
+  },
+  {
+    "id": "peito-inter-1",
+    "title": "Treino Peito Intermediário",
+    "muscleGroup": "peito",
+    "level": "intermediario",
+    "duration": "50-60 min",
+    "description": "Desenvolvimento completo",
+    "exercises": [
+      { "name": "Supino Inclinado", "sets": "4 séries", "reps": "10-12", "rest": "60s" },
+      { "name": "Crossover", "sets": "3 séries", "reps": "12-15", "rest": "45s" }
+    ]
+  },
+  {
+    "id": "peito-adv-1",
+    "title": "Treino Peito Avançado",
+    "muscleGroup": "peito",
+    "level": "avancado",
+    "duration": "60-75 min",
+    "description": "Máxima hipertrofia",
+    "exercises": [
+      { "name": "Supino Pirâmide", "sets": "5 séries", "reps": "12-10-8-6-4", "rest": "120s" },
+      { "name": "Supino Drop Set", "sets": "3 séries", "reps": "falha", "rest": "90s" }
+    ]
+  }
+]

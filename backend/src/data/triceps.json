@@ -1,0 +1,36 @@
+[
+  {
+    "id": "triceps-init-1",
+    "title": "Treino Tríceps Iniciante",
+    "muscleGroup": "triceps",
+    "level": "iniciante",
+    "duration": "30-40 min",
+    "description": "Base para tríceps",
+    "exercises": [
+      { "name": "Tríceps Testa", "sets": "3 séries", "reps": "10-12", "rest": "60s" },
+      { "name": "Tríceps Corda", "sets": "3 séries", "reps": "12-15", "rest": "45s" }
+    ]
+  },
+  {
+    "id": "triceps-inter-1",
+    "title": "Treino Tríceps Intermediário",
+    "muscleGroup": "triceps",
+    "level": "intermediario",
+    "duration": "40-50 min",
+    "description": "Volume e definição",
+    "exercises": [
+      { "name": "Supino Fechado", "sets": "4 séries", "reps": "8-10", "rest": "90s" }
+    ]
+  },
+  {
+    "id": "triceps-adv-1",
+    "title": "Treino Tríceps Avançado",
+    "muscleGroup": "triceps",
+    "level": "avancado",
+    "duration": "50-60 min",
+    "description": "Alta intensidade",
+    "exercises": [
+      { "name": "Mergulho com Peso", "sets": "4 séries", "reps": "8-10", "rest": "90s" }
+    ]
+  }
+]

@@ -1,0 +1,41 @@
+[
+  {
+    "id": "costas-init-1",
+    "title": "Treino Costas Iniciante",
+    "muscleGroup": "costas",
+    "level": "iniciante",
+    "duration": "40-50 min",
+    "description": "Fundamentos para construir costas fortes",
+    "exercises": [
+      { "name": "Puxada Frontal", "sets": "3 séries", "reps": "10-12 repetições", "rest": "60 segundos" },
+      { "name": "Remada Curvada", "sets": "3 séries", "reps": "10-12 repetições", "rest": "60 segundos" },
+      { "name": "Remada Cavalinho", "sets": "3 séries", "reps": "12-15 repetições", "rest": "60 segundos" }
+    ]
+  },
+  {
+    "id": "costas-inter-1",
+    "title": "Treino Costas Intermediário",
+    "muscleGroup": "costas",
+    "level": "intermediario",
+    "duration": "50-60 min",
+    "description": "Desenvolvimento de espessura e largura",
+    "exercises": [
+      { "name": "Barra Fixa", "sets": "4 séries", "reps": "8-10", "rest": "90 segundos" },
+      { "name": "Remada Unilateral", "sets": "4 séries", "reps": "10-12", "rest": "60 segundos" },
+      { "name": "Pullover", "sets": "3 séries", "reps": "12-15", "rest": "60 segundos" }
+    ]
+  },
+  {
+    "id": "costas-adv-1",
+    "title": "Treino Costas Avançado",
+    "muscleGroup": "costas",
+    "level": "avancado",
+    "duration": "60-75 min",
+    "description": "Treino intenso para máximo desenvolvimento",
+    "exercises": [
+      { "name": "Levantamento Terra", "sets": "5 séries", "reps": "5-6", "rest": "120 segundos" },
+      { "name": "Barra Fixa com Peso", "sets": "4 séries", "reps": "6-8", "rest": "90 segundos" },
+      { "name": "Remada T-Bar", "sets": "4 séries", "reps": "8-10", "rest": "60 segundos" }
+    ]
+  }
+]
