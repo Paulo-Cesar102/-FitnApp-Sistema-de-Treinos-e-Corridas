@@ -1,0 +1,47 @@
+[
+  {
+    "id": "biceps-init-1",
+    "title": "Treino Bíceps Iniciante",
+    "image": "/images/biceps.jpg",
+    "muscleGroup": "biceps",
+    "level": "iniciante",
+    "duration": "30-40 min",
+    "description": "Treino básico para desenvolvimento inicial dos bíceps",
+    "exercises": [
+      { "name": "Rosca Direta com Barra", "sets": "3 séries", "reps": "10-12 repetições", "rest": "60 segundos", "tips": "Mantenha os cotovelos fixos ao lado do corpo" },
+      { "name": "Rosca Alternada com Halteres", "sets": "3 séries", "reps": "10-12 repetições", "rest": "60 segundos", "tips": "Supine o punho durante a subida" },
+      { "name": "Rosca Martelo", "sets": "3 séries", "reps": "12-15 repetições", "rest": "45 segundos", "tips": "Pegada neutra trabalha também o braquial" }
+    ]
+  },
+  {
+    "id": "biceps-inter-1",
+    "title": "Treino Bíceps Intermediário",
+    "muscleGroup": "biceps",
+    "level": "intermediario",
+    "duration": "40-50 min",
+    "description": "Treino moderado com variações de exercícios",
+    "exercises": [
+      { "name": "Rosca Direta com Barra W", "sets": "4 séries", "reps": "8-10 repetições", "rest": "60 segundos", "tips": "A barra W reduz o estresse no punho" },
+      { "name": "Rosca Concentrada", "sets": "4 séries", "reps": "10-12 repetições", "rest": "45 segundos", "tips": "Foque na contração do pico" },
+      { "name": "Rosca Scott", "sets": "3 séries", "reps": "10-12 repetições", "rest": "60 segundos", "tips": "Evita compensação com outros músculos" },
+      { "name": "Rosca Invertida", "sets": "3 séries", "reps": "12-15 repetições", "rest": "45 segundos", "tips": "Trabalha o braquiorradial" }
+    ]
+  },
+  {
+    "id": "biceps-adv-1",
+    "title": "Treino Bíceps Avançado",
+    "muscleGroup": "biceps",
+    "level": "avancado",
+    "duration": "50-60 min",
+    "description": "Treino intenso com técnicas avançadas",
+    "exercises": [
+      { "name": "Rosca 21", "sets": "4 séries", "reps": "21 repetições", "rest": "90 segundos", "tips": "7 reps no início, 7 no final, 7 completas" },
+      { "name": "Rosca Spider", "sets": "4 séries", "reps": "8-10 repetições", "rest": "60 segundos", "tips": "Ângulo de 90° maximiza tensão" },
+      { "name": "Rosca com Cabo - Drop Set", "sets": "3 séries", "reps": "Até a falha", "rest": "90 segundos", "tips": "Reduza o peso 2-3 vezes por série" },
+      { "name": "Rosca Martelo Cross Body", "sets": "3 séries", "reps": "10-12 repetições", "rest": "45 segundos", "tips": "Cruze o corpo para maior ativação" },
+      { "name": "Rosca Inclinada", "sets": "4 séries", "reps": "8-10 repetições", "rest": "60 segundos", "tips": "Banco a 45°, alongamento máximo" }
+    ]
+  }
+
+]
+

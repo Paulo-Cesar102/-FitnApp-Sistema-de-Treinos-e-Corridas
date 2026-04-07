@@ -1,46 +1,47 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./Exercicio.css";
 
-// 🔥 MOCK no formato da API
-const treinosMock = [
-  {
-    id: "1",
-    name: "Abdominal Iniciante",
-    level: "iniciante",
-    duration: "30 min",
-    reps: 10,
-    image: "https://images.unsplash.com/photo-1599058917212-d750089bc07e",
-    category: { name: "abdomen" }
-  },
-  {
-    id: "2",
-    name: "Bíceps Intermediário",
-    level: "intermediario",
-    duration: "40 min",
-    reps: 12,
-    image: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61",
-    category: { name: "biceps" }
-  }
-];
-
-export default function Exercicio() {
-  const [treinos] = useState(treinosMock);
+export default function Treinos() {
+  const [treinos, setTreinos] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [grupo, setGrupo] = useState("todos");
   const [nivel, setNivel] = useState("todos");
   const [ativo, setAtivo] = useState(null);
 
+  // 🔥 BUSCAR DA API
+  useEffect(() => {
+    fetch("http://localhost:3000/exercises")
+      .then((res) => res.json())
+      .then((data) => {
+        setTreinos(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, []);
+
+  // 🔥 FILTRO ADAPTADO PRA API
   const filtrados = treinos.filter((t) => {
     return (
-      (grupo === "todos" || t.category.name === grupo) &&
+      (grupo === "todos" || t.category?.name === grupo) &&
       (nivel === "todos" || t.level === nivel)
     );
   });
+
+  // 🔥 LOADING (IMPORTANTE)
+  if (loading) {
+    return <h2 style={{ color: "white" }}>Carregando...</h2>;
+  }
 
   return (
     <div className="app">
       {/* HEADER */}
       <div className="header">
-        <h1>GYM<span>PRO</span></h1>
+        <h1>
+          GYM<span>PRO</span>
+        </h1>
         <p>Transforme seu corpo com treinos personalizados</p>
       </div>
 
@@ -48,7 +49,7 @@ export default function Exercicio() {
       <div className="filtros">
         <h3>Grupo muscular</h3>
         <div className="chips">
-          {["todos", "biceps", "abdomen"].map((g) => (
+          {["todos", "biceps", "triceps", "peito", "costas", "ombros", "pernas", "abdomen"].map((g) => (
             <button
               key={g}
               className={grupo === g ? "chip ativo" : "chip"}
@@ -81,9 +82,11 @@ export default function Exercicio() {
             <div className="overlay" />
 
             <div className="card-info">
-              <span className={`badge ${t.level}`}>{t.level}</span>
+              <span className="badge">{t.level}</span>
               <h2>{t.name}</h2>
-              <p>⏱ {t.duration} • 🔥 {t.reps} reps</p>
+              <p>
+                ⏱ {t.duration || "30 min"} • 🔥 {t.reps || 10} reps
+              </p>
             </div>
           </div>
         ))}
@@ -95,9 +98,7 @@ export default function Exercicio() {
           <div className="sheet-content" onClick={(e) => e.stopPropagation()}>
             <div className="handle" />
 
-            <span className={`badge ${ativo.level}`}>
-              {ativo.level}
-            </span>
+            <span className="badge">{ativo.level}</span>
 
             <h2>{ativo.name}</h2>
             <p>{ativo.duration}</p>

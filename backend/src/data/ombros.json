@@ -1,0 +1,35 @@
+[
+  {
+    "id": "ombros-init-1",
+    "title": "Treino Ombros Iniciante",
+    "muscleGroup": "ombros",
+    "level": "iniciante",
+    "duration": "35-45 min",
+    "description": "Base para ombros",
+    "exercises": [
+      { "name": "Desenvolvimento", "sets": "3 séries", "reps": "10-12", "rest": "60s" }
+    ]
+  },
+  {
+    "id": "ombros-inter-1",
+    "title": "Treino Ombros Intermediário",
+    "muscleGroup": "ombros",
+    "level": "intermediario",
+    "duration": "45-55 min",
+    "description": "Desenvolvimento completo",
+    "exercises": [
+      { "name": "Arnold Press", "sets": "4 séries", "reps": "10-12", "rest": "60s" }
+    ]
+  },
+  {
+    "id": "ombros-adv-1",
+    "title": "Treino Ombros Avançado",
+    "muscleGroup": "ombros",
+    "level": "avancado",
+    "duration": "60-70 min",
+    "description": "Ombros 3D",
+    "exercises": [
+      { "name": "Desenvolvimento Militar", "sets": "5 séries", "reps": "6-8", "rest": "120s" }
+    ]
+  }
+]

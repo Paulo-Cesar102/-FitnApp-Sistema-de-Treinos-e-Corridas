@@ -1,0 +1,35 @@
+[
+  {
+    "id": "abdomen-init-1",
+    "title": "Treino Abdômen Iniciante",
+    "muscleGroup": "abdomen",
+    "level": "iniciante",
+    "duration": "20-25 min",
+    "description": "Core básico",
+    "exercises": [
+      { "name": "Abdominal", "sets": "3 séries", "reps": "15-20", "rest": "30s" }
+    ]
+  },
+  {
+    "id": "abdomen-inter-1",
+    "title": "Treino Abdômen Intermediário",
+    "muscleGroup": "abdomen",
+    "level": "intermediario",
+    "duration": "25-30 min",
+    "description": "Core forte",
+    "exercises": [
+      { "name": "Prancha Lateral", "sets": "3 séries", "reps": "30s", "rest": "30s" }
+    ]
+  },
+  {
+    "id": "abdomen-adv-1",
+    "title": "Treino Abdômen Avançado",
+    "muscleGroup": "abdomen",
+    "level": "avancado",
+    "duration": "30-40 min",
+    "description": "Core completo",
+    "exercises": [
+      { "name": "Dragon Flag", "sets": "4 séries", "reps": "8-10", "rest": "60s" }
+    ]
+  }
+]

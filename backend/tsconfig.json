@@ -7,9 +7,10 @@
     "rootDir": ".",
     "outDir": "dist",
     "esModuleInterop": true,
+    "resolveJsonModule": true,
     "strict": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
   },
-  "include": [".", "prisma/prisma.config.ts"],
+"include": [".", "prisma/prisma.config.ts"],
   "exclude": ["node_modules", "dist"]
 }

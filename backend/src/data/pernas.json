@@ -1,0 +1,40 @@
+[
+  {
+    "id": "pernas-init-1",
+    "title": "Treino Pernas Iniciante",
+    "muscleGroup": "pernas",
+    "level": "iniciante",
+    "duration": "40-50 min",
+    "description": "Base de força nas pernas",
+    "exercises": [
+      { "name": "Agachamento", "sets": "3 séries", "reps": "10-12", "rest": "90s" },
+      { "name": "Leg Press", "sets": "3 séries", "reps": "12-15", "rest": "60s" }
+    ]
+  },
+  {
+    "id": "pernas-inter-1",
+    "title": "Treino Pernas Intermediário",
+    "muscleGroup": "pernas",
+    "level": "intermediario",
+    "duration": "60-70 min",
+    "description": "Aumento de volume e intensidade",
+    "exercises": [
+      { "name": "Agachamento Livre", "sets": "4 séries", "reps": "8-10", "rest": "120s" },
+      { "name": "Afundo", "sets": "3 séries", "reps": "10-12", "rest": "60s" },
+      { "name": "Stiff", "sets": "4 séries", "reps": "10-12", "rest": "60s" }
+    ]
+  },
+  {
+    "id": "pernas-adv-1",
+    "title": "Treino Pernas Avançado",
+    "muscleGroup": "pernas",
+    "level": "avancado",
+    "duration": "75-90 min",
+    "description": "Treino intenso para crescimento máximo",
+    "exercises": [
+      { "name": "Agachamento Completo", "sets": "5 séries", "reps": "5-6", "rest": "150s" },
+      { "name": "Agachamento Búlgaro", "sets": "4 séries", "reps": "8-10", "rest": "90s" },
+      { "name": "Leg Press Drop Set", "sets": "4 séries", "reps": "falha", "rest": "90s" }
+    ]
+  }
+]
