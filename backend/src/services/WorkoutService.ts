@@ -28,16 +28,18 @@ export class WorkoutService {
     await this.workoutRepository.delete(id);
   }
 
+  private calculateLevel(xp: number): number {
+    return Math.floor(xp / 100) + 1;
+  }
+
   async completeWorkout(userId: string, workoutId: string) {
     const xpGained = 50;
 
-    await prisma.completedWorkout.create({
-      data: {
-        userId,
-        workoutId,
-        xpEarned: xpGained,
-      },
-    });
+    const workout = await this.workoutRepository.findById(workoutId);
+
+    if (!workout) {
+      throw new Error("Treino não encontrado");
+    }
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -47,8 +49,37 @@ export class WorkoutService {
       throw new Error("Usuário não encontrado");
     }
 
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const alreadyCompletedToday = await prisma.completedWorkout.findFirst({
+      where: {
+        userId,
+        workoutId,
+        doneAt: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      },
+    });
+
+    if (alreadyCompletedToday) {
+      throw new Error("Você já concluiu esse treino hoje.");
+    }
+
+    await prisma.completedWorkout.create({
+      data: {
+        userId,
+        workoutId,
+        xpEarned: xpGained,
+      },
+    });
+
     const newXp = user.xp + xpGained;
-    const newLevel = Math.floor(newXp / 100) + 1;
+    const newLevel = this.calculateLevel(newXp);
 
     await prisma.user.update({
       where: { id: userId },

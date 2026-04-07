@@ -5,6 +5,7 @@ export interface CompletedWorkout {
   id?: string;
   userId: string;
   workoutId: string;
+  xpEarned: number;
   doneAt?: Date;
 
   user?: IUser;
