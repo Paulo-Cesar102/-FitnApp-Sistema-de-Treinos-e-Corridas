@@ -5,7 +5,8 @@ export class ExerciseRepository {
   async findAll() {
     return prisma.exercise.findMany({
       include: {
-        category: true
+        category: true,
+        primaryMuscle: true, 
       }
     });
   }
@@ -14,7 +15,8 @@ export class ExerciseRepository {
     return prisma.exercise.findUnique({
       where: { id },
       include: {
-        category: true
+        category: true,
+        primaryMuscle: true,
       }
     });
   }
@@ -23,8 +25,10 @@ export class ExerciseRepository {
     return prisma.exercise.findMany({
       where: {
         categoryId
+      },
+      include: {
+        primaryMuscle: true, 
       }
     });
   }
-
 }

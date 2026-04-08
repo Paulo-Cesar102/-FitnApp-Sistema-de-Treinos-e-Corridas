@@ -7,6 +7,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// =========================
+// ENUMS
+// =========================
+
 enum Role {
   USER
   ADMIN
@@ -16,6 +20,16 @@ enum Sex {
   M
   F
 }
+
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+// =========================
+// MODELS
+// =========================
 
 model User {
   id        String   @id @default(uuid())
@@ -28,16 +42,16 @@ model User {
   role      Role     @default(USER)
   createdAt DateTime @default(now())
 
-  workouts           UserWorkout[]
-  completedWorkouts  CompletedWorkout[]
-  badges             UserBadge[]
-  feedbacks          Feedback[]
-  exercises          Exercise[]
+  workouts          UserWorkout[]
+  completedWorkouts CompletedWorkout[]
+  badges            UserBadge[]
+  feedbacks         Feedback[]
+  exercises         Exercise[]
 }
 
 model Category {
-  id        String   @id @default(uuid())
-  name      String
+  id   String @id @default(uuid())
+  name String
 
   exercises Exercise[]
 }
@@ -46,6 +60,12 @@ model Exercise {
   id          String   @id @default(uuid())
   name        String
   description String?
+  
+  // Novos campos para suportar o Seed
+  image       String?
+  level       Difficulty @default(BEGINNER)
+  duration    String?
+  reps        Int?
 
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id])
@@ -55,33 +75,33 @@ model Exercise {
 
   secondaryMuscles ExerciseMuscle[]
 
-  userId      String?
-  user        User? @relation(fields: [userId], references: [id])
+  userId    String?
+  user      User? @relation(fields: [userId], references: [id])
 
   workoutExercises UserWorkoutExercise[]
 }
+
 model WorkoutSet {
   id String @id @default(uuid())
 
-  userId String
+  userId     String
   exerciseId String
 
-  reps Int
+  reps   Int
   weight Float
 
   createdAt DateTime @default(now())
 }
+
 model TrainingProgram {
   id          String   @id @default(uuid())
   name        String
   description String?
 
   durationWeeks Int
-
-  createdAt DateTime @default(now())
+  createdAt     DateTime @default(now())
 
   workouts ProgramWorkout[]
-  
 }
 
 model ProgramWorkout {
@@ -101,48 +121,41 @@ model MuscleGroup {
   id   String @id @default(uuid())
   name String @unique
 
-  primaryExercises   Exercise[] @relation("PrimaryMuscle")
+  primaryExercises   Exercise[]       @relation("PrimaryMuscle")
   secondaryExercises ExerciseMuscle[]
 }
+
 model ExerciseMuscle {
-  id        String @id @default(uuid())
+  id String @id @default(uuid())
 
   exerciseId String
   muscleId   String
 
-  exercise Exercise @relation(fields: [exerciseId], references: [id])
+  exercise Exercise    @relation(fields: [exerciseId], references: [id])
   muscle   MuscleGroup @relation(fields: [muscleId], references: [id])
 }
 
-enum Difficulty {
-  BEGINNER
-  INTERMEDIATE
-  ADVANCED
-}
-
 model UserWorkout {
-  id         String   @id @default(uuid())
-  name       String
-  createdAt  DateTime @default(now())
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
 
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  exercises  UserWorkoutExercise[]
-
+  exercises         UserWorkoutExercise[]
   completedWorkouts CompletedWorkout[]
-
-  programWorkouts ProgramWorkout[]
+  programWorkouts   ProgramWorkout[]
 }
 
 model UserWorkoutExercise {
-  id             String @id @default(uuid())
+  id String @id @default(uuid())
 
-  userWorkoutId  String
-  exerciseId     String
+  userWorkoutId String
+  exerciseId    String
 
-  sets           Int
-  reps           Int
+  sets Int
+  reps Int
 
   userWorkout UserWorkout @relation(fields: [userWorkoutId], references: [id])
   exercise    Exercise    @relation(fields: [exerciseId], references: [id])
@@ -151,16 +164,16 @@ model UserWorkoutExercise {
 }
 
 model CompletedWorkout {
-  id         String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  userId     String
-  workoutId  String
+  userId    String
+  workoutId String
 
-  xpEarned   Int
-  doneAt     DateTime @default(now())
+  xpEarned Int
+  doneAt   DateTime @default(now())
 
-  user       User        @relation(fields: [userId], references: [id])
-  workout    UserWorkout @relation(fields: [workoutId], references: [id])
+  user    User        @relation(fields: [userId], references: [id])
+  workout UserWorkout @relation(fields: [workoutId], references: [id])
 }
 
 model Badge {
@@ -171,18 +184,18 @@ model Badge {
 }
 
 model UserBadge {
-  id        String   @id @default(uuid())
+  id String @id @default(uuid())
 
   userId    String
   badgeId   String
   earnedAt  DateTime @default(now())
 
-  user      User  @relation(fields: [userId], references: [id])
-  badge     Badge @relation(fields: [badgeId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+  badge Badge @relation(fields: [badgeId], references: [id])
 }
 
 model Feedback {
-  id        String   @id @default(uuid())
+  id String @id @default(uuid())
 
   userId    String
   message   String
