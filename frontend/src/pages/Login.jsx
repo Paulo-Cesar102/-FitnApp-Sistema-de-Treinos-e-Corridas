@@ -69,7 +69,7 @@ export default function Login() {
         </div>
 
         <div className="form-group">
-          <label>Senha Secreta</label>
+          <label>Senha</label>
           <div className="input-wrapper">
             <input
               type="password"
