@@ -5,12 +5,14 @@ import { authMiddleware } from "../middlewares/auth";
 const workoutRoutes = Router();
 const workoutController = new WorkoutController();
 
-workoutRoutes.post("/create", authMiddleware, (req, res) =>
-  workoutController.create(req, res)
+// Caminho: GET /workouts
+workoutRoutes.get("/", authMiddleware, (req, res) =>
+  workoutController.findAll(req, res)
 );
 
-workoutRoutes.get("/list", authMiddleware, (req, res) =>
-  workoutController.findAll(req, res)
+// Caminho: POST /workouts
+workoutRoutes.post("/", authMiddleware, (req, res) =>
+  workoutController.create(req, res)
 );
 
 workoutRoutes.post("/complete", authMiddleware, (req, res) =>

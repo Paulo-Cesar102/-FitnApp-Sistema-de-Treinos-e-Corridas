@@ -31,4 +31,17 @@ export class ExerciseRepository {
       }
     });
   }
+
+  // No seu ExerciseRepository
+async findAllCategories() {
+  return prisma.category.findMany({
+    include: {
+      exercises: {
+        include: {
+          primaryMuscle: true 
+        }
+      }
+    }
+  });
+}
 }

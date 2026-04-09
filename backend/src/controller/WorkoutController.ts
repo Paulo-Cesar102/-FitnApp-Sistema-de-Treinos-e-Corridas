@@ -26,23 +26,25 @@ export class WorkoutController {
     }
   }
 
-  async findAll(req: Request, res: Response) {
-    try {
-      const userId = req.user?.id;
+ async findAll(req: Request, res: Response) {
+  try {
 
-      if (!userId) {
-        return res.status(401).json({ message: "Usuário não identificado" });
-      }
+    const userId = (req as any ).user.id; 
 
-      const workouts = await this.workoutService.findAll(userId);
 
-      return res.json(workouts);
-    } catch (error) {
-      return res.status(400).json({
-        message: error instanceof Error ? error.message : "Erro ao listar treinos",
-      });
-    }
+    const workouts = await this.workoutService.findAll(userId);
+
+    // 3. RETORNA O JSON (Isso aqui é o que faz os cards aparecerem!)
+    return res.json(workouts); 
+
+  } catch (error) {
+    console.error("Erro no Controller findAll:", error);
+    return res.status(400).json({
+      message: error instanceof Error ? error.message : "Erro ao listar treinos",
+    });
   }
+}
+
 
   async delete(req: Request, res: Response) {
     try {

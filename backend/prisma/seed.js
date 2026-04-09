@@ -2,77 +2,114 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🚀 Populando banco com +50 exercícios...");
+  console.log("🚀 Iniciando Super Seed GymPro...");
 
-  // 1. Criar Categorias
-  const categoriesData = [
-    { name: "Musculação" }, { name: "Calistenia" }, { name: "Funcional" }, { name: "Cardio" }
-  ];
-  await prisma.category.createMany({ data: categoriesData, skipDuplicates: true });
+  // 1. Usuário Master
+  const user = await prisma.user.upsert({
+    where: { email: 'admin@gympro.com' },
+    update: {},
+    create: {
+      name: "GymPro Master",
+      email: "admin@gympro.com",
+      password: "123",
+      role: "ADMIN"
+    }
+  });
 
-  // 2. Criar Grupos Musculares
-  const musclesData = [
-    { name: "Peito" }, { name: "Costas" }, { name: "Ombros" },
-    { name: "Biceps" }, { name: "Triceps" }, { name: "Pernas" },
-    { name: "Abdomen" }
-  ];
-  await prisma.muscleGroup.createMany({ data: musclesData, skipDuplicates: true });
+  // 2. Categorias - Ajustado para evitar o erro de validação
+  let catMusculacao = await prisma.category.findFirst({
+    where: { name: "Musculação" }
+  });
 
-  const dbCats = await prisma.category.findMany();
-  const dbMuscles = await prisma.muscleGroup.findMany();
+  if (!catMusculacao) {
+    catMusculacao = await prisma.category.create({
+      data: { name: "Musculação" }
+    });
+  }
 
-  const getC = (name) => dbCats.find(c => c.name === name).id;
-  const getM = (name) => dbMuscles.find(m => m.name === name).id;
+  // 3. Grupos Musculares
+  const gruposMusculares = ["Peito", "Costas", "Pernas", "Ombros", "Braços", "Core"];
+  const mGroups = {};
 
-  const exercises = [
-    // PEITO (10+)
-    { name: "Supino Reto Barra", description: "Base para peitoral.", categoryId: getC("Musculação"), primaryMuscleId: getM("Peito"), level: "BEGINNER", duration: "45 min", reps: 10, image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600" },
-    { name: "Supino Inclinado Halter", description: "Foco em peito superior.", categoryId: getC("Musculação"), primaryMuscleId: getM("Peito"), level: "INTERMEDIATE", duration: "45 min", reps: 12, image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600" },
-    { name: "Flexão de Braço", description: "Peso do corpo.", categoryId: getC("Calistenia"), primaryMuscleId: getM("Peito"), level: "BEGINNER", duration: "20 min", reps: 15, image: "https://images.unsplash.com/photo-1598971639058-a7d6d9f0e3b6?w=600" },
-    { name: "Crucifixo Reto", description: "Isolamento peitoral.", categoryId: getC("Musculação"), primaryMuscleId: getM("Peito"), level: "BEGINNER", duration: "30 min", reps: 12, image: "https://images.unsplash.com/photo-1581009146145-b5ef03a726ec?w=600" },
-    { name: "Dips (Paralelas)", description: "Peito inferior e tríceps.", categoryId: getC("Calistenia"), primaryMuscleId: getM("Peito"), level: "ADVANCED", duration: "30 min", reps: 8, image: "https://images.unsplash.com/photo-1590487988256-9ed24133863e?w=600" },
-    { name: "Crossover Polia Alta", description: "Definição peitoral.", categoryId: getC("Musculação"), primaryMuscleId: getM("Peito"), level: "INTERMEDIATE", duration: "40 min", reps: 15, image: "https://images.unsplash.com/photo-1597452485669-2c7bb5fef90d?w=600" },
-    { name: "Supino Declinado", description: "Peitoral inferior.", categoryId: getC("Musculação"), primaryMuscleId: getM("Peito"), level: "INTERMEDIATE", duration: "45 min", reps: 10, image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600" },
-    { name: "Flexão Arqueiro", description: "Flexão avançada unilateral.", categoryId: getC("Calistenia"), primaryMuscleId: getM("Peito"), level: "ADVANCED", duration: "25 min", reps: 6, image: "https://images.unsplash.com/photo-1598971639058-a7d6d9f0e3b6?w=600" },
-    { name: "Fly na Máquina", description: "Segurança e isolamento.", categoryId: getC("Musculação"), primaryMuscleId: getM("Peito"), level: "BEGINNER", duration: "30 min", reps: 12, image: "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=600" },
-    { name: "Flexão Diamante", description: "Foco em tríceps e peito interno.", categoryId: getC("Calistenia"), primaryMuscleId: getM("Peito"), level: "INTERMEDIATE", duration: "20 min", reps: 12, image: "https://images.unsplash.com/photo-1598971639058-a7d6d9f0e3b6?w=600" },
+  for (const nome of gruposMusculares) {
+    // Se o MuscleGroup também não for unique no schema, usamos findFirst/create
+    let group = await prisma.muscleGroup.findFirst({ where: { name: nome } });
+    if (!group) {
+      group = await prisma.muscleGroup.create({ data: { name: nome } });
+    }
+    mGroups[nome] = group;
+  }
 
-    // COSTAS (10+)
-    { name: "Puxada Aberta", description: "Largura das costas.", categoryId: getC("Musculação"), primaryMuscleId: getM("Costas"), level: "BEGINNER", duration: "40 min", reps: 12, image: "https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=600" },
-    { name: "Remada Curvada", description: "Espessura das costas.", categoryId: getC("Musculação"), primaryMuscleId: getM("Costas"), level: "INTERMEDIATE", duration: "45 min", reps: 10, image: "https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=600" },
-    { name: "Barra Fixa", description: "Essencial calistenia.", categoryId: getC("Calistenia"), primaryMuscleId: getM("Costas"), level: "ADVANCED", duration: "30 min", reps: 8, image: "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=600" },
-    { name: "Remada Unilateral", description: "Serrote com halter.", categoryId: getC("Musculação"), primaryMuscleId: getM("Costas"), level: "BEGINNER", duration: "35 min", reps: 12, image: "https://images.unsplash.com/photo-1583454159113-1c8a1a40c9b2?w=600" },
-    { name: "Puxada Triângulo", description: "Foco em costas centrais.", categoryId: getC("Musculação"), primaryMuscleId: getM("Costas"), level: "BEGINNER", duration: "40 min", reps: 12, image: "https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=600" },
-    { name: "Muscle Up", description: "Movimento de explosão.", categoryId: getC("Calistenia"), primaryMuscleId: getM("Costas"), level: "ADVANCED", duration: "40 min", reps: 5, image: "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=600" },
-    { name: "Remada Cavalinho", description: "Densidade máxima.", categoryId: getC("Musculação"), primaryMuscleId: getM("Costas"), level: "INTERMEDIATE", duration: "45 min", reps: 10, image: "https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=600" },
-    { name: "Levantamento Terra", description: "Força bruta posterior.", categoryId: getC("Musculação"), primaryMuscleId: getM("Costas"), level: "ADVANCED", duration: "60 min", reps: 5, image: "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=600" },
-    { name: "Pull Over Corda", description: "Isolamento de grande dorsal.", categoryId: getC("Musculação"), primaryMuscleId: getM("Costas"), level: "INTERMEDIATE", duration: "30 min", reps: 15, image: "https://images.unsplash.com/photo-1591940742878-13aba4b7a35e?w=600" },
-    { name: "Remada na Máquina", description: "Controle e contração.", categoryId: getC("Musculação"), primaryMuscleId: getM("Costas"), level: "BEGINNER", duration: "35 min", reps: 15, image: "https://images.unsplash.com/photo-1591940742878-13aba4b7a35e?w=600" },
-
-    // PERNAS (10+)
-    { name: "Agachamento Livre", description: "O rei das pernas.", categoryId: getC("Musculação"), primaryMuscleId: getM("Pernas"), level: "INTERMEDIATE", duration: "50 min", reps: 10, image: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=600" },
-    { name: "Leg Press 45", description: "Poder de empurre.", categoryId: getC("Musculação"), primaryMuscleId: getM("Pernas"), level: "BEGINNER", duration: "45 min", reps: 15, image: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=600" },
-    { name: "Cadeira Extensora", description: "Isolamento quadríceps.", categoryId: getC("Musculação"), primaryMuscleId: getM("Pernas"), level: "BEGINNER", duration: "30 min", reps: 15, image: "https://images.unsplash.com/photo-1591940742878-13aba4b7a35e?w=600" },
-    { name: "Mesa Flexora", description: "Isolamento posterior.", categoryId: getC("Musculação"), primaryMuscleId: getM("Pernas"), level: "BEGINNER", duration: "30 min", reps: 12, image: "https://images.unsplash.com/photo-1591940742878-13aba4b7a35e?w=600" },
-    { name: "Agachamento Búlgaro", description: "Unilateral intenso.", categoryId: getC("Musculação"), primaryMuscleId: getM("Pernas"), level: "ADVANCED", duration: "40 min", reps: 10, image: "https://images.unsplash.com/photo-1434608519344-49d77a699e1d?w=600" },
-    { name: "Stiff Barra", description: "Posterior e glúteos.", categoryId: getC("Musculação"), primaryMuscleId: getM("Pernas"), level: "INTERMEDIATE", duration: "45 min", reps: 12, image: "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=600" },
-    { name: "Pistol Squat", description: "Agachamento uma perna.", categoryId: getC("Calistenia"), primaryMuscleId: getM("Pernas"), level: "ADVANCED", duration: "30 min", reps: 5, image: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=600" },
-    { name: "Elevação Pélvica", description: "Foco total glúteos.", categoryId: getC("Musculação"), primaryMuscleId: getM("Pernas"), level: "INTERMEDIATE", duration: "40 min", reps: 10, image: "https://images.unsplash.com/photo-1434596922112-19c563067271?w=600" },
-    { name: "Cadeira Adutora", description: "Parte interna coxa.", categoryId: getC("Musculação"), primaryMuscleId: getM("Pernas"), level: "BEGINNER", duration: "25 min", reps: 15, image: "https://images.unsplash.com/photo-1591940742878-13aba4b7a35e?w=600" },
-    { name: "Panturrilha em Pé", description: "Definição panturrilhas.", categoryId: getC("Musculação"), primaryMuscleId: getM("Pernas"), level: "BEGINNER", duration: "20 min", reps: 20, image: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=600" },
-
-    // BRAÇOS, OMBROS E ABDOMEM (Resumo para completar +50 totais)
-    { name: "Desenvolvimento Arnold", description: "Ombros completos.", categoryId: getC("Musculação"), primaryMuscleId: getM("Ombros"), level: "INTERMEDIATE", duration: "35 min", reps: 10, image: "https://images.unsplash.com/photo-1532384748853-8f54a8f476e2?w=600" },
-    { name: "Rosca Direta", description: "Bíceps clássico.", categoryId: getC("Musculação"), primaryMuscleId: getM("Biceps"), level: "BEGINNER", duration: "25 min", reps: 12, image: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=600" },
-    { name: "Tríceps Testa", description: "Crânio tríceps.", categoryId: getC("Musculação"), primaryMuscleId: getM("Triceps"), level: "INTERMEDIATE", duration: "25 min", reps: 10, image: "https://images.unsplash.com/photo-1590487988256-9ed24133863e?w=600" },
-    { name: "Abdominal Infra", description: "Abdomen inferior.", categoryId: getC("Musculação"), primaryMuscleId: getM("Abdomen"), level: "BEGINNER", duration: "15 min", reps: 20, image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600" },
-    { name: "L-Sit", description: "Core avançado.", categoryId: getC("Calistenia"), primaryMuscleId: getM("Abdomen"), level: "ADVANCED", duration: "20 min", reps: 1, image: "https://images.unsplash.com/photo-1566241142559-40e1bfc26ebc?w=600" }
+  // 4. Biblioteca de Exercícios
+  const exerciciosData = [
+    { id: 'ex-supino-reto', name: "Supino Reto", mGroup: "Peito", img: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600" },
+    { id: 'ex-supino-inc', name: "Supino Inclinado", mGroup: "Peito", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600" },
+    { id: 'ex-crucifixo', name: "Crucifixo Reto", mGroup: "Peito", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=600" },
+    { id: 'ex-puxada', name: "Puxada Pulley", mGroup: "Costas", img: "https://images.unsplash.com/photo-1603287611630-d6455054202e?w=600" },
+    { id: 'ex-remada', name: "Remada Curvada", mGroup: "Costas", img: "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=600" },
+    { id: 'ex-agachamento', name: "Agachamento Livre", mGroup: "Pernas", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2158?w=600" },
+    { id: 'ex-legpress', name: "Leg Press 45º", mGroup: "Pernas", img: "https://images.unsplash.com/photo-1591076482161-42ce6da69f67?w=600" },
+    { id: 'ex-rosca-direta', name: "Rosca Direta", mGroup: "Braços", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=600" },
+    { id: 'ex-triceps-corda', name: "Tríceps Corda", mGroup: "Braços", img: "https://www.google.com/imgres?q=triceps%20corda&imgurl=https%3A%2F%2Fpratiquefitness.com.br%2Fblog%2Fwp-content%2Fuploads%2F2023%2F11%2FComo-fazer-triceps-corda.jpg&imgrefurl=https%3A%2F%2Fpratiquefitness.com.br%2Fblog%2Fcomo-fazer-triceps-corda%2F&docid=-PW2V4_OQPiAlM&tbnid=wTxAkQqoT2nFbM&vet=12ahUKEwiT_s-Ih-GTAxXqs5UCHU5rL2MQnPAOegQIPxAB..i&w=600&h=400&hcb=2&ved=2ahUKEwiT_s-Ih-GTAxXqs5UCHU5rL2MQnPAOegQIPxAB?w=600" },
   ];
 
-  // Adicionei aqui um loop para gerar variações automáticas e bater a meta de 50+
-  await prisma.exercise.createMany({ data: exercises, skipDuplicates: true });
+  for (const ex of exerciciosData) {
+    await prisma.exercise.upsert({
+      where: { id: ex.id },
+      update: {
+        name: ex.name,
+        image: ex.img,
+        primaryMuscleId: mGroups[ex.mGroup].id
+      },
+      create: {
+        id: ex.id,
+        name: ex.name,
+        description: `Exercício focado em ${ex.mGroup}`,
+        image: ex.img,
+        level: "INTERMEDIATE",
+        duration: "10 min",
+        categoryId: catMusculacao.id,
+        primaryMuscleId: mGroups[ex.mGroup].id
+      }
+    });
+  }
 
-  console.log("✅ Seed finalizado! Verifique seu GymPro.");
+  // 5. Treinos
+  const treinos = [
+    { name: "Peitoral de Ferro", exercises: [{ id: 'ex-supino-reto', sets: 4, reps: 10 }, { id: 'ex-supino-inc', sets: 3, reps: 12 }] },
+    { name: "Costas Largas", exercises: [{ id: 'ex-puxada', sets: 4, reps: 12 }, { id: 'ex-remada', sets: 4, reps: 10 }] },
+    { name: "Leg Day", exercises: [{ id: 'ex-agachamento', sets: 4, reps: 8 }, { id: 'ex-legpress', sets: 3, reps: 12 }] },
+    { name: "Braços Gigantes", exercises: [{ id: 'ex-rosca-direta', sets: 4, reps: 10 }, { id: 'ex-triceps-corda', sets: 4, reps: 10 }] }
+  ];
+
+  // Limpa treinos antigos do admin para renovar
+  await prisma.userWorkoutExercise.deleteMany({ where: { userWorkout: { userId: user.id } } });
+  await prisma.userWorkout.deleteMany({ where: { userId: user.id } });
+
+  for (const t of treinos) {
+    await prisma.userWorkout.create({
+      data: {
+        name: t.name,
+        userId: user.id,
+        exercises: {
+          create: t.exercises.map(e => ({
+            exerciseId: e.id,
+            sets: e.sets,
+            reps: e.reps
+          }))
+        }
+      }
+    });
+  }
+
+  console.log(`✅ Seed finalizado com sucesso!`);
 }
 
-main().catch(e => { console.error(e); process.exit(1); }).finally(async () => { await prisma.$disconnect(); });
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

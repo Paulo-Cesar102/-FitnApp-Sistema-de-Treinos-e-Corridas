@@ -1,0 +1,239 @@
+/* Layout Geral */
+.user-workouts-container {
+  padding: 20px;
+  background: #000;
+  min-height: 100vh;
+  color: #fff;
+  padding-bottom: 100px; /* Espaço para o MenuBar não cobrir os cards */
+}
+
+.user-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding: 0 10px;
+}
+
+.user-header h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.user-header h1 span {
+  color: #ff4500;
+}
+
+.add-btn {
+  background: #ff4500;
+  border: none;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.add-btn:hover {
+  transform: scale(1.05);
+}
+
+/* Grid de Cards */
+.user-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.user-card {
+  background: #111;
+  border-radius: 15px;
+  border: 1px solid #222;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.3s, transform 0.2s;
+}
+
+.user-card:hover {
+  border-color: #ff4500;
+  transform: translateY(-5px);
+}
+
+.user-card-top {
+  position: relative;
+  height: 160px;
+}
+
+.user-card-top img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.8;
+}
+
+.delete-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 0, 0, 0.9);
+  border: none;
+  color: #fff;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.user-card-body {
+  padding: 20px;
+}
+
+.user-card-body h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #fff;
+}
+
+.user-card-body p {
+  color: #888;
+  font-size: 0.9rem;
+  margin: 10px 0;
+  text-transform: uppercase;
+}
+
+.start-btn {
+  width: 100%;
+  background: transparent;
+  border: 1px solid #ff4500;
+  color: #ff4500;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: bold;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.start-btn:hover {
+  background: #ff4500;
+  color: #fff;
+}
+
+/* Estilos do Modal (Foco na Execução) */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-sheet {
+  background: #111;
+  width: 90%;
+  max-width: 450px;
+  border-radius: 25px;
+  padding: 30px;
+  text-align: center;
+  border: 1px solid #333;
+}
+
+.progresso-track {
+  width: 100%;
+  height: 6px;
+  background: #222;
+  border-radius: 3px;
+  margin-bottom: 20px;
+}
+
+.progresso-fill {
+  height: 100%;
+  background: #ff4500;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.container-foto-trava {
+  width: 100%;
+  height: 250px;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.container-foto-trava img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nome-exercicio-foco {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.status-item {
+  background: #1a1a1a;
+  padding: 15px;
+  border-radius: 15px;
+}
+
+.status-item span {
+  font-size: 0.7rem;
+  color: #888;
+  display: block;
+}
+
+.status-item p {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #ff4500;
+}
+
+.btn-main {
+  width: 100%;
+  background: #ff4500;
+  border: none;
+  color: #fff;
+  padding: 15px;
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.btn-secundario {
+  background: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+/* Tela de Finalizado */
+.view-finalizado {
+  padding: 40px 0;
+}
+
+.icon-celebration {
+  font-size: 4rem;
+  margin-bottom: 20px;
+}

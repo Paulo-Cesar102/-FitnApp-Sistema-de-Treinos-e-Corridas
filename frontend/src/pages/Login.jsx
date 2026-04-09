@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import "./Login.css"; // Certifique-se de que o CSS abaixo esteja aqui
+import "./Login.css"; 
+
 
 export default function Login() {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -28,7 +29,7 @@ export default function Login() {
       localStorage.setItem("token", response.data.token);
 
       // Redireciona para o Dashboard após 1.5s
-      setTimeout(() => navigate("/dashboard"), 1500);
+      setTimeout(() => navigate("/home"), 1500);
 
     } catch (error) {
       const msg = error.response?.data?.message || "E-mail ou senha incorretos.";

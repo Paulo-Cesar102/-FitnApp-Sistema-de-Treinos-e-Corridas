@@ -1,0 +1,79 @@
+.tab-bar-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 80px;
+  background: rgba(10, 10, 10, 0.98);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 10000;
+}
+
+.tab-bar-content {
+  width: 100%;
+  max-width: 480px;
+  height: 100%;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.tab-item {
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pill-container {
+  width: 60px;
+  height: 32px;
+  border-radius: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+  margin-bottom: 4px;
+}
+
+/* Pílula Ativa */
+.tab-item.active .pill-container {
+  background-color: #FF4500;
+}
+
+.tab-icon {
+  font-size: 1.2rem;
+  transition: color 0.3s;
+  color: #555;
+}
+
+.tab-item.active .tab-icon {
+  color: #fff;
+}
+
+.tab-label {
+  font-size: 11px;
+  color: #555;
+  font-weight: 500;
+}
+
+.tab-item.active .tab-label {
+  color: #fff;
+  font-weight: 700;
+}
+
+.system-indicator {
+  width: 130px;
+  height: 5px;
+  background: #222;
+  border-radius: 10px;
+  margin-bottom: 8px;
+}

@@ -8,10 +8,7 @@ export const getCategories = async () => {
 
 };
 
-export const getCategoryExercises = async (id: string) => {
-
+export const getExercises = async (id: string) => { // Mudei aqui
   const response = await api.get(`/categories/${id}/exercises`);
-
   return response.data;
-
 };
