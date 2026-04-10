@@ -1,23 +1,25 @@
-/* Layout Geral */
+/* ===== LAYOUT ===== */
 .user-workouts-container {
   padding: 20px;
-  background: #000;
+  background: radial-gradient(circle at top, #0a0a0a, #000);
   min-height: 100vh;
   color: #fff;
-  padding-bottom: 100px; /* Espaço para o MenuBar não cobrir os cards */
+  padding-bottom: 100px;
+  font-family: "Inter", sans-serif;
 }
 
+/* ===== HEADER ===== */
 .user-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 30px;
-  padding: 0 10px;
 }
 
 .user-header h1 {
-  font-size: 1.5rem;
-  font-weight: 800;
+  font-size: 1.8rem;
+  font-weight: 900;
+  letter-spacing: 1px;
 }
 
 .user-header h1 span {
@@ -25,53 +27,66 @@
 }
 
 .add-btn {
-  background: #ff4500;
+  background: linear-gradient(135deg, #ff4500, #ff6a00);
   border: none;
   color: #fff;
-  padding: 10px 20px;
-  border-radius: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
   font-weight: bold;
   cursor: pointer;
-  transition: transform 0.2s;
+  box-shadow: 0 0 15px rgba(255, 69, 0, 0.4);
+  transition: 0.3s;
 }
 
 .add-btn:hover {
-  transform: scale(1.05);
+  transform: scale(1.07);
+  box-shadow: 0 0 25px rgba(255, 69, 0, 0.7);
 }
 
-/* Grid de Cards */
+/* ===== GRID ===== */
 .user-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  gap: 25px;
 }
 
+/* ===== CARD ===== */
 .user-card {
-  background: #111;
-  border-radius: 15px;
+  background: rgba(20, 20, 20, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 18px;
   border: 1px solid #222;
   overflow: hidden;
   cursor: pointer;
-  transition: border-color 0.3s, transform 0.2s;
+  transition: 0.3s;
+  position: relative;
 }
 
 .user-card:hover {
+  transform: translateY(-6px) scale(1.02);
   border-color: #ff4500;
-  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(255, 69, 0, 0.2);
 }
 
+/* ===== IMG ===== */
 .user-card-top {
   position: relative;
-  height: 160px;
+  height: 170px;
 }
 
 .user-card-top img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.8;
+  opacity: 0.85;
+  transition: 0.4s;
 }
 
+.user-card:hover img {
+  transform: scale(1.05);
+}
+
+/* ===== DELETE BTN ===== */
 .delete-btn {
   position: absolute;
   top: 10px;
@@ -80,39 +95,43 @@
   border: none;
   color: #fff;
   border-radius: 50%;
-  width: 35px;
-  height: 35px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 38px;
+  height: 38px;
   cursor: pointer;
   z-index: 10;
+  transition: 0.2s;
 }
 
+.delete-btn:hover {
+  transform: scale(1.1);
+  background: red;
+}
+
+/* ===== BODY ===== */
 .user-card-body {
-  padding: 20px;
+  padding: 18px;
 }
 
 .user-card-body h3 {
   margin: 0;
-  font-size: 1.2rem;
-  color: #fff;
+  font-size: 1.3rem;
 }
 
 .user-card-body p {
-  color: #888;
-  font-size: 0.9rem;
+  color: #aaa;
+  font-size: 0.85rem;
   margin: 10px 0;
   text-transform: uppercase;
 }
 
+/* ===== BOTÃO INICIAR ===== */
 .start-btn {
   width: 100%;
   background: transparent;
   border: 1px solid #ff4500;
   color: #ff4500;
   padding: 12px;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: bold;
   text-transform: uppercase;
   cursor: pointer;
@@ -122,20 +141,23 @@
 .start-btn:hover {
   background: #ff4500;
   color: #fff;
+  box-shadow: 0 0 20px rgba(255, 69, 0, 0.6);
 }
 
-/* Estilos do Modal (Foco na Execução) */
+/* ===== MODAL ===== */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.95);
+  background: rgba(0, 0, 0, 0.97);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+
+  animation: fadeIn 0.3s ease;
 }
 
 .modal-sheet {
@@ -146,8 +168,10 @@
   padding: 30px;
   text-align: center;
   border: 1px solid #333;
+  animation: slideUp 0.4s ease;
 }
 
+/* ===== PROGRESS ===== */
 .progresso-track {
   width: 100%;
   height: 6px;
@@ -158,14 +182,15 @@
 
 .progresso-fill {
   height: 100%;
-  background: #ff4500;
+  background: linear-gradient(90deg, #ff4500, #ff7a00);
   border-radius: 3px;
   transition: width 0.4s ease;
 }
 
+/* ===== IMG EXERCICIO ===== */
 .container-foto-trava {
   width: 100%;
-  height: 250px;
+  height: 260px;
   border-radius: 20px;
   overflow: hidden;
   margin-bottom: 20px;
@@ -177,11 +202,13 @@
   object-fit: cover;
 }
 
+/* ===== TEXTO ===== */
 .nome-exercicio-foco {
-  font-size: 1.8rem;
+  font-size: 1.9rem;
   margin-bottom: 20px;
 }
 
+/* ===== STATUS ===== */
 .status-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -198,18 +225,18 @@
 .status-item span {
   font-size: 0.7rem;
   color: #888;
-  display: block;
 }
 
 .status-item p {
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   font-weight: bold;
   color: #ff4500;
 }
 
+/* ===== BOTÕES ===== */
 .btn-main {
   width: 100%;
-  background: #ff4500;
+  background: linear-gradient(135deg, #ff4500, #ff6a00);
   border: none;
   color: #fff;
   padding: 15px;
@@ -218,6 +245,12 @@
   font-size: 1rem;
   cursor: pointer;
   margin-bottom: 10px;
+  transition: 0.3s;
+}
+
+.btn-main:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(255, 69, 0, 0.7);
 }
 
 .btn-secundario {
@@ -225,10 +258,9 @@
   border: none;
   color: #888;
   cursor: pointer;
-  font-size: 0.9rem;
 }
 
-/* Tela de Finalizado */
+/* ===== FINAL ===== */
 .view-finalizado {
   padding: 40px 0;
 }
@@ -236,4 +268,50 @@
 .icon-celebration {
   font-size: 4rem;
   margin-bottom: 20px;
+  animation: bounce 1s infinite;
+}
+
+/* ===== ANIMAÇÕES ===== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+/* 🔥 EVITA CORTE PELO MENU */
+.modal-sheet.scrollable {
+  max-height: 85vh;
+  overflow-y: auto;
+  padding-bottom: 80px;
+}
+
+/* 🔥 SCROLL BONITO */
+.modal-sheet::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-sheet::-webkit-scrollbar-thumb {
+  background: #ff4500;
+  border-radius: 10px;
+}
+
+/* 🔥 EMPTY STATE */
+.empty-state {
+  text-align: center;
+  margin-top: 50px;
+  color: #aaa;
+}
+
+/* 🔥 LOADING */
+.loading {
+  text-align: center;
+  margin-top: 50px;
 }

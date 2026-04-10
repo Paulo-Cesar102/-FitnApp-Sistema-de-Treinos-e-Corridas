@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getExercises, createPersonalWorkout } from "../api/workoutService";
-import "./CriarTreino.css"; 
+import "./CriarTreino.css";
 
 export default function CriarTreino() {
   const navigate = useNavigate();
+
   const [nomeTreino, setNomeTreino] = useState("");
   const [exerciciosBanco, setExerciciosBanco] = useState([]);
   const [selecionados, setSelecionados] = useState([]);
@@ -14,6 +15,8 @@ export default function CriarTreino() {
     async function load() {
       try {
         const data = await getExercises();
+        console.log("EXERCICIOS:", data);
+
         setExerciciosBanco(data);
       } catch (err) {
         console.error("Erro ao carregar banco:", err);
@@ -23,76 +26,124 @@ export default function CriarTreino() {
   }, []);
 
   const toggleExercicio = (ex) => {
-    const jaExiste = selecionados.find(s => s.id === ex.id);
+    const jaExiste = selecionados.find((s) => s.id === ex.id);
+
     if (jaExiste) {
-      setSelecionados(selecionados.filter(s => s.id !== ex.id));
+      setSelecionados((prev) => prev.filter((s) => s.id !== ex.id));
     } else {
-      setSelecionados([...selecionados, { ...ex, sets: 3, reps: 12 }]);
+      setSelecionados((prev) => [
+        ...prev,
+        {
+          ...ex,
+          sets: 3,
+          reps: 12,
+        },
+      ]);
     }
   };
 
   const handleSalvar = async () => {
-    if (!nomeTreino || selecionados.length === 0) {
+    if (!nomeTreino.trim() || selecionados.length === 0) {
       return alert("Preencha o nome e escolha ao menos um exercício!");
     }
 
     try {
       const payload = {
         name: nomeTreino,
-        exercises: selecionados.map(ex => ({ 
-          exerciseId: ex.id, 
-          sets: 3, 
-          reps: 12 
-        }))
+        exercises: selecionados.map((ex) => ({
+          exerciseId: ex.id,
+          sets: Number(ex.sets) || 3,
+          reps: Number(ex.reps) || 12,
+        })),
       };
 
+      console.log("PAYLOAD:", payload);
+
       await createPersonalWorkout(payload);
+
       alert("Treino salvo com sucesso!");
-      navigate("/exercicio"); // Nome da sua rota de listagem
+      navigate("/exercicio");
     } catch (err) {
-      console.error("Erro detalhado:", err);
-      alert("Erro 404: Verifique se o servidor backend está rodando e se a rota /workouts/create existe.");
+      console.error("Erro ao salvar:", err);
+      alert("Erro ao salvar o treino.");
     }
   };
+
+  const exerciciosFiltrados = exerciciosBanco.filter((ex) => {
+    const name =
+      typeof ex.name === "object" ? ex.name?.name : ex.name;
+
+    return name?.toLowerCase().includes(busca.toLowerCase());
+  });
 
   return (
     <div className="criacao-full-container">
       <header className="header-voltar">
-        <button onClick={() => navigate(-1)}>← Voltar</button>
-        <h2>NOVO <span>CARD</span></h2>
-        <input 
-          className="input-nome" 
-          placeholder="Dê um nome ao treino..." 
-          onChange={(e) => setNomeTreino(e.target.value)} 
+        <button className="btn-back" onClick={() => navigate(-1)}>
+          ← Voltar
+        </button>
+
+        <h2>
+          NOVO <span>TREINO</span>
+        </h2>
+
+        <input
+          className="input-nome"
+          placeholder="Dê um nome ao treino..."
+          value={nomeTreino}
+          onChange={(e) => setNomeTreino(e.target.value)}
         />
-        <input 
-          className="input-busca" 
-          placeholder="🔍 Buscar exercício..." 
-          onChange={(e) => setBusca(e.target.value)} 
+
+        <input
+          className="input-busca"
+          placeholder="🔍 Buscar exercício..."
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
         />
       </header>
 
       <div className="grid-exercicios">
-        {exerciciosBanco
-          .filter(ex => ex.name.toLowerCase().includes(busca.toLowerCase()))
-          .map(ex => (
-            <div 
-              key={ex.id} 
-              className={`card-ex-mini ${selecionados.find(s => s.id === ex.id) ? 'active' : ''}`} 
+        {exerciciosFiltrados.map((ex) => {
+          const name =
+            typeof ex.name === "object" ? ex.name?.name : ex.name;
+
+          const isSelected = selecionados.some(
+            (s) => s.id === ex.id
+          );
+
+          return (
+            <div
+              key={ex.id}
+              className={`card-ex-mini ${
+                isSelected ? "active" : ""
+              }`}
               onClick={() => toggleExercicio(ex)}
             >
               <div className="img-holder">
-                <img src={ex.image} alt="" />
-                {selecionados.find(s => s.id === ex.id) && <div className="check">✓</div>}
+                <img
+                  src={
+                    ex.image ||
+                    "https://via.placeholder.com/150"
+                  }
+                  alt={name}
+                />
+
+                {isSelected && (
+                  <div className="check">✓</div>
+                )}
               </div>
-              <p>{ex.name}</p>
+
+              <p>{name}</p>
             </div>
-          ))}
+          );
+        })}
       </div>
 
       {selecionados.length > 0 && (
         <footer className="footer-save">
-          <button onClick={handleSalvar}>SALVAR MEU TREINO</button>
+          <button className="btn-save" onClick={handleSalvar}>
+            SALVAR ({selecionados.length})
+          </button>
         </footer>
       )}
     </div>

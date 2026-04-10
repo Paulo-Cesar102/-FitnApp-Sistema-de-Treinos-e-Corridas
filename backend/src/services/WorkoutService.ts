@@ -14,8 +14,41 @@ export class WorkoutService {
     return this.workoutRepository.create(data);
   }
 
+  // 🔥 (mantido - usado na aba de treinos)
   async findAll(userId: string): Promise<IWorkout[]> {
     return this.workoutRepository.findAll(userId);
+  }
+
+  // 🔥 NOVO - treinos do usuário (mais explícito)
+  async getUserWorkouts(userId: string): Promise<IWorkout[]> {
+    return prisma.userWorkout.findMany({
+      where: {
+        userId: userId,
+      },
+      include: {
+        exercises: {
+          include: {
+            exercise: true,
+          },
+        },
+      },
+    });
+  }
+
+  // 🔥 NOVO - catálogo (HOME)
+  async getCatalog(): Promise<IWorkout[]> {
+    return prisma.userWorkout.findMany({
+      where: {
+        userId: null, // 🔥 só catálogo
+      },
+      include: {
+        exercises: {
+          include: {
+            exercise: true,
+          },
+        },
+      },
+    });
   }
 
   async delete(id: string): Promise<void> {

@@ -140,14 +140,13 @@ model UserWorkout {
   name      String
   createdAt DateTime @default(now())
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
+  userId    String?  
+  user      User?    @relation(fields: [userId], references: [id])
 
-  exercises         UserWorkoutExercise[]
+  exercises          UserWorkoutExercise[]
   completedWorkouts CompletedWorkout[]
   programWorkouts   ProgramWorkout[]
 }
-
 model UserWorkoutExercise {
   id String @id @default(uuid())
 

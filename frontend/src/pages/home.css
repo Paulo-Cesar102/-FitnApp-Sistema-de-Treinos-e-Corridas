@@ -1,322 +1,183 @@
-/* RESET */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-/* BASE */
-.app-container {
-  padding: 20px 20px 100px;
-  background: linear-gradient(180deg, #000 0%, #0a0a0a 100%);
+/* --- CONFIGURAÇÕES GERAIS --- */
+.home-container {
+  background: radial-gradient(circle at top, #1a1a1a 0%, #000 100%);
   min-height: 100vh;
   color: #fff;
+  padding: 24px;
+  padding-bottom: 110px;
   font-family: 'Inter', sans-serif;
 }
 
-/* HEADER */
-.header {
+.home-header {
   text-align: center;
+  margin-bottom: 30px;
+  margin-top: 10px;
 }
 
-.header h1 {
-  font-size: 2.2rem;
+.home-header h1 {
+  font-size: 2rem;
   font-weight: 900;
-}
-
-.header span {
-  color: #FF4500;
-}
-
-.header p {
-  font-size: 0.75rem;
-  color: #777;
-  margin-top: 5px;
-}
-
-/* GRID */
-.lista-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 14px;
-  margin-top: 25px;
-}
-
-/* CARD */
-.card-pill {
-  display: flex;
-  background: rgba(20, 20, 20, 0.95);
-  border-radius: 20px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 69, 0, 0.1);
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-
-/* HOVER */
-.card-pill:hover {
-  transform: translateY(-5px);
-  border: 1px solid rgba(255, 69, 0, 0.4);
-  box-shadow: 0 10px 25px rgba(255, 69, 0, 0.2);
-}
-
-/* IMAGE */
-.card-pill-image {
-  width: 100px;
-  height: 100px;
-  overflow: hidden;
-}
-
-.card-pill-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: 0.3s;
-}
-
-.card-pill:hover img {
-  transform: scale(1.1);
-}
-
-/* CONTENT */
-.card-pill-content {
-  flex: 1;
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.card-pill-content h2 {
-  font-size: 0.95rem;
-  font-weight: 700;
-}
-
-/* TAG */
-.count-tag {
-  font-size: 0.65rem;
-  font-weight: 900;
-  color: #FF4500;
+  letter-spacing: -1px;
   text-transform: uppercase;
 }
 
-/* LOADING */
-.loading-screen {
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
+.home-header span {
+  color: #ff4500;
+  text-shadow: 0 0 15px rgba(255, 69, 0, 0.4);
 }
 
-/* SPINNER */
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #111;
-  border-top: 4px solid #FF4500;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+.home-header p {
+  font-size: 0.75rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-top: 4px;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+/* --- GRID DE CARDS --- */
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Força 2 colunas no mobile como no seu print */
+  gap: 16px;
 }
 
-/* 🔥 MODAL */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.95);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  z-index: 999;
-}
-
-/* ANIMAÇÃO DE ENTRADA */
-.modal-sheet {
-  background: #121212;
-  width: 100%;
-  height: 92vh;
-  border-radius: 30px 30px 0 0;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  animation: slideUp 0.3s ease;
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-
-/* PROGRESSO */
-.progresso-track {
-  width: 100%;
-  height: 6px;
-  background: #222;
-  border-radius: 10px;
-  margin-bottom: 10px;
-}
-
-.progresso-fill {
-  height: 100%;
-  background: #FF4500;
-  border-radius: 10px;
-  transition: width 0.4s ease;
-}
-
-.step-count {
-  font-size: 0.7rem;
-  color: #888;
-  margin-bottom: 15px;
-  text-align: center;
-}
-
-/* IMAGEM */
-.container-foto-trava {
-  width: 100%;
-  height: 200px;
+.home-card {
+  position: relative;
   border-radius: 20px;
   overflow: hidden;
-  margin-bottom: 20px;
+  cursor: pointer;
+  height: 220px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.2s, border-color 0.2s;
 }
 
-.container-foto-trava img {
+.home-card:active {
+  transform: scale(0.96);
+}
+
+.home-card img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-/* NOME */
-.nome-exercicio-foco {
-  font-size: 1.5rem;
-  font-weight: 800;
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-/* STATUS */
-.status-grid {
-  display: flex;
-  justify-content: space-around;
-  background: #1a1a1a;
-  padding: 18px;
-  border-radius: 18px;
-  margin-bottom: 20px;
-}
-
-.status-item span {
-  font-size: 0.65rem;
-  color: #666;
-}
-
-.status-item p {
-  font-size: 1.4rem;
-  font-weight: 900;
-  color: #FF4500;
-}
-
-/* BOTÕES */
-.btn-main {
-  background: #FF4500;
-  color: #fff;
-  border: none;
-  padding: 18px;
-  border-radius: 16px;
-  font-weight: 800;
-  cursor: pointer;
-  margin-top: auto;
-  transition: 0.2s;
-}
-
-.btn-main:hover {
-  background: #ff5a1f;
-}
-
-.btn-secundario {
-  background: transparent;
-  color: #555;
-  border: none;
-  padding: 12px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-/* FINAL */
-.view-finalizado {
+/* Overlay Escuro para leitura do texto */
+.home-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 10%, rgba(0,0,0,0.2) 50%, transparent 100%);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  gap: 15px;
+  justify-content: flex-end;
+  padding: 15px;
 }
 
-.icon-celebration {
-  font-size: 4rem;
+.home-card-overlay h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 4px;
 }
 
-/* RESPONSIVO */
-@media (min-width: 600px) {
-  .lista-grid {
-    grid-template-columns: 1fr 1fr;
-  }
+.home-card-overlay span {
+  font-size: 0.65rem;
+  color: #ff4500;
+  font-weight: 600;
+  background: rgba(255, 69, 0, 0.15);
+  padding: 2px 8px;
+  border-radius: 20px;
+  width: fit-content;
 }
 
-@media (min-width: 1024px) {
-  .lista-grid {
-    grid-template-columns: repeat(3, 1fr);
-    max-width: 900px;
-    margin: 30px auto;
-  }
-
-  .modal-sheet {
-    max-width: 450px;
-    height: auto;
-    border-radius: 24px;
-  }
-}/* MODAL */
+/* --- MODAL DE EXECUÇÃO (UI PREMIUM) --- */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.95);
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
   display: flex;
-  align-items: flex-end;
+  align-items: flex-end; /* Abre de baixo para cima no mobile */
   justify-content: center;
-  z-index: 999;
+  z-index: 9999;
 }
 
-/* MOBILE */
 .modal-sheet {
   background: #121212;
   width: 100%;
-  height: 92vh;
-  border-radius: 30px 30px 0 0;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  animation: slideUp 0.3s ease;
+  max-width: 500px;
+  border-radius: 30px 30px 0 0; /* Estilo iOS */
+  padding: 30px 24px 40px;
+  text-align: center;
+  box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+  animation: slideUp 0.3s ease-out;
 }
 
-/* DESKTOP CORRIGIDO */
-@media (min-width: 1024px) {
-  .modal-overlay {
-    align-items: center;
-  }
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
 
-  .modal-sheet {
-    width: 420px;
-    height: auto;
-    max-height: 90vh;
-    border-radius: 24px;
-    padding: 25px;
-  }
+.progresso-track {
+  height: 4px;
+  background: #252525;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.container-foto-trava {
+  width: 100%;
+  height: 260px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+}
+
+.nome-exercicio-foco {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin-bottom: 20px;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 25px;
+}
+
+.status-item {
+  background: #1a1a1a;
+  padding: 15px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+/* --- BOTÕES --- */
+.btn-main {
+  width: 100%;
+  background: #ff4500;
+  border: none;
+  padding: 16px;
+  border-radius: 16px;
+  color: white;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 15px rgba(255, 69, 0, 0.3);
+  transition: 0.2s;
+}
+
+.btn-main:active {
+  transform: scale(0.98);
+  filter: brightness(1.2);
+}
+
+.btn-secundario {
+  margin-top: 15px;
+  background: none;
+  border: none;
+  color: #555;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
 }
