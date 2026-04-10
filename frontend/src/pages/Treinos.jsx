@@ -16,9 +16,11 @@ export default function Treinos() {
     async function fetchMyData() {
       try {
         const data = await getUserWorkouts();
+        console.log("MEUS TREINOS:", data);
+
         setMyWorkouts(data);
       } catch (err) {
-        console.error(err);
+        console.error("Erro ao carregar seus treinos:", err);
       } finally {
         setLoading(false);
       }
@@ -27,17 +29,18 @@ export default function Treinos() {
   }, []);
 
   const startTraining = (workout) => {
-    if (!workout?.exercises?.length) {
-      alert("⚠️ Esse treino ainda não possui exercícios!");
-      return;
+    if (workout?.exercises?.length > 0) {
+      setActiveWorkout(workout);
+      setCurrentStep(0);
+      setIsFinished(false);
+    } else {
+      alert("Adicione exercícios a este treino para começar!");
     }
-
-    setActiveWorkout(workout);
-    setCurrentStep(0);
-    setIsFinished(false);
   };
 
   const next = () => {
+    if (!activeWorkout?.exercises) return;
+
     if (currentStep + 1 < activeWorkout.exercises.length) {
       setCurrentStep((prev) => prev + 1);
     } else {
@@ -53,105 +56,135 @@ export default function Treinos() {
 
   const handleDelete = async (e, id) => {
     e.stopPropagation();
+
     if (!window.confirm("Apagar este treino?")) return;
 
     try {
       await deleteWorkout(id);
       setMyWorkouts((prev) => prev.filter((w) => w.id !== id));
-    } catch {
+    } catch (err) {
       alert("Erro ao excluir.");
     }
   };
 
-  if (loading) return <div className="loading">Carregando...</div>;
+  if (loading) {
+    return <div className="loading">Carregando seus treinos...</div>;
+  }
 
   const currentItem = activeWorkout?.exercises?.[currentStep];
   const exData = currentItem?.exercise;
 
+  const workoutName =
+    typeof activeWorkout?.name === "object"
+      ? activeWorkout?.name?.name
+      : activeWorkout?.name;
+
   return (
     <div className="user-workouts-container">
       <header className="user-header">
-        <h1>MEUS <span>TREINOS</span></h1>
-        <button className="add-btn" onClick={() => navigate("/criar-treino")}>
+        <h1>
+          MEUS <span>TREINOS</span>
+        </h1>
+
+        <button
+          className="add-btn"
+          onClick={() => navigate("/criar-treino")}
+        >
           + NOVO
         </button>
       </header>
 
-      {myWorkouts.length === 0 ? (
-        <div className="empty-state">
-          <p>Você ainda não criou nenhum treino 😢</p>
-        </div>
-      ) : (
-        <div className="user-grid">
-          {myWorkouts.map((treino) => {
-            const thumb =
-              treino.exercises?.[0]?.exercise?.image ||
-              "https://placehold.co/300";
+      <div className="user-grid">
+        {myWorkouts.map((treino) => {
+          const nameDisplay =
+            typeof treino.name === "object"
+              ? treino.name?.name
+              : treino.name;
 
-            return (
-              <div
-                key={treino.id}
-                className="user-card"
-                onClick={() => startTraining(treino)}
-              >
-                <div className="user-card-top">
-                  <img
-                    src={thumb}
-                    onError={(e) => {
-                      e.currentTarget.src = "https://placehold.co/300";
-                    }}
-                  />
+          const thumb =
+            treino.exercises?.[0]?.exercise?.image ||
+            "https://placehold.co/300";
 
-                  <button
-                    className="delete-btn"
-                    onClick={(e) => handleDelete(e, treino.id)}
-                  >
-                    🗑️
-                  </button>
-                </div>
+          return (
+            <div
+              key={treino.id}
+              className="user-card"
+              onClick={() => startTraining(treino)}
+            >
+              <div className="user-card-top">
+                <img
+                  src={thumb}
+                  onError={(e) => {
+                    e.currentTarget.src = "https://placehold.co/300";
+                  }}
+                  alt="Treino"
+                />
 
-                <div className="user-card-body">
-                  <h3>{treino.name}</h3>
-                  <p>{treino.exercises?.length || 0} EXERCÍCIOS</p>
-
-                  <button
-                    className="start-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      startTraining(treino);
-                    }}
-                  >
-                    INICIAR
-                  </button>
-                </div>
+                <button
+                  className="delete-btn"
+                  onClick={(e) => handleDelete(e, treino.id)}
+                >
+                  🗑️
+                </button>
               </div>
-            );
-          })}
-        </div>
-      )}
+
+              <div className="user-card-body">
+                <h3>{nameDisplay || "Treino Sem Nome"}</h3>
+                <p>{treino.exercises?.length || 0} EXERCÍCIOS</p>
+
+                <button
+                  className="start-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    startTraining(treino);
+                  }}
+                >
+                  INICIAR
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
       {/* MODAL */}
       {activeWorkout && (
         <div className="modal-overlay">
-          <div className="modal-sheet scrollable">
-
+          <div className="modal-sheet">
             {!isFinished ? (
               <>
                 <div className="progresso-track">
                   <div
                     className="progresso-fill"
                     style={{
-                      width: `${((currentStep + 1) / activeWorkout.exercises.length) * 100}%`,
+                      width: `${
+                        activeWorkout?.exercises?.length
+                          ? ((currentStep + 1) /
+                              activeWorkout.exercises.length) *
+                            100
+                          : 0
+                      }%`,
                     }}
-                  />
+                  ></div>
                 </div>
 
                 <p className="step-count">
-                  {activeWorkout.name} • {currentStep + 1}/{activeWorkout.exercises.length}
+                  {workoutName} • {currentStep + 1}/
+                  {activeWorkout.exercises.length}
                 </p>
 
                 <div className="container-foto-trava">
-                  <img src={exData?.image || "https://placehold.co/300"} />
+                  <img
+                    src={
+                      exData?.image ||
+                      "https://placehold.co/300"
+                    }
+                    onError={(e) => {
+                      e.currentTarget.src =
+                        "https://placehold.co/300";
+                    }}
+                    alt="Exercício"
+                  />
                 </div>
 
                 <h2 className="nome-exercicio-foco">
@@ -185,12 +218,16 @@ export default function Treinos() {
                 <div className="icon-celebration">🔥</div>
                 <h2>TREINO CONCLUÍDO!</h2>
 
+                <p>
+                  Você completou o{" "}
+                  <strong>{workoutName}</strong>.
+                </p>
+
                 <button className="btn-main" onClick={close}>
                   FECHAR
                 </button>
               </div>
             )}
-
           </div>
         </div>
       )}
