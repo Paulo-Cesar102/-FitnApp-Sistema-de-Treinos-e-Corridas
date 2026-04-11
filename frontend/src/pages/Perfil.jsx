@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import "./Perfil.css";
 import CustomAlert from "../Componentes/CustomAlert";
 
-// Ícones Vetorizados
 const TrophyIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff4500" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>;
 const DumbbellIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff4500" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.4 14.4 9.6 9.6"/><path d="M18.65 21.35a2 2 0 0 1-2.83 0l-5.66-5.66a2 2 0 0 1 0-2.83l.06-.06a2 2 0 0 1 2.83 0l5.66 5.66a2 2 0 0 1 0 2.83Z"/><path d="m2 2 2.83 2.83"/><path d="M4 4l-2 2"/><path d="m4 4 2-2"/><path d="m4 4 5.66 5.66a2 2 0 0 0 2.83 0l.06-.06a2 2 0 0 0 0-2.83L6.89 1.11a2 2 0 0 0-2.83 0l-2.83 2.83Z"/><path d="m22 22-2.83-2.83"/><path d="M20 20l2-2"/><path d="m20 20-2 2"/></svg>;
 const FlameIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff4500" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>;
@@ -13,7 +12,6 @@ export default function Perfil() {
   const navigate = useNavigate();
   const [alertConfig, setAlertConfig] = useState({ isOpen: false });
 
-  // MOCK: Dados falsos que seu DB vai fornecer no futuro
   const [userData, setUserData] = useState({
     name: "Atleta GymPro",
     email: "atleta@gympro.com",
@@ -24,7 +22,6 @@ export default function Perfil() {
     streak: 5
   });
 
-  // Calcula a porcentagem da barra de XP
   const progressPercentage = (userData.currentXP / userData.nextLevelXP) * 100;
 
   const handleLogout = () => {
@@ -52,7 +49,6 @@ export default function Perfil() {
         </button>
       </header>
 
-      {/* Card do Usuário e XP */}
       <section className="profile-card">
         <div className="profile-info">
           <div className="profile-avatar">
@@ -75,7 +71,6 @@ export default function Perfil() {
         </div>
       </section>
 
-      {/* Estatísticas */}
       <h3 className="section-title">Desempenho</h3>
       <section className="stats-grid">
         <div className="stat-card">
@@ -95,7 +90,6 @@ export default function Perfil() {
         </div>
       </section>
 
-      {/* Conquistas (Badges Falsas por enquanto) */}
       <h3 className="section-title">Conquistas Recentes</h3>
       <section className="badges-list">
         <div className="badge-item">

@@ -52,7 +52,6 @@
   border-color: #ff4500;
 }
 
-/* --- CARD DO USUÁRIO --- */
 .profile-card {
   background: rgba(26, 26, 26, 0.7);
   backdrop-filter: blur(12px);
@@ -93,7 +92,6 @@
   color: #888;
 }
 
-/* --- BARRA DE XP --- */
 .xp-header {
   display: flex;
   justify-content: space-between;
@@ -133,7 +131,6 @@
   transition: width 1s ease-in-out;
 }
 
-/* --- SESSÕES E GRID --- */
 .section-title {
   font-size: 1.1rem;
   margin-bottom: 16px;
@@ -177,7 +174,6 @@
   color: #fff;
 }
 
-/* --- BADGES --- */
 .badges-list {
   display: flex;
   flex-direction: column;

@@ -1,4 +1,3 @@
-/* --- CONFIGURAÇÕES GERAIS --- */
 .home-container {
   background: radial-gradient(circle at top, #1a1a1a 0%, #000 100%);
   min-height: 100vh;
@@ -53,7 +52,6 @@
   margin-top: 4px;
 }
 
-/* --- BARRA DE PESQUISA --- */
 .home-search-wrapper {
   position: relative;
   width: 100%;
@@ -88,7 +86,6 @@
   box-shadow: 0 0 15px rgba(255, 69, 0, 0.2);
 }
 
-/* --- GRID DE CARDS --- */
 .home-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -120,7 +117,6 @@
   transform: scale(1.08);
 }
 
-/* --- SKELETON LOADING --- */
 .skeleton-card {
   background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
   background-size: 200% 100%;
@@ -132,7 +128,6 @@
   100% { background-position: -200% 0; }
 }
 
-/* Overlay Escuro para leitura do texto */
 .home-card-overlay {
   position: absolute;
   inset: 0;
@@ -182,14 +177,13 @@
   transform: scale(1.1);
 }
 
-/* --- MODAL DE EXECUÇÃO (UI PREMIUM) --- */
 .modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(8px);
   display: flex;
-  align-items: flex-end; /* Abre de baixo para cima no mobile */
+  align-items: flex-end;
   justify-content: center;
   z-index: 9999;
 }
@@ -198,7 +192,7 @@
   background: #121212;
   width: 100%;
   max-width: 500px;
-  border-radius: 30px 30px 0 0; /* Estilo iOS */
+  border-radius: 30px 30px 0 0;
   padding: 30px 24px 40px;
   text-align: center;
   box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
@@ -246,7 +240,6 @@
   border: 1px solid rgba(255,255,255,0.05);
 }
 
-/* --- BOTÕES --- */
 .btn-main {
   width: 100%;
   background: #ff4500;
