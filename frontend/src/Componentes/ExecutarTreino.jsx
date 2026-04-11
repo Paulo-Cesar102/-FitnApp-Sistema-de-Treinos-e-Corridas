@@ -6,6 +6,10 @@ import CustomAlert from "./CustomAlert";
 // Ícones Vetorizados
 const TimerIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
 const ActivityIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>;
+const PlayIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>;
+const PauseIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>;
+const CheckIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
+const SkipIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>;
 
 export default function ExecutarTreino({ workout }) {
   const navigate = useNavigate();
@@ -24,6 +28,7 @@ export default function ExecutarTreino({ workout }) {
   const [currentSet, setCurrentSet] = useState(1);
   const [isResting, setIsResting] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
+  const [isSetRunning, setIsSetRunning] = useState(false);
   
   const [activeTime, setActiveTime] = useState(0); // Cronômetro da série
   const [restTime, setRestTime] = useState(0);     // Timer de descanso
@@ -88,16 +93,17 @@ export default function ExecutarTreino({ workout }) {
         playBeep();
         avancarSerie();
       }
-    } else {
+    } else if (isSetRunning) {
       // Progressiva do tempo de execução da série
       interval = setInterval(() => setActiveTime((prev) => prev + 1), 1000);
     }
 
     return () => clearInterval(interval);
-  }, [isResting, restTime, isFinished]);
+  }, [isResting, restTime, isFinished, isSetRunning]);
 
   const avancarSerie = () => {
     setIsResting(false);
+    setIsSetRunning(false); // Aguarda o usuário iniciar a nova série manualmente
     setActiveTime(0);
 
     if (currentSet < totalSets) {
@@ -121,6 +127,7 @@ export default function ExecutarTreino({ workout }) {
     const tempoDescanso = parseInt(currentItem?.rest) || 60; 
     setRestTime(tempoDescanso);
     setIsResting(true);
+    setIsSetRunning(false);
   };
 
   const formatTime = (seconds) => {
@@ -141,11 +148,15 @@ export default function ExecutarTreino({ workout }) {
       </header>
 
       <div className="exercise-card">
-        <img src={exerciseImage} alt={exerciseName} className="exercise-image" />
-        <h3 className="exercise-title">{exerciseName}</h3>
-        <div className="exercise-stats">
-          <p>Série: <span>{currentSet} / {totalSets}</span></p>
-          <p>Repetições: <span>{reps}</span></p>
+        <div className="exercise-image-wrapper">
+          <img src={exerciseImage} alt={exerciseName} className="exercise-image" />
+          <div className="exercise-info-overlay">
+            <h3 className="exercise-title">{exerciseName}</h3>
+            <div className="exercise-stats-pills">
+              <span className="stat-pill">Série {currentSet}/{totalSets}</span>
+              <span className="stat-pill">{reps} Reps</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -154,13 +165,25 @@ export default function ExecutarTreino({ workout }) {
           <div className="timer-box rest">
             <h4 style={{ display: "flex", alignItems: "center", gap: "8px" }}><TimerIcon /> Descanso</h4>
             <h2 className="time-text glow-green">{formatTime(restTime)}</h2>
-            <button className="btn-skip" onClick={() => setRestTime(0)}>Pular Descanso</button>
+            <button className="btn-skip" onClick={() => setRestTime(0)}><SkipIcon /> Pular</button>
           </div>
         ) : (
-          <div className="timer-box active">
+          <div className={`timer-box ${isSetRunning ? "running" : ""}`}>
             <h4 style={{ display: "flex", alignItems: "center", gap: "8px" }}><ActivityIcon /> Tempo da Série</h4>
-            <h2 className="time-text glow-orange">{formatTime(activeTime)}</h2>
-            <button className="btn-finish" onClick={handleFinalizarSerie}>Concluir Série</button>
+            <h2 className={`time-text ${isSetRunning ? "glow-orange" : ""}`}>{formatTime(activeTime)}</h2>
+            {!isSetRunning && activeTime === 0 ? (
+              <button className="btn-start" onClick={() => setIsSetRunning(true)}><PlayIcon /> Iniciar</button>
+            ) : !isSetRunning && activeTime > 0 ? (
+              <div style={{ display: "flex", gap: "10px", width: "100%" }}>
+                <button className="btn-start" style={{ flex: 1 }} onClick={() => setIsSetRunning(true)}><PlayIcon /> Retomar</button>
+                <button className="btn-finish" style={{ flex: 1 }} onClick={handleFinalizarSerie}><CheckIcon /> Concluir</button>
+              </div>
+            ) : (
+              <div style={{ display: "flex", gap: "10px", width: "100%" }}>
+                <button className="btn-skip" style={{ flex: 1 }} onClick={() => setIsSetRunning(false)}><PauseIcon /> Pausar</button>
+                <button className="btn-finish" style={{ flex: 2 }} onClick={handleFinalizarSerie}><CheckIcon /> Concluir</button>
+              </div>
+            )}
           </div>
         )}
       </div>

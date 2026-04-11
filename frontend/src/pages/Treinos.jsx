@@ -35,19 +35,18 @@ export default function Treinos() {
     });
   };
 
-  useEffect(() => {
-    async function fetchMyData() {
-      try {
-        const data = await getUserWorkouts();
-        console.log("MEUS TREINOS:", data);
-
-        setMyWorkouts(data);
-      } catch (err) {
-        console.error("Erro ao carregar seus treinos:", err);
-      } finally {
-        setLoading(false);
-      }
+  const fetchMyData = async () => {
+    try {
+      const data = await getUserWorkouts();
+      setMyWorkouts(data);
+    } catch (err) {
+      console.error("Erro ao carregar seus treinos:", err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     fetchMyData();
   }, []);
 
@@ -74,12 +73,9 @@ export default function Treinos() {
     });
   };
 
-  if (loading) {
-    return <div className="loading">Carregando seus treinos...</div>;
-  }
-
   return (
     <div className="user-workouts-container">
+
       <header className="user-header">
         <h1>
           MEUS <span>TREINOS</span>
@@ -94,59 +90,71 @@ export default function Treinos() {
         </button>
       </header>
 
-      <div className="user-grid">
-        {myWorkouts.map((treino) => {
-          const nameDisplay =
-            typeof treino.name === "object"
-              ? treino.name?.name
-              : treino.name;
-
-          const thumb =
-            treino.exercises?.[0]?.exercise?.image ||
-            "https://placehold.co/300";
-
-          return (
-            <div
-              key={treino.id}
-              className="user-card"
-              onClick={() => startTraining(treino)}
-            >
-              <div className="user-card-top">
-                <img
-                  src={thumb}
-                  onError={(e) => {
-                    e.currentTarget.src = "https://placehold.co/300";
-                  }}
-                  alt="Treino"
-                />
-
-                <button
-                  className="delete-btn"
-                  onClick={(e) => handleDelete(e, treino.id)}
-                >
-                  <TrashIcon />
-                </button>
+      {loading ? (
+        <div className="user-grid">
+          {[1, 2, 3, 4].map((n) => (
+            <div key={n} className="user-card skeleton-card" style={{ height: "280px" }}></div>
+          ))}
+        </div>
+      ) : myWorkouts.length === 0 ? (
+        <div className="empty-state">
+          <p>Você ainda não criou nenhum treino personalizado.</p>
+        </div>
+      ) : (
+        <div className="user-grid">
+          {myWorkouts.map((treino) => {
+            const nameDisplay =
+              typeof treino.name === "object"
+                ? treino.name?.name
+                : treino.name;
+  
+            const thumb =
+              treino.exercises?.[0]?.exercise?.image ||
+              "https://placehold.co/300";
+  
+            return (
+              <div
+                key={treino.id}
+                className="user-card"
+                onClick={() => startTraining(treino)}
+              >
+                <div className="user-card-top">
+                  <img
+                    src={thumb}
+                    onError={(e) => {
+                      e.currentTarget.src = "https://placehold.co/300";
+                    }}
+                    alt="Treino"
+                  />
+  
+                  <button
+                    className="delete-btn"
+                    onClick={(e) => handleDelete(e, treino.id)}
+                  >
+                    <TrashIcon />
+                  </button>
+                </div>
+  
+                <div className="user-card-body">
+                  <h3>{nameDisplay || "Treino Sem Nome"}</h3>
+                  <p>{treino.exercises?.length || 0} EXERCÍCIOS</p>
+  
+                  <button
+                    className="start-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      startTraining(treino);
+                    }}
+                  >
+                    <PlayIcon />
+                    <span>INICIAR</span>
+                  </button>
+                </div>
               </div>
-
-              <div className="user-card-body">
-                <h3>{nameDisplay || "Treino Sem Nome"}</h3>
-                <p>{treino.exercises?.length || 0} EXERCÍCIOS</p>
-
-                <button
-                  className="start-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    startTraining(treino);
-                  }}
-                >
-                  <PlayIcon />
-                  <span>INICIAR</span>
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       <CustomAlert config={alertConfig} />
     </div>

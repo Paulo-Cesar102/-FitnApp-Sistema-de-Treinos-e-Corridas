@@ -4,7 +4,7 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: radial-gradient(circle at 100% 100%, #220000 0%, #0a0a0a 50%);
+  background: radial-gradient(circle at top, #1a1a1a 0%, #000 100%);
   font-family: 'Inter', sans-serif;
   padding: 1rem;
 }
@@ -29,7 +29,7 @@
   left: 0;
   width: 100%;
   height: 4px;
-  background: linear-gradient(90deg, transparent, #ff1f1f, transparent);
+  background: linear-gradient(90deg, transparent, #ff4500, transparent);
 }
 
 /* Adicione isso ao seu arquivo CSS */
@@ -37,7 +37,22 @@
 .logo-icon {
   font-size: 3rem;
   margin-bottom: 0.5rem;
-  filter: drop-shadow(0 0 10px var(--color-primary));
+}
+
+.logo-icon svg {
+  transform-origin: bottom center; /* Faz a animação crescer da base da chama */
+  animation: flamePulse 2s infinite ease-in-out;
+}
+
+@keyframes flamePulse {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    filter: drop-shadow(0 0 10px var(--color-primary));
+  }
+  50% {
+    transform: scale(1.08) translateY(-2px) rotate(2deg);
+    filter: drop-shadow(0 0 25px #ff6a00);
+  }
 }
 
 .input-wrapper {
@@ -47,7 +62,7 @@
 
 .form-group input:focus {
   border-color: var(--color-primary) !important;
-  box-shadow: 0 0 20px rgba(255, 31, 31, 0.2); /* Brilho externo */
+  box-shadow: 0 0 20px rgba(255, 69, 0, 0.2); /* Brilho externo */
   background: rgba(255, 255, 255, 0.1) !important;
   transform: translateY(-1px);
 }
@@ -83,4 +98,3 @@
   color: var(--color-primary);
   font-weight: 600;
 }
-

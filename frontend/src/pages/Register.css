@@ -1,14 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Inter:wght@300;400;600&display=swap');
 
 :root {
-  --color-primary: #ff1f1f; /* Um vermelho mais vibrante, "sangue" */
+  --color-primary: #ff4500;
   --color-success: #00ff88;
   --color-dark-bg: #0a0a0a;
   --color-card: rgba(20, 20, 20, 0.85);
   --color-white: #ffffff;
   --color-text-dim: #b3b3b3;
   --color-border: rgba(255, 255, 255, 0.1);
-  --color-primary-glow: rgba(255, 31, 31, 0.4);
+  --color-primary-glow: rgba(255, 69, 0, 0.4);
 }
 
 * {
@@ -22,8 +22,7 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  /* Fundo escuro com um detalhe de iluminação no canto */
-  background: radial-gradient(circle at 0% 0%, #220000 0%, var(--color-dark-bg) 50%);
+  background: radial-gradient(circle at top, #1a1a1a 0%, #000 100%);
   font-family: 'Inter', sans-serif;
   padding: 1rem;
 }
@@ -79,6 +78,27 @@
   letter-spacing: 1px;
 }
 
+.logo-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.logo-icon svg {
+  transform-origin: bottom center; /* Faz a animação crescer da base da chama */
+  animation: flamePulse 2s infinite ease-in-out;
+}
+
+@keyframes flamePulse {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    filter: drop-shadow(0 0 10px var(--color-primary));
+  }
+  50% {
+    transform: scale(1.08) translateY(-2px) rotate(2deg);
+    filter: drop-shadow(0 0 25px #ff6a00);
+  }
+}
+
 .form-group {
   margin-bottom: 1.5rem;
 }
@@ -132,7 +152,7 @@
 }
 
 .submit-btn:hover:not(:disabled) {
-  background-color: #ff3d3d;
+  background-color: #ff6a00;
   box-shadow: 0 0 25px var(--color-primary-glow);
   transform: scale(1.02);
 }

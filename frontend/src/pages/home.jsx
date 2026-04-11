@@ -56,15 +56,6 @@ export default function Home() {
     return name?.toLowerCase().includes(busca.toLowerCase());
   });
 
-  if (loading) {
-    return (
-      <div className="loading-screen">
-        <div className="spinner"></div>
-        <p>Carregando catálogo oficial...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="home-container">
       <header className="home-header">
@@ -90,7 +81,14 @@ export default function Home() {
         />
       </div>
 
-      {treinosFiltrados.length === 0 ? (
+      {loading ? (
+        <main className="home-grid">
+          {/* Gera 6 Skeletons vazios para preencher a tela */}
+          {[1, 2, 3, 4, 5, 6].map((n) => (
+            <div key={n} className="home-card skeleton-card"></div>
+          ))}
+        </main>
+      ) : treinosFiltrados.length === 0 ? (
         <div className="empty-state">
           <DumbbellIcon />
           <p style={{ marginTop: "1rem" }}>Nenhum treino encontrado.</p>

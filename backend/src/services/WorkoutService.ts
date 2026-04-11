@@ -39,7 +39,7 @@ export class WorkoutService {
   async getCatalog(): Promise<IWorkout[]> {
     return prisma.userWorkout.findMany({
       where: {
-        userId: null, // 🔥 só catálogo
+        userId: null,
       },
       include: {
         exercises: {
