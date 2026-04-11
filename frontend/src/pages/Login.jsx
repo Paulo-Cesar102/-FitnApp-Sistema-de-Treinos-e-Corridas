@@ -2,13 +2,24 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./Login.css"; 
+import CustomAlert from "../Componentes/CustomAlert";
 
 
 export default function Login() {
   const [formData, setFormData] = useState({ email: "", password: "" });
-  const [status, setStatus] = useState({ message: "", type: "" });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [alertConfig, setAlertConfig] = useState({ isOpen: false });
+
+  const showAlert = (title, message, type, onConfirm) => {
+    setAlertConfig({
+      isOpen: true,
+      title,
+      message,
+      type,
+      onConfirm: onConfirm || (() => setAlertConfig({ isOpen: false }))
+    });
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,17 +34,17 @@ export default function Login() {
       // Chamando sua rota de auth
       const response = await axios.post("http://localhost:3000/auth/login", formData);
 
-      setStatus({ message: "Login realizado com sucesso!", type: "success" });
-      
       // Salva o token para as próximas requisições
       localStorage.setItem("token", response.data.token);
 
-      // Redireciona para o Dashboard após 1.5s
-      setTimeout(() => navigate("/home"), 1500);
+      showAlert("Acesso Liberado", "Login realizado com sucesso!", "success", () => {
+        setAlertConfig({ isOpen: false });
+        navigate("/home");
+      });
 
     } catch (error) {
       const msg = error.response?.data?.message || "E-mail ou senha incorretos.";
-      setStatus({ message: msg, type: "error" });
+      showAlert("Falha no Login", msg, "error");
     } finally {
       setLoading(false);
     }
@@ -47,12 +58,6 @@ export default function Login() {
         <h2>Acesse sua Força</h2>
         <p>Entre para esmagar as metas de hoje</p>
       </header>
-
-      {status.message && (
-        <div className={`status-message ${status.type}`}>
-          {status.type === 'success' ? '✅ ' : '⚠️ '} {status.message}
-        </div>
-      )}
 
       <form onSubmit={handleSubmit}>
         <div className="form-group">
@@ -99,6 +104,8 @@ export default function Login() {
         </a>
       </footer>
     </div>
+
+    <CustomAlert config={alertConfig} />
   </div>
 );
 }

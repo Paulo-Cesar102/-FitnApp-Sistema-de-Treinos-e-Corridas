@@ -1,14 +1,28 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { getCatalogWorkouts } from "../api/workoutService";
 import "./home.css";
+import CustomAlert from "../Componentes/CustomAlert";
+
+// Ícones Vetorizados
+const DumbbellIcon = () => <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.3"><path d="M14.4 14.4 9.6 9.6"/><path d="M18.65 21.35a2 2 0 0 1-2.83 0l-5.66-5.66a2 2 0 0 1 0-2.83l.06-.06a2 2 0 0 1 2.83 0l5.66 5.66a2 2 0 0 1 0 2.83Z"/><path d="m2 2 2.83 2.83"/><path d="M4 4l-2 2"/><path d="m4 4 2-2"/><path d="m4 4 5.66 5.66a2 2 0 0 0 2.83 0l.06-.06a2 2 0 0 0 0-2.83L6.89 1.11a2 2 0 0 0-2.83 0l-2.83 2.83Z"/><path d="m22 22-2.83-2.83"/><path d="M20 20l2-2"/><path d="m20 20-2 2"/></svg>;
+const ListIcon = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>;
+const PlayCircleIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>;
+const SearchIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>;
 
 export default function Home() {
+  const navigate = useNavigate();
   const [workouts, setWorkouts] = useState([]);
+  const [busca, setBusca] = useState("");
   const [loading, setLoading] = useState(true);
+  const [alertConfig, setAlertConfig] = useState({ isOpen: false });
 
-  const [selectedWorkout, setSelectedWorkout] = useState(null);
-  const [step, setStep] = useState(0);
-  const [finished, setFinished] = useState(false);
+  const showAlert = (title, message, type) => {
+    setAlertConfig({
+      isOpen: true, title, message, type,
+      onConfirm: () => setAlertConfig({ isOpen: false })
+    });
+  };
 
   useEffect(() => {
     async function load() {
@@ -27,28 +41,20 @@ export default function Home() {
 
   const openWorkout = (workout) => {
     if (!workout?.exercises?.length) {
-      alert("⚠️ Este treino não possui exercícios.");
+      showAlert("Atenção", "Este treino do catálogo ainda não possui exercícios cadastrados.", "error");
       return;
     }
-
-    setSelectedWorkout(workout);
-    setStep(0);
-    setFinished(false);
+    
+    // Limpa o objeto do Prisma para evitar DataCloneError no React Router
+    const workoutSeguro = JSON.parse(JSON.stringify(workout));
+    navigate("/executar-treino", { state: { workout: workoutSeguro } });
   };
 
-  const nextExercise = () => {
-    if (step + 1 < selectedWorkout.exercises.length) {
-      setStep((prev) => prev + 1);
-    } else {
-      setFinished(true);
-    }
-  };
-
-  const closeModal = () => {
-    setSelectedWorkout(null);
-    setStep(0);
-    setFinished(false);
-  };
+  // Lógica de filtro em tempo real
+  const treinosFiltrados = workouts.filter((treino) => {
+    const name = typeof treino.name === "object" ? treino.name?.name : treino.name;
+    return name?.toLowerCase().includes(busca.toLowerCase());
+  });
 
   if (loading) {
     return (
@@ -59,35 +65,39 @@ export default function Home() {
     );
   }
 
-  const currentItem = selectedWorkout?.exercises?.[step];
-  const currentExercise = currentItem?.exercise;
-
-  const workoutName =
-    typeof selectedWorkout?.name === "object"
-      ? selectedWorkout?.name?.name
-      : selectedWorkout?.name;
-
-  const exerciseName =
-    typeof currentExercise?.name === "object"
-      ? currentExercise?.name?.name
-      : currentExercise?.name;
-
   return (
     <div className="home-container">
       <header className="home-header">
-        <h1>
+        <h1 className="app-logo">
           GYM<span>PRO</span>
         </h1>
-        <p>CATÁLOGO DE TREINOS</p>
+        <p className="greeting">Pronto para treinar?</p>
+        <h2>
+          Catálogo <span>Oficial</span>
+        </h2>
       </header>
 
-      {workouts.length === 0 ? (
+      <div className="home-search-wrapper">
+        <div className="home-search-icon">
+          <SearchIcon />
+        </div>
+        <input
+          type="text"
+          className="home-search-input"
+          placeholder="Buscar no catálogo..."
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+        />
+      </div>
+
+      {treinosFiltrados.length === 0 ? (
         <div className="empty-state">
-          <p>Nenhum treino disponível 😢</p>
+          <DumbbellIcon />
+          <p style={{ marginTop: "1rem" }}>Nenhum treino encontrado.</p>
         </div>
       ) : (
         <main className="home-grid">
-          {workouts.map((treino) => {
+          {treinosFiltrados.map((treino) => {
             const name =
               typeof treino.name === "object"
                 ? treino.name?.name
@@ -111,9 +121,14 @@ export default function Home() {
                   alt={name}
                 />
 
+                <div className="card-play-btn">
+                  <PlayCircleIcon />
+                </div>
+
                 <div className="home-card-overlay">
                   <h2>{name}</h2>
                   <span>
+                    <ListIcon />
                     {treino.exercises?.length || 0} EXERCÍCIOS
                   </span>
                 </div>
@@ -123,87 +138,7 @@ export default function Home() {
         </main>
       )}
 
-      {/* MODAL */}
-      {selectedWorkout && (
-        <div className="modal-overlay">
-          <div className="modal-sheet">
-            {!finished ? (
-              <>
-                <div className="progresso-track">
-                  <div
-                    className="progresso-fill"
-                    style={{
-                      width: `${
-                        ((step + 1) /
-                          selectedWorkout.exercises.length) *
-                        100
-                      }%`,
-                    }}
-                  />
-                </div>
-
-                <p className="step-count">
-                  {workoutName} • {step + 1}/
-                  {selectedWorkout.exercises.length}
-                </p>
-
-                <div className="container-foto-trava">
-                  <img
-                    src={
-                      currentExercise?.image ||
-                      "https://placehold.co/300"
-                    }
-                    onError={(e) => {
-                      e.currentTarget.src =
-                        "https://placehold.co/300";
-                    }}
-                    alt={exerciseName}
-                  />
-                </div>
-
-                <h2 className="nome-exercicio-foco">
-                  {exerciseName}
-                </h2>
-
-                <div className="status-grid">
-                  <div className="status-item">
-                    <span>SÉRIES</span>
-                    <p>{currentItem?.sets || 4}</p>
-                  </div>
-
-                  <div className="status-item">
-                    <span>REPS</span>
-                    <p>{currentItem?.reps || 10}</p>
-                  </div>
-                </div>
-
-                <button className="btn-main" onClick={nextExercise}>
-                  {step + 1 ===
-                  selectedWorkout.exercises.length
-                    ? "FINALIZAR"
-                    : "PRÓXIMO"}
-                </button>
-
-                <button
-                  className="btn-secundario"
-                  onClick={closeModal}
-                >
-                  CANCELAR
-                </button>
-              </>
-            ) : (
-              <div className="view-finalizado">
-                <div className="icon-celebration">🏆</div>
-                <h2>TREINO CONCLUÍDO!</h2>
-
-                <button className="btn-main" onClick={closeModal}>
-                  VOLTAR
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <CustomAlert config={alertConfig} />
     </div>
   );
 }

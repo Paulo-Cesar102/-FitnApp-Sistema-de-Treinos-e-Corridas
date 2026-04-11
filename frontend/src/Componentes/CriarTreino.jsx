@@ -2,6 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getExercises, createPersonalWorkout } from "../api/workoutService";
 import "./CriarTreino.css";
+import CustomAlert from "./CustomAlert";
+
+// Ícones
+const ArrowLeftIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>;
+const SearchIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>;
+const CheckIcon = () => <svg width="32" height="32" viewBox="0 0 24 24" fill="#ff4500" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>;
 
 export default function CriarTreino() {
   const navigate = useNavigate();
@@ -9,6 +15,17 @@ export default function CriarTreino() {
   const [exerciciosBanco, setExerciciosBanco] = useState([]);
   const [selecionados, setSelecionados] = useState([]);
   const [busca, setBusca] = useState("");
+  const [alertConfig, setAlertConfig] = useState({ isOpen: false });
+
+  const showAlert = (title, message, type, onConfirm) => {
+    setAlertConfig({
+      isOpen: true,
+      title,
+      message,
+      type,
+      onConfirm: onConfirm || (() => setAlertConfig({ isOpen: false }))
+    });
+  };
 
   useEffect(() => {
     async function load() {
@@ -33,7 +50,7 @@ export default function CriarTreino() {
 
   const handleSalvar = async () => {
     if (!nomeTreino.trim() || selecionados.length === 0) {
-      return alert("Preencha o nome e escolha ao menos um exercício!");
+      return showAlert("Atenção", "Preencha o nome e escolha ao menos um exercício!", "error");
     }
     try {
       const payload = {
@@ -45,10 +62,12 @@ export default function CriarTreino() {
         })),
       };
       await createPersonalWorkout(payload);
-      alert("Treino criado com sucesso! 🔥");
-      navigate("/exercicio");
+      showAlert("Sucesso", "Treino criado e salvo no seu perfil!", "success", () => {
+        setAlertConfig({ isOpen: false });
+        navigate("/exercicio");
+      });
     } catch (err) {
-      alert("Erro ao salvar o treino.");
+      showAlert("Erro", "Ocorreu um erro ao salvar o treino. Tente novamente.", "error");
     }
   };
 
@@ -62,7 +81,8 @@ export default function CriarTreino() {
       <header className="header-mobile">
         <div className="top-bar">
           <button className="back-minimal" onClick={() => navigate(-1)}>
-            ← <span>Voltar</span>
+            <ArrowLeftIcon />
+            <span>Voltar</span>
           </button>
           <h2 className="title-glow">NOVO <span>TREINO</span></h2>
           <div style={{ width: 45 }}></div> 
@@ -75,12 +95,16 @@ export default function CriarTreino() {
             value={nomeTreino}
             onChange={(e) => setNomeTreino(e.target.value)}
           />
-          <div className="search-box">
+          <div className="search-wrapper" style={{ position: "relative", width: "100%" }}>
+            <div style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+              <SearchIcon />
+            </div>
             <input
               className="input-custom search"
-              placeholder="🔍 Buscar exercício..."
+              placeholder="Buscar exercício..."
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
+              style={{ paddingLeft: "42px" }}
             />
           </div>
         </div>
@@ -103,7 +127,7 @@ export default function CriarTreino() {
                   alt={name}
                   onError={(e) => { e.currentTarget.src = "https://placehold.co/150x100/111/ff4500?text=GymPro"; }}
                 />
-                {isSelected && <div className="overlay-check">✓</div>}
+                {isSelected && <div className="overlay-check"><CheckIcon /></div>}
               </div>
               <p className="exercise-name-label">{name}</p>
             </div>
@@ -118,6 +142,8 @@ export default function CriarTreino() {
           </button>
         </div>
       )}
+
+      <CustomAlert config={alertConfig} />
     </div>
   );
 }

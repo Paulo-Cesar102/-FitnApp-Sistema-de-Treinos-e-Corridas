@@ -9,41 +9,89 @@
 }
 
 .home-header {
-  text-align: center;
-  margin-bottom: 30px;
+  text-align: left;
+  margin-bottom: 24px;
   margin-top: 10px;
 }
 
-.home-header h1 {
-  font-size: 2rem;
+.app-logo {
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 900;
+  letter-spacing: -1px;
+  margin-bottom: 1.5rem;
+}
+
+.app-logo span {
+  color: #ff4500;
+  text-shadow: 0 0 15px rgba(255, 69, 0, 0.4);
+}
+
+.home-header h2 {
+  font-size: 2.2rem;
   font-weight: 900;
   letter-spacing: -1px;
   text-transform: uppercase;
 }
 
-.home-header span {
+.home-header h2 span {
   color: #ff4500;
-  text-shadow: 0 0 15px rgba(255, 69, 0, 0.4);
+  text-shadow: 0 0 20px rgba(255, 69, 0, 0.3);
 }
 
-.home-header p {
-  font-size: 0.75rem;
+.greeting {
+  font-size: 0.95rem;
   color: #666;
   text-transform: uppercase;
   letter-spacing: 2px;
   margin-top: 4px;
 }
 
+/* --- BARRA DE PESQUISA --- */
+.home-search-wrapper {
+  position: relative;
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.home-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  display: flex;
+}
+
+.home-search-input {
+  width: 100%;
+  background: #111;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 14px 14px 14px 42px;
+  border-radius: 14px;
+  color: #fff;
+  font-size: 0.95rem;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.3s ease;
+}
+
+.home-search-input:focus {
+  outline: none;
+  border-color: #ff4500;
+  background: rgba(255, 69, 0, 0.05);
+  box-shadow: 0 0 15px rgba(255, 69, 0, 0.2);
+}
+
 /* --- GRID DE CARDS --- */
 .home-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* Força 2 colunas no mobile como no seu print */
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 16px;
 }
 
 .home-card {
   position: relative;
-  border-radius: 20px;
+  border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
   height: 220px;
@@ -59,6 +107,11 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.home-card:hover img {
+  transform: scale(1.08);
 }
 
 /* Overlay Escuro para leitura do texto */
@@ -79,6 +132,9 @@
 }
 
 .home-card-overlay span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 0.65rem;
   color: #ff4500;
   font-weight: 600;
@@ -86,6 +142,26 @@
   padding: 2px 8px;
   border-radius: 20px;
   width: fit-content;
+}
+
+.card-play-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255, 69, 0, 0.8);
+  backdrop-filter: blur(4px);
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(255, 69, 0, 0.4);
+  transition: 0.3s ease;
+}
+.home-card:hover .card-play-btn {
+  background: #ff4500;
+  transform: scale(1.1);
 }
 
 /* --- MODAL DE EXECUÇÃO (UI PREMIUM) --- */

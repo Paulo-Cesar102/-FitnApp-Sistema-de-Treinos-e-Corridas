@@ -27,10 +27,13 @@
 }
 
 .add-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   background: linear-gradient(135deg, #ff4500, #ff6a00);
   border: none;
   color: #fff;
-  padding: 10px 18px;
+  padding: 8px 16px;
   border-radius: 10px;
   font-weight: bold;
   cursor: pointer;
@@ -88,10 +91,14 @@
 
 /* ===== DELETE BTN ===== */
 .delete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: absolute;
   top: 10px;
   right: 10px;
-  background: rgba(255, 0, 0, 0.9);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
   border: none;
   color: #fff;
   border-radius: 50%;
@@ -104,7 +111,7 @@
 
 .delete-btn:hover {
   transform: scale(1.1);
-  background: red;
+  background: rgba(255, 69, 0, 0.9);
 }
 
 /* ===== BODY ===== */
@@ -126,10 +133,14 @@
 
 /* ===== BOTÃO INICIAR ===== */
 .start-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   width: 100%;
-  background: transparent;
-  border: 1px solid #ff4500;
-  color: #ff4500;
+  background: rgba(255, 69, 0, 0.1);
+  border: 1px solid rgba(255, 69, 0, 0.3);
+  color: #ff6a00;
   padding: 12px;
   border-radius: 10px;
   font-weight: bold;

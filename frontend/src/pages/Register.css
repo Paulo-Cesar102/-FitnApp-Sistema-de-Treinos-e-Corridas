@@ -137,32 +137,6 @@
   transform: scale(1.02);
 }
 
-.status-message {
-  padding: 1rem;
-  border-radius: 6px;
-  margin-bottom: 2rem;
-  font-size: 0.9rem;
-  text-align: center;
-  animation: slideIn 0.3s ease;
-}
-
-@keyframes slideIn {
-  from { transform: scale(0.9); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-.status-message.error {
-  background: rgba(255, 31, 31, 0.15);
-  color: #ff8080;
-  border: 1px solid rgba(255, 31, 31, 0.3);
-}
-
-.status-message.success {
-  background: rgba(0, 255, 136, 0.15);
-  color: var(--color-success);
-  border: 1px solid rgba(0, 255, 136, 0.3);
-}
-
 .register-footer {
   text-align: center;
   margin-top: 2rem;

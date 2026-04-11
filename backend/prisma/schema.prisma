@@ -21,6 +21,18 @@ enum Sex {
   F
 }
 
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum ShareStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
 enum Difficulty {
   BEGINNER
   INTERMEDIATE
@@ -28,7 +40,7 @@ enum Difficulty {
 }
 
 // =========================
-// MODELS
+// USER
 // =========================
 
 model User {
@@ -47,7 +59,23 @@ model User {
   badges            UserBadge[]
   feedbacks         Feedback[]
   exercises         Exercise[]
+
+  // amizade
+  sentRequests     FriendRequest[] @relation("SentRequests")
+  receivedRequests FriendRequest[] @relation("ReceivedRequests")
+
+  // chat
+  chatParticipants ChatParticipant[]
+  messages         Message[]
+
+  // compartilhar treino
+  sentWorkouts     WorkoutShare[] @relation("WorkoutSender")
+  receivedWorkouts WorkoutShare[] @relation("WorkoutReceiver")
 }
+
+// =========================
+// CATEGORY / EXERCISE
+// =========================
 
 model Category {
   id   String @id @default(uuid())
@@ -60,9 +88,8 @@ model Exercise {
   id          String   @id @default(uuid())
   name        String
   description String?
-  
-  // Novos campos para suportar o Seed
   image       String?
+  tutorial    String?
   level       Difficulty @default(BEGINNER)
   duration    String?
   reps        Int?
@@ -75,23 +102,87 @@ model Exercise {
 
   secondaryMuscles ExerciseMuscle[]
 
-  userId    String?
-  user      User? @relation(fields: [userId], references: [id])
+  userId String?
+  user   User? @relation(fields: [userId], references: [id])
 
   workoutExercises UserWorkoutExercise[]
 }
 
-model WorkoutSet {
+// =========================
+// MUSCLE
+// =========================
+
+model MuscleGroup {
+  id   String @id @default(uuid())
+  name String @unique
+
+  primaryExercises   Exercise[]       @relation("PrimaryMuscle")
+  secondaryExercises ExerciseMuscle[]
+}
+
+model ExerciseMuscle {
   id String @id @default(uuid())
 
-  userId     String
   exerciseId String
+  muscleId   String
 
-  reps   Int
-  weight Float
-
-  createdAt DateTime @default(now())
+  exercise Exercise    @relation(fields: [exerciseId], references: [id])
+  muscle   MuscleGroup @relation(fields: [muscleId], references: [id])
 }
+
+// =========================
+// WORKOUT
+// =========================
+
+model UserWorkout {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  userId String?
+  user   User? @relation(fields: [userId], references: [id])
+
+  exercises          UserWorkoutExercise[]
+  completedWorkouts CompletedWorkout[]
+  programWorkouts   ProgramWorkout[] 
+  sharedWorkouts WorkoutShare[]
+}
+
+model UserWorkoutExercise {
+  id String @id @default(uuid())
+
+  userWorkoutId String
+  exerciseId    String
+
+  sets Int
+  reps Int
+
+  userWorkout UserWorkout @relation(fields: [userWorkoutId], references: [id])
+  exercise    Exercise    @relation(fields: [exerciseId], references: [id])
+
+  @@unique([userWorkoutId, exerciseId])
+}
+
+// =========================
+// COMPLETED
+// =========================
+
+model CompletedWorkout {
+  id String @id @default(uuid())
+
+  userId    String
+  workoutId String
+
+  xpEarned Int
+  doneAt   DateTime @default(now())
+
+  user    User        @relation(fields: [userId], references: [id])
+  workout UserWorkout @relation(fields: [workoutId], references: [id])
+}
+
+// =========================
+// PROGRAM
+// =========================
 
 model TrainingProgram {
   id          String   @id @default(uuid())
@@ -117,63 +208,9 @@ model ProgramWorkout {
   workout UserWorkout     @relation(fields: [workoutId], references: [id])
 }
 
-model MuscleGroup {
-  id   String @id @default(uuid())
-  name String @unique
-
-  primaryExercises   Exercise[]       @relation("PrimaryMuscle")
-  secondaryExercises ExerciseMuscle[]
-}
-
-model ExerciseMuscle {
-  id String @id @default(uuid())
-
-  exerciseId String
-  muscleId   String
-
-  exercise Exercise    @relation(fields: [exerciseId], references: [id])
-  muscle   MuscleGroup @relation(fields: [muscleId], references: [id])
-}
-
-model UserWorkout {
-  id        String   @id @default(uuid())
-  name      String
-  createdAt DateTime @default(now())
-
-  userId    String?  
-  user      User?    @relation(fields: [userId], references: [id])
-
-  exercises          UserWorkoutExercise[]
-  completedWorkouts CompletedWorkout[]
-  programWorkouts   ProgramWorkout[]
-}
-model UserWorkoutExercise {
-  id String @id @default(uuid())
-
-  userWorkoutId String
-  exerciseId    String
-
-  sets Int
-  reps Int
-
-  userWorkout UserWorkout @relation(fields: [userWorkoutId], references: [id])
-  exercise    Exercise    @relation(fields: [exerciseId], references: [id])
-
-  @@unique([userWorkoutId, exerciseId])
-}
-
-model CompletedWorkout {
-  id String @id @default(uuid())
-
-  userId    String
-  workoutId String
-
-  xpEarned Int
-  doneAt   DateTime @default(now())
-
-  user    User        @relation(fields: [userId], references: [id])
-  workout UserWorkout @relation(fields: [workoutId], references: [id])
-}
+// =========================
+// BADGE
+// =========================
 
 model Badge {
   id   String @id @default(uuid())
@@ -185,13 +222,17 @@ model Badge {
 model UserBadge {
   id String @id @default(uuid())
 
-  userId    String
-  badgeId   String
-  earnedAt  DateTime @default(now())
+  userId   String
+  badgeId  String
+  earnedAt DateTime @default(now())
 
   user  User  @relation(fields: [userId], references: [id])
   badge Badge @relation(fields: [badgeId], references: [id])
 }
+
+// =========================
+// FEEDBACK
+// =========================
 
 model Feedback {
   id String @id @default(uuid())
@@ -202,4 +243,84 @@ model Feedback {
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
+}
+
+// =========================
+// FRIEND SYSTEM
+// =========================
+
+model FriendRequest {
+  id String @id @default(uuid())
+
+  senderId   String
+  receiverId String
+
+  status FriendRequestStatus @default(PENDING)
+  createdAt DateTime @default(now())
+
+  sender   User @relation("SentRequests", fields: [senderId], references: [id])
+  receiver User @relation("ReceivedRequests", fields: [receiverId], references: [id])
+
+  @@unique([senderId, receiverId])
+}
+
+// =========================
+// CHAT
+// =========================
+
+model Chat {
+  id String @id @default(uuid())
+
+  isGroup Boolean @default(false)
+  name    String?
+
+  createdAt DateTime @default(now())
+
+  participants ChatParticipant[]
+  messages     Message[]
+}
+
+model ChatParticipant {
+  id String @id @default(uuid())
+
+  userId String
+  chatId String
+
+  user User @relation(fields: [userId], references: [id])
+  chat Chat @relation(fields: [chatId], references: [id])
+
+  @@unique([userId, chatId])
+}
+
+model Message {
+  id String @id @default(uuid())
+
+  content String
+  createdAt DateTime @default(now())
+
+  senderId String
+  chatId   String
+
+  sender User @relation(fields: [senderId], references: [id])
+  chat   Chat @relation(fields: [chatId], references: [id])
+}
+
+// =========================
+// SHARE WORKOUT
+// =========================
+
+model WorkoutShare {
+  id String @id @default(uuid())
+
+  workoutId String
+  senderId  String
+  receiverId String
+
+  status ShareStatus @default(PENDING)
+  createdAt DateTime @default(now())
+
+  workout  UserWorkout @relation(fields: [workoutId], references: [id])
+  sender   User        @relation("WorkoutSender", fields: [senderId], references: [id])
+  receiver User        @relation("WorkoutReceiver", fields: [receiverId], references: [id])
+ 
 }

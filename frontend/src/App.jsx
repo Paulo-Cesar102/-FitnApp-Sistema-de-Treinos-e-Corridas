@@ -5,6 +5,8 @@ import Home from "./pages/home";
 import Treinos from "./pages/Treinos";
 import CriarTreino from "./Componentes/CriarTreino";
 import MenuBar from "./Componentes/MenuBar";
+import ExecutarTreino from "./Componentes/ExecutarTreino";
+import Perfil from "./pages/Perfil";
 
 function Layout({ children }) {
   const location = useLocation();
@@ -44,6 +46,12 @@ export default function App() {
 
           {/* 🔥 CRIAR TREINO */}
           <Route path="/criar-treino" element={<CriarTreino />} />
+
+          {/* 🔥 PERFIL DO USUÁRIO */}
+          <Route path="/perfil" element={<Perfil />} />
+
+          {/* 🔥 EXECUTAR TREINO (CRONÔMETRO) */}
+          <Route path="/executar-treino" element={<ExecutarTreino />} />
 
           <Route path="*" element={<Navigate to="/home" />} />
         </Routes>

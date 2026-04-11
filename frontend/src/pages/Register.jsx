@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom"; // Hook para navegar entre páginas
 import "./Register.css";
+import CustomAlert from "../Componentes/CustomAlert";
 
 export default function Register() {
   const navigate = useNavigate(); // Inicializa o redirecionador
@@ -15,8 +16,18 @@ export default function Register() {
     gender: ""
   });
 
-  const [status, setStatus] = useState({ message: "", type: "" });
   const [loading, setLoading] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({ isOpen: false });
+
+  const showAlert = (title, message, type, onConfirm) => {
+    setAlertConfig({
+      isOpen: true,
+      title,
+      message,
+      type,
+      onConfirm: onConfirm || (() => setAlertConfig({ isOpen: false }))
+    });
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -28,7 +39,7 @@ export default function Register() {
     
     // Validação de senhas
     if (formData.password !== formData.confirmPassword) {
-      return setStatus({ message: "As senhas não coincidem", type: "error" });
+      return showAlert("Atenção", "As senhas informadas não coincidem.", "error");
     }
 
     try {
@@ -44,19 +55,17 @@ export default function Register() {
       // CONEXÃO COM A SUA API
       await axios.post("http://localhost:3000/users/register", payload);
 
-      setStatus({ message: "Usuário cadastrado com sucesso! Redirecionando...", type: "success" });
-      
       // Limpa os campos
       setFormData({ name: "", email: "", password: "", confirmPassword: "", gender: "" });
 
-      // REDIRECIONAMENTO: Espera 2 segundos para o usuário ver o sucesso e pula pro login
-      setTimeout(() => {
+      showAlert("Conta Criada", "Usuário cadastrado com sucesso! Faça login para continuar.", "success", () => {
+        setAlertConfig({ isOpen: false });
         navigate("/login");
-      }, 2000);
+      });
 
     } catch (error) {
       const msg = error.response?.data?.error || "Erro ao conectar com o servidor";
-      setStatus({ message: msg, type: "error" });
+      showAlert("Erro no Cadastro", msg, "error");
     } finally {
       setLoading(false);
     }
@@ -69,12 +78,6 @@ export default function Register() {
           <h2>Criar Conta</h2>
           <p>Acesse ao nosso portal de Treinos</p>
         </header>
-
-        {status.message && (
-          <div className={`status-message ${status.type}`}>
-            {status.message}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -150,6 +153,8 @@ export default function Register() {
           Já tem uma conta? <a href="/login" onClick={(e) => { e.preventDefault(); navigate("/login"); }}>Faça Login</a>
         </footer>
       </div>
+
+      <CustomAlert config={alertConfig} />
     </div>
   );
 }
