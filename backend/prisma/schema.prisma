@@ -54,11 +54,12 @@ model User {
   role      Role     @default(USER)
   createdAt DateTime @default(now())
 
-  workouts          UserWorkout[]
-  completedWorkouts CompletedWorkout[]
-  badges            UserBadge[]
-  feedbacks         Feedback[]
-  exercises         Exercise[]
+  workouts                   UserWorkout[]
+  completedWorkouts          CompletedWorkout[]
+  completedWorkoutExercises  CompletedWorkoutExercise[]
+  badges                     UserBadge[]
+  feedbacks                  Feedback[]
+  exercises                  Exercise[]
 
   // amizade
   sentRequests     FriendRequest[] @relation("SentRequests")
@@ -85,7 +86,7 @@ model Category {
 }
 
 model Exercise {
-  id          String   @id @default(uuid())
+  id          String     @id @default(uuid())
   name        String
   description String?
   image       String?
@@ -94,8 +95,8 @@ model Exercise {
   duration    String?
   reps        Int?
 
-  categoryId  String
-  category    Category @relation(fields: [categoryId], references: [id])
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
 
   primaryMuscleId String
   primaryMuscle   MuscleGroup @relation("PrimaryMuscle", fields: [primaryMuscleId], references: [id])
@@ -105,7 +106,8 @@ model Exercise {
   userId String?
   user   User? @relation(fields: [userId], references: [id])
 
-  workoutExercises UserWorkoutExercise[]
+  workoutExercises           UserWorkoutExercise[]
+  completedWorkoutExercises  CompletedWorkoutExercise[]
 }
 
 // =========================
@@ -142,10 +144,11 @@ model UserWorkout {
   userId String?
   user   User? @relation(fields: [userId], references: [id])
 
-  exercises          UserWorkoutExercise[]
-  completedWorkouts CompletedWorkout[]
-  programWorkouts   ProgramWorkout[] 
-  sharedWorkouts WorkoutShare[]
+  exercises                  UserWorkoutExercise[]
+  completedWorkouts          CompletedWorkout[]
+  completedWorkoutExercises  CompletedWorkoutExercise[]
+  programWorkouts            ProgramWorkout[]
+  sharedWorkouts             WorkoutShare[]
 }
 
 model UserWorkoutExercise {
@@ -178,6 +181,24 @@ model CompletedWorkout {
 
   user    User        @relation(fields: [userId], references: [id])
   workout UserWorkout @relation(fields: [workoutId], references: [id])
+}
+
+model CompletedWorkoutExercise {
+  id             String   @id @default(uuid())
+
+  userId         String
+  workoutId      String
+  exerciseId     String
+
+  xpEarned       Int
+  doneAt         DateTime @default(now())
+  completionDate String
+
+  user     User        @relation(fields: [userId], references: [id])
+  workout  UserWorkout @relation(fields: [workoutId], references: [id])
+  exercise Exercise    @relation(fields: [exerciseId], references: [id])
+
+  @@unique([userId, workoutId, exerciseId, completionDate])
 }
 
 // =========================
@@ -312,8 +333,8 @@ model Message {
 model WorkoutShare {
   id String @id @default(uuid())
 
-  workoutId String
-  senderId  String
+  workoutId  String
+  senderId   String
   receiverId String
 
   status ShareStatus @default(PENDING)
@@ -322,5 +343,4 @@ model WorkoutShare {
   workout  UserWorkout @relation(fields: [workoutId], references: [id])
   sender   User        @relation("WorkoutSender", fields: [senderId], references: [id])
   receiver User        @relation("WorkoutReceiver", fields: [receiverId], references: [id])
- 
 }

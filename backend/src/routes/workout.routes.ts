@@ -5,12 +5,12 @@ import { authMiddleware } from "../middlewares/auth";
 const workoutRoutes = Router();
 const workoutController = new WorkoutController();
 
-// 🔥 CATÁLOGO (HOME)
+// CATÁLOGO
 workoutRoutes.get("/catalog", (req, res) =>
   workoutController.getCatalog(req, res)
 );
 
-// 🔥 TREINOS DO USUÁRIO
+// TREINOS DO USUÁRIO
 workoutRoutes.get("/user", authMiddleware, (req, res) =>
   workoutController.getUserWorkouts(req, res)
 );
@@ -20,12 +20,17 @@ workoutRoutes.post("/", authMiddleware, (req, res) =>
   workoutController.create(req, res)
 );
 
-// COMPLETAR TREINO
+// COMPLETAR TREINO INTEIRO
 workoutRoutes.post("/complete", authMiddleware, (req, res) =>
   workoutController.complete(req, res)
 );
 
-// DELETAR
+// COMPLETAR EXERCÍCIO
+workoutRoutes.post("/complete-exercise", authMiddleware, (req, res) =>
+  workoutController.completeExercise(req, res)
+);
+
+// DELETAR TREINO
 workoutRoutes.delete("/:id", authMiddleware, (req, res) =>
   workoutController.delete(req, res)
 );

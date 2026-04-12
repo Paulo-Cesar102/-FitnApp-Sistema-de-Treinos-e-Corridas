@@ -1,21 +1,18 @@
 import { prisma } from "../database/prisma";
 import { IWorkout } from "../entities/Workout";
 import { ICreateWorkoutDTO } from "../dtos/ICreateWorkoutDTO";
-import { IWorkoutRepository } from "./IWorkoutRepository";
 
-export class WorkoutRepository implements IWorkoutRepository {
-
+export class WorkoutRepository {
   async create(data: ICreateWorkoutDTO): Promise<IWorkout> {
     const workout = await prisma.userWorkout.create({
       data: {
         name: data.name,
         userId: data.userId,
-
         exercises: {
-          create: data.exercises.map((ex) => ({
-            exerciseId: ex.exerciseId,
-            sets: ex.sets,
-            reps: ex.reps,
+          create: data.exercises.map((exercise) => ({
+            exerciseId: exercise.exerciseId,
+            sets: exercise.sets,
+            reps: exercise.reps,
           })),
         },
       },
@@ -28,46 +25,48 @@ export class WorkoutRepository implements IWorkoutRepository {
       },
     });
 
-    return workout as any;
+    return workout as unknown as IWorkout;
   }
 
-  async findAll(userId?: string) {
-    return prisma.userWorkout.findMany({
+  async findAll(userId: string): Promise<IWorkout[]> {
+    const workouts = await prisma.userWorkout.findMany({
       where: {
-        userId: userId ? userId : { equals: null } as any
+        userId,
       },
       include: {
         exercises: {
-          include: { exercise: true }
-        }
-      }
+          include: {
+            exercise: true,
+          },
+        },
+      },
     });
+
+    return workouts as unknown as IWorkout[];
   }
 
   async findById(id: string): Promise<IWorkout | null> {
-    return prisma.userWorkout.findUnique({
-      where: { id },
+    const workout = await prisma.userWorkout.findUnique({
+      where: {
+        id,
+      },
       include: {
         exercises: {
           include: {
-            exercise: true
-          }
-        }
-      }
-    }) as any;
+            exercise: true,
+          },
+        },
+      },
+    });
+
+    return workout as unknown as IWorkout | null;
   }
 
   async delete(id: string): Promise<void> {
-    // 1. Primeiro removemos os exercícios vinculados para evitar o erro de Constraint
-    await prisma.userWorkoutExercise.deleteMany({
-      where: {
-        userWorkoutId: id
-      }
-    });
-
-    // 2. Agora o treino pode ser removido sem restrições
     await prisma.userWorkout.delete({
-      where: { id }
+      where: {
+        id,
+      },
     });
   }
 }

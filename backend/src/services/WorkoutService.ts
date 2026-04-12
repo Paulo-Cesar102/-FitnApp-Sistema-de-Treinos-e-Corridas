@@ -11,19 +11,21 @@ export class WorkoutService {
       throw new Error("Nome do treino é obrigatório");
     }
 
+    if (!data.exercises || data.exercises.length === 0) {
+      throw new Error("O treino precisa ter pelo menos um exercício");
+    }
+
     return this.workoutRepository.create(data);
   }
 
-  // 🔥 (mantido - usado na aba de treinos)
   async findAll(userId: string): Promise<IWorkout[]> {
     return this.workoutRepository.findAll(userId);
   }
 
-  // 🔥 NOVO - treinos do usuário (mais explícito)
   async getUserWorkouts(userId: string): Promise<IWorkout[]> {
     return prisma.userWorkout.findMany({
       where: {
-        userId: userId,
+        userId,
       },
       include: {
         exercises: {
@@ -32,14 +34,15 @@ export class WorkoutService {
           },
         },
       },
-    });
+    }) as unknown as IWorkout[];
   }
 
-  // 🔥 NOVO - catálogo (HOME)
   async getCatalog(): Promise<IWorkout[]> {
     return prisma.userWorkout.findMany({
       where: {
-        userId: null,
+        userId: {
+          equals: null,
+        },
       },
       include: {
         exercises: {
@@ -48,7 +51,7 @@ export class WorkoutService {
           },
         },
       },
-    });
+    }) as unknown as IWorkout[];
   }
 
   async delete(id: string): Promise<void> {
@@ -65,9 +68,45 @@ export class WorkoutService {
     return Math.floor(xp / 100) + 1;
   }
 
-  async completeWorkout(userId: string, workoutId: string) {
-    const xpGained = 50;
+  private getDifficultyBaseXp(level: string): number {
+    switch (level) {
+      case "BEGINNER":
+        return 10;
+      case "INTERMEDIATE":
+        return 20;
+      case "ADVANCED":
+        return 30;
+      default:
+        return 10;
+    }
+  }
 
+  private calculateWorkoutXp(workout: any): number {
+    let totalXp = 0;
+
+    if (!workout.exercises || workout.exercises.length === 0) {
+      return 10;
+    }
+
+    for (const item of workout.exercises) {
+      const difficultyLevel = item.exercise.level;
+      const baseXp = this.getDifficultyBaseXp(difficultyLevel);
+      const volumeBonus = Math.floor((item.sets * item.reps) / 10);
+
+      totalXp += baseXp + volumeBonus;
+    }
+
+    return totalXp;
+  }
+
+  private calculateExerciseXp(item: any): number {
+    const baseXp = this.getDifficultyBaseXp(item.exercise.level);
+    const volumeBonus = Math.floor((item.sets * item.reps) / 10);
+
+    return baseXp + volumeBonus;
+  }
+
+  async completeWorkout(userId: string, workoutId: string) {
     const workout = await this.workoutRepository.findById(workoutId);
 
     if (!workout) {
@@ -103,6 +142,11 @@ export class WorkoutService {
       throw new Error("Você já concluiu esse treino hoje.");
     }
 
+    const xpGained = this.calculateWorkoutXp(workout);
+    const currentXp = user.xp ?? 0;
+    const newXp = currentXp + xpGained;
+    const newLevel = this.calculateLevel(newXp);
+
     await prisma.completedWorkout.create({
       data: {
         userId,
@@ -110,9 +154,6 @@ export class WorkoutService {
         xpEarned: xpGained,
       },
     });
-
-    const newXp = user.xp + xpGained;
-    const newLevel = this.calculateLevel(newXp);
 
     await prisma.user.update({
       where: { id: userId },
@@ -156,6 +197,85 @@ export class WorkoutService {
       newXp,
       newLevel,
       totalCompleted,
+    };
+  }
+
+  async completeExercise(userId: string, workoutId: string, exerciseId: string) {
+    const workout = await prisma.userWorkout.findUnique({
+      where: { id: workoutId },
+      include: {
+        exercises: {
+          include: {
+            exercise: true,
+          },
+        },
+      },
+    });
+
+    if (!workout) {
+      throw new Error("Treino não encontrado");
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error("Usuário não encontrado");
+    }
+
+    const workoutExercise = workout.exercises.find(
+      (item) => item.exerciseId === exerciseId
+    );
+
+    if (!workoutExercise) {
+      throw new Error("Exercício não encontrado neste treino");
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+
+    const alreadyCompletedToday =
+      await prisma.completedWorkoutExercise.findFirst({
+        where: {
+          userId,
+          workoutId,
+          exerciseId,
+          completionDate: today,
+        },
+      });
+
+    if (alreadyCompletedToday) {
+      throw new Error("Você já concluiu esse exercício hoje.");
+    }
+
+    const xpGained = this.calculateExerciseXp(workoutExercise);
+    const currentXp = user.xp ?? 0;
+    const newXp = currentXp + xpGained;
+    const newLevel = this.calculateLevel(newXp);
+
+    await prisma.completedWorkoutExercise.create({
+      data: {
+        userId,
+        workoutId,
+        exerciseId,
+        xpEarned: xpGained,
+        completionDate: today,
+      },
+    });
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        xp: newXp,
+        level: newLevel,
+      },
+    });
+
+    return {
+      message: "Exercício concluído com sucesso",
+      xpGained,
+      newXp,
+      newLevel,
     };
   }
 }
