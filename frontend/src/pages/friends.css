@@ -119,3 +119,62 @@
 .btn-add-friend { background: #ff4500; color: #fff; border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .btn-action-ghost { background: transparent; border: 1px solid #333; color: #888; padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; }
 .empty-msg { text-align: center; color: #444; margin-top: 40px; }
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-chat {
+  background: linear-gradient(135deg, #00c6ff, #0072ff);
+  border: none;
+  color: #fff;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: 0.2s;
+}
+
+.btn-chat:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(0, 114, 255, 0.6);
+}
+
+.btn-action-ghost:hover {
+  border-color: #ff4500;
+  color: #ff4500;
+}
+
+/* garante que lista não fique atrás do chat */
+.friends-list {
+  padding-bottom: 120px;
+}
+
+/* melhora responsividade */
+@media (max-width: 500px) {
+  .chat-box {
+    width: 95%;
+    right: 2.5%;
+    bottom: 90px;
+  }
+}
+
+/* 🔥 BADGE DE MENSAGEM */
+.badge-msg {
+  background: #ff4500;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 20px;
+  animation: pulse 1.5s infinite;
+}
+
+/* ✨ ANIMAÇÃO */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}

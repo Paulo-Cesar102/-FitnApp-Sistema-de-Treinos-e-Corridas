@@ -54,12 +54,12 @@ model User {
   role      Role     @default(USER)
   createdAt DateTime @default(now())
 
-  workouts                  UserWorkout[]
-  completedWorkouts         CompletedWorkout[]
-  completedWorkoutExercises CompletedWorkoutExercise[]
-  badges                    UserBadge[]
-  feedbacks                 Feedback[]
-  exercises                 Exercise[]
+  workouts                   UserWorkout[]
+  completedWorkouts          CompletedWorkout[]
+  completedWorkoutExercises  CompletedWorkoutExercise[]
+  badges                     UserBadge[]
+  feedbacks                  Feedback[]
+  exercises                  Exercise[]
 
   // amizade
   sentRequests     FriendRequest[] @relation("SentRequests")
@@ -144,11 +144,11 @@ model UserWorkout {
   userId String?
   user   User? @relation(fields: [userId], references: [id])
 
-  exercises                 UserWorkoutExercise[]
-  completedWorkouts         CompletedWorkout[]
-  completedWorkoutExercises CompletedWorkoutExercise[]
-  programWorkouts           ProgramWorkout[]
-  sharedWorkouts            WorkoutShare[]
+  exercises                  UserWorkoutExercise[]
+  completedWorkouts          CompletedWorkout[]
+  completedWorkoutExercises  CompletedWorkoutExercise[]
+  programWorkouts            ProgramWorkout[]
+  sharedWorkouts             WorkoutShare[]
 }
 
 model UserWorkoutExercise {
@@ -191,11 +191,11 @@ model CompletedWorkoutExercise {
   exerciseId String
 
   xpEarned       Int
-  doneAt         DateTime @default(now())
+  doneAt           DateTime @default(now())
   completionDate String
 
-  user     User        @relation(fields: [userId], references: [id])
-  workout  UserWorkout @relation(fields: [workoutId], references: [id])
+  user      User        @relation(fields: [userId], references: [id])
+  workout   UserWorkout @relation(fields: [workoutId], references: [id])
   exercise Exercise    @relation(fields: [exerciseId], references: [id])
 
   @@unique([userId, workoutId, exerciseId, completionDate])
@@ -206,12 +206,12 @@ model CompletedWorkoutExercise {
 // =========================
 
 model TrainingProgram {
-  id          String   @id @default(uuid())
-  name        String
+  id           String   @id @default(uuid())
+  name         String
   description String?
 
   durationWeeks Int
-  createdAt     DateTime @default(now())
+  createdAt      DateTime @default(now())
 
   workouts ProgramWorkout[]
 }
@@ -226,7 +226,7 @@ model ProgramWorkout {
   day  Int
 
   program TrainingProgram @relation(fields: [programId], references: [id])
-  workout UserWorkout     @relation(fields: [workoutId], references: [id])
+  workout UserWorkout      @relation(fields: [workoutId], references: [id])
 }
 
 // =========================
@@ -234,11 +234,10 @@ model ProgramWorkout {
 // =========================
 
 model Badge {
-  id            String      @id @default(uuid())
-  name          String      @unique
-  description   String
-  levelRequired Int
-  users         UserBadge[]
+  id   String @id @default(uuid())
+  name String
+
+  users UserBadge[]
 }
 
 model UserBadge {
@@ -279,8 +278,8 @@ model FriendRequest {
   senderId   String
   receiverId String
 
-  status    FriendRequestStatus @default(PENDING)
-  createdAt DateTime            @default(now())
+  status FriendRequestStatus @default(PENDING)
+  createdAt DateTime @default(now())
 
   sender   User @relation("SentRequests", fields: [senderId], references: [id])
   receiver User @relation("ReceivedRequests", fields: [receiverId], references: [id])
@@ -324,6 +323,9 @@ model Message {
 
   senderId String
   chatId   String
+
+  // 🔥 ADICIONADO: Campo para controle de notificações
+  read      Boolean  @default(false) 
 
   sender User @relation(fields: [senderId], references: [id])
   chat   Chat @relation(fields: [chatId], references: [id])

@@ -1,65 +1,69 @@
-import biceps from "./src/data/biceps.json";
-import costas from "./src/data/costas.json";
-import pernas from "./src/data/pernas.json";
-import peito from "./src/data/peito.json";
-import triceps from "./src/data/triceps.json";
-import ombros from "./src/data/ombros.json";
-import abdomen from "./src/data/abdomen.json";
+import express from "express";
+import cors from "cors";
+import "dotenv/config"; // 🔥 carrega .env automaticamente
 
-import express from 'express';
-import cors from 'cors';
 import { userRoutes } from "./src/routes/user.routes";
-import { feedbackRoutes } from './src/routes/feedback.routes';
+import { feedbackRoutes } from "./src/routes/feedback.routes";
 import authRoutes from "./src/routes/auth.routes";
 import exerciseRoutes from "./src/routes/exercise.routes";
 import { workoutRoutes } from "./src/routes/workout.routes";
 import categoryRoutes from "./src/routes/category.routes"; 
 import { rankingRoutes } from "./src/routes/ranking.routes";
 import { badgeRoutes } from "./src/routes/badge.routes";  
+import categoryRoutes from "./src/routes/category.routes";
+import { rankingRoutes } from "./src/routes/ranking.routes";
+import { router as friendRoutes } from "./src/routes/friendRequest";
+import { router as chatRoutes } from "./src/routes/chat.routes";
+
+
 
 
 const app = express();
 
-app.use(cors()); 
-app.use(express.json()); 
+// 🔐 CORS CONFIGURADO
+app.use(
+  cors({
+    origin: "http://localhost:5173", // frontend Vite
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+  })
+);
 
-app.use(exerciseRoutes);
-app.use("/api", exerciseRoutes);
+// 📦 JSON
+app.use(express.json());
+
+// 🧭 ROTAS
+app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
+app.use("/friends", friendRoutes); // 🔥 já protegido lá dentro com middleware
+app.use("/exercises", exerciseRoutes);
 app.use("/feedbacks", feedbackRoutes);
 app.use("/workouts", workoutRoutes);
-app.use("/auth", authRoutes);
-app.use( categoryRoutes);
+app.use("/categories", categoryRoutes);
 app.use("/ranking", rankingRoutes);
 app.use("/badges", badgeRoutes);
+app.use("/chats", chatRoutes);
 
-app.get("/api/workouts-json", (_req, res) => {
-  const todos = [
-    ...biceps,
-    ...costas,
-    ...pernas,
-    ...peito,
-    ...triceps,
-    ...ombros,
-    ...abdomen
-  ];
 
-  res.json(todos);
-});
-
-app.get('/', (_req, res) => {
-  res.json({ 
-    status: 'online',
-    message: 'Server conectado com sucesso!' 
+app.get("/", (_req, res) => {
+  res.json({
+    status: "online",
+    message: "GymClub Server Ativo 🚀"
   });
 });
 
+// 🚨 MIDDLEWARE GLOBAL DE ERRO (TOP)
+app.use((err: any, _req: any, res: any, _next: any) => {
+  console.error("🔥 ERRO GLOBAL:", err);
+
+  return res.status(500).json({
+    message: "Erro interno do servidor"
+  });
+});
+
+// 🚀 START SERVER
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`=========================================`);
-  console.log(` Servidor ativo na porta: ${PORT}`);
-  console.log(` Local: http://localhost:${PORT}`);
-  console.log(`=========================================`);
+  console.log(`🚀 Servidor rodando em: http://localhost:${PORT}`);
 });
-

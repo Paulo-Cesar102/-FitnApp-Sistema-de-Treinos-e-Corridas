@@ -1,42 +1,53 @@
 import { api } from "./api";
 
-// LISTAR AMIGOS
+// 👥 LISTAR AMIGOS
 export const getFriends = async () => {
   const response = await api.get("/friends");
   return response.data;
 };
 
-// LISTAR SOLICITAÇÕES PENDENTES
+// ⏳ LISTAR PENDENTES
 export const getPendingRequests = async () => {
   const response = await api.get("/friends/pending");
   return response.data;
 };
 
-// BUSCAR USUÁRIOS
-export const searchUsers = async (name: string) => {
-  const response = await api.get(`/users/search?name=${name}`);
+// 🔍 BUSCAR USUÁRIOS
+export const searchUsers = async (query: string) => {
+  const response = await api.get(`/friends/search?query=${query}`);
   return response.data;
 };
 
-// ENVIAR SOLICITAÇÃO DE AMIZADE
-export const addFriend = async (userId: string) => {
-  const response = await api.post("/friends/request", { receiverId: userId });
+// ➕ ENVIAR SOLICITAÇÃO
+export const addFriend = async (receiverId: string) => {
+  console.log("Enviando solicitação para:", receiverId);
+
+  const response = await api.post("/friends/request", {
+    receiverId // 🔥 só isso agora
+  });
+
   return response.data;
 };
 
-// ACEITAR SOLICITAÇÃO
+// ✅ ACEITAR
 export const acceptFriend = async (requestId: string) => {
-  const response = await api.post("/friends/accept", { requestId });
+  const response = await api.post("/friends/accept", {
+    requestId
+  });
+
   return response.data;
 };
 
-// RECUSAR SOLICITAÇÃO
+// ❌ RECUSAR
 export const rejectFriend = async (requestId: string) => {
-  const response = await api.post("/friends/reject", { requestId });
+  const response = await api.post("/friends/reject", {
+    requestId
+  });
+
   return response.data;
 };
 
-// REMOVER AMIGO
+// 🗑️ REMOVER AMIGO
 export const deleteFriend = async (id: string) => {
   const response = await api.delete(`/friends/${id}`);
   return response.data;

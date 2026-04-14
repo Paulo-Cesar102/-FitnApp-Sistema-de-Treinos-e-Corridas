@@ -1,31 +1,69 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
+
+interface JwtPayload {
+  id: string;
+}
+
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: JwtPayload;
+    }
+  }
+}
+
 export function authMiddleware(
   req: Request,
   res: Response,
   next: NextFunction
 ) {
-
   const authHeader = req.headers.authorization;
+
 
   if (!authHeader) {
     return res.status(401).json({
-      message: "Token not provided"
+      message: "Token não fornecido"
     });
   }
 
-  const token = authHeader.split(" ")[1];
-
- try {
-  const decoded = jwt.verify(token, "segredo-super-secreto") as any; 
-  
  
-  req.user = decoded; 
+  const parts = authHeader.split(" ");
 
-  console.log("Token decodificado:", req.user); 
-  return next();
-} catch {
-  return res.status(401).json({ message: "Invalid token" });
-}
+  if (parts.length !== 2) {
+    return res.status(401).json({
+      message: "Token mal formatado"
+    });
+  }
+
+  const [scheme, token] = parts;
+
+  if (!/^Bearer$/i.test(scheme)) {
+    return res.status(401).json({
+      message: "Formato inválido"
+    });
+  }
+
+  try {
+   
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET as string
+    ) as JwtPayload;
+
+    // 🔥 salva no request
+    req.user = {
+      id: decoded.id
+    };
+
+    console.log("Usuário autenticado:", req.user);
+
+    return next();
+  } catch (err) {
+    return res.status(401).json({
+      message: "Token inválido"
+    });
+  }
 }
