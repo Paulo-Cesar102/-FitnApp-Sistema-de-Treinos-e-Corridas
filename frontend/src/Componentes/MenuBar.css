@@ -77,3 +77,33 @@
   border-radius: 10px;
   margin-bottom: 8px;
 }
+
+.friends-modal {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  z-index: 9999;
+}
+
+.friends-box {
+  width: 260px;
+  background: #111;
+  padding: 12px;
+  border-radius: 12px;
+  color: white;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+.friend-item {
+  display: flex;
+  justify-content: space-between;
+  margin: 6px 0;
+}
+
+.friends-box input {
+  width: 100%;
+  margin-top: 10px;
+  padding: 6px;
+  border-radius: 6px;
+  border: none;
+}

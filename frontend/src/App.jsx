@@ -7,11 +7,12 @@ import CriarTreino from "./Componentes/CriarTreino";
 import MenuBar from "./Componentes/MenuBar";
 import ExecutarTreino from "./Componentes/ExecutarTreino";
 import Perfil from "./pages/Perfil";
+import Friends from "./pages/friends";
 
 function Layout({ children }) {
   const location = useLocation();
 
-  const rotasComMenu = ["/home", "/exercicio", "/perfil"];
+  const rotasComMenu = ["/home", "/exercicio", "/perfil", "/amigos"];
   const mostrarMenu = rotasComMenu.includes(location.pathname);
 
   return (
@@ -49,6 +50,9 @@ export default function App() {
 
           {/* 🔥 PERFIL DO USUÁRIO */}
           <Route path="/perfil" element={<Perfil />} />
+
+          {/* 🔥 COMUNIDADE / AMIGOS */}
+          <Route path="/amigos" element={<Friends />} />
 
           {/* 🔥 EXECUTAR TREINO (CRONÔMETRO) */}
           <Route path="/executar-treino" element={<ExecutarTreino />} />
