@@ -14,7 +14,8 @@ import authRoutes from "./src/routes/auth.routes";
 import exerciseRoutes from "./src/routes/exercise.routes";
 import { workoutRoutes } from "./src/routes/workout.routes";
 import categoryRoutes from "./src/routes/category.routes"; 
-import { rankingRoutes } from "./src/routes/ranking.routes";    
+import { rankingRoutes } from "./src/routes/ranking.routes";
+import { badgeRoutes } from "./src/routes/badge.routes";  
 
 
 const app = express();
@@ -30,6 +31,7 @@ app.use("/workouts", workoutRoutes);
 app.use("/auth", authRoutes);
 app.use( categoryRoutes);
 app.use("/ranking", rankingRoutes);
+app.use("/badges", badgeRoutes);
 
 app.get("/api/workouts-json", (_req, res) => {
   const todos = [

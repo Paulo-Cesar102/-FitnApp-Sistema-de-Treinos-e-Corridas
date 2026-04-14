@@ -2,9 +2,11 @@ import { prisma } from "../database/prisma";
 import { IWorkout } from "../entities/Workout";
 import { ICreateWorkoutDTO } from "../dtos/ICreateWorkoutDTO";
 import { WorkoutRepository } from "../repository/WorkoutRepository";
+import { BadgeService } from "./BadgeService";
 
 export class WorkoutService {
   private workoutRepository = new WorkoutRepository();
+  private badgeService = new BadgeService();
 
   async create(data: ICreateWorkoutDTO): Promise<IWorkout> {
     if (!data.name) {
@@ -167,29 +169,10 @@ export class WorkoutService {
       where: { userId },
     });
 
-    if (totalCompleted === 1) {
-      const badge = await prisma.badge.findFirst({
-        where: { name: "Iniciante" },
-      });
-
-      if (badge) {
-        const alreadyHasBadge = await prisma.userBadge.findFirst({
-          where: {
-            userId,
-            badgeId: badge.id,
-          },
-        });
-
-        if (!alreadyHasBadge) {
-          await prisma.userBadge.create({
-            data: {
-              userId,
-              badgeId: badge.id,
-            },
-          });
-        }
-      }
-    }
+    const newBadges = await this.badgeService.grantBadgesByLevel(
+      userId,
+      newLevel
+    );
 
     return {
       message: "Treino concluído com sucesso",
@@ -197,6 +180,7 @@ export class WorkoutService {
       newXp,
       newLevel,
       totalCompleted,
+      newBadges,
     };
   }
 
@@ -271,11 +255,17 @@ export class WorkoutService {
       },
     });
 
+    const newBadges = await this.badgeService.grantBadgesByLevel(
+      userId,
+      newLevel
+    );
+
     return {
       message: "Exercício concluído com sucesso",
       xpGained,
       newXp,
       newLevel,
+      newBadges,
     };
   }
 }
