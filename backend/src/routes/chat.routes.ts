@@ -5,22 +5,22 @@ import { authMiddleware } from "../middlewares/auth";
 const router = Router();
 const controller = new ChatController();
 
-// 🔒 TODAS AS ROTAS PROTEGIDAS
+//  TODAS AS ROTAS PROTEGIDAS
 router.use(authMiddleware);
 
-// 💬 criar chat privado
+//  criar chat privado
 router.post("/private", controller.createPrivate.bind(controller));
 
-// 👥 criar grupo
+//  criar grupo
 router.post("/group", controller.createGroup.bind(controller));
 
-// 📩 enviar mensagem
+//  enviar mensagem
 router.post("/message", controller.sendMessage.bind(controller));
 
-// 📋 listar chats do usuário
+//  listar chats do usuário
 router.get("/", controller.getChats.bind(controller));
 
-// 💬 mensagens de um chat
+//  mensagens de um chat
 router.get("/:chatId/messages", controller.getMessages.bind(controller));
 
 // Exemplo

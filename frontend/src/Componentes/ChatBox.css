@@ -1,3 +1,4 @@
+/* CONTAINER PRINCIPAL DO CHAT */
 .chat-box.gymclub-theme {
   position: fixed;
   bottom: 85px;
@@ -15,9 +16,10 @@
   border: 1px solid #222;
 
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7);
+  z-index: 999; /* Garante que fique acima de outros elementos */
 }
 
-/* HEADER */
+/* HEADER (TOPO DO CHAT) */
 .chat-header {
   background: linear-gradient(90deg, #0f0f0f, #1a1a1a);
   padding: 14px;
@@ -48,20 +50,22 @@
   font-size: 14px;
 }
 
-/* CLOSE BUTTON */
+/* BOTÃO DE FECHAR */
 .close-btn {
   background: transparent;
   border: none;
   color: #aaa;
-  font-size: 16px;
+  font-size: 18px;
   cursor: pointer;
+  transition: 0.2s;
 }
 
 .close-btn:hover {
-  color: #fff;
+  color: #ff2d55;
+  transform: scale(1.1);
 }
 
-/* MESSAGES AREA */
+/* ÁREA DE MENSAGENS (COM TEXTURA) */
 .chat-messages {
   flex: 1;
   padding: 14px;
@@ -71,24 +75,25 @@
   flex-direction: column;
   gap: 10px;
 
+  /* Textura de fundo sutil */
   background-image: url("https://www.transparenttextures.com/patterns/dark-matter.png");
   background-repeat: repeat;
 }
 
-/* BUBBLES */
+/* ESTILO GERAL DOS BALÕES */
 .msg {
   max-width: 75%;
-  padding: 10px 12px;
+  padding: 10px 14px;
   font-size: 14px;
-  line-height: 1.3;
+  line-height: 1.4;
 
   word-wrap: break-word;
   border-radius: 14px;
 
-  animation: pop 0.15s ease-in-out;
+  animation: pop 0.2s ease-out;
 }
 
-/* RECEIVED */
+/* MENSAGENS RECEBIDAS (AMIGO - GRADIENTE LARANJA) */
 .received {
   background: linear-gradient(135deg, #ff5c1a, #ff2d55);
   color: #fff;
@@ -99,22 +104,22 @@
   box-shadow: 0 4px 12px rgba(255, 92, 26, 0.25);
 }
 
-/* SENT */
+/* MENSAGENS ENVIADAS (VOCÊ - DARK) */
 .sent {
   background: #1e1e1e;
   color: #fff;
 
   align-self: flex-end;
-  border-radius: 14px 0 14px 14px;
+  border-radius: 14px 14px 0 14px;
 
   border: 1px solid #333;
 }
 
-/* INPUT */
+/* INPUT E CAMPO DE TEXTO */
 .chat-input {
   display: flex;
-  padding: 10px;
-  gap: 8px;
+  padding: 12px;
+  gap: 10px;
 
   background: #0f0f0f;
   border-top: 1px solid #222;
@@ -124,22 +129,23 @@
   flex: 1;
 
   background: #1a1a1a;
-  border: none;
+  border: 1px solid #222;
   color: #fff;
 
-  padding: 10px 12px;
-  border-radius: 20px;
+  padding: 10px 16px;
+  border-radius: 25px;
 
   outline: none;
-  font-size: 13px;
+  font-size: 14px;
+  transition: 0.3s;
 }
 
 .chat-input input:focus {
   border: 1px solid #ff5c1a;
-  box-shadow: 0 0 10px rgba(255, 92, 26, 0.3);
+  box-shadow: 0 0 10px rgba(255, 92, 26, 0.2);
 }
 
-/* SEND BUTTON */
+/* BOTÃO DE ENVIAR */
 .send-btn {
   background: linear-gradient(135deg, #ff5c1a, #ff2d55);
   border: none;
@@ -147,8 +153,12 @@
   color: #fff;
   border-radius: 50%;
 
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   cursor: pointer;
   transition: 0.2s;
@@ -156,16 +166,27 @@
 
 .send-btn:hover {
   transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(255, 92, 26, 0.4);
 }
 
-/* ANIMATION */
+/* ANIMAÇÃO DE ENTRADA */
 @keyframes pop {
   from {
-    transform: scale(0.95);
-    opacity: 0.6;
+    transform: scale(0.9);
+    opacity: 0;
   }
   to {
     transform: scale(1);
     opacity: 1;
   }
+}
+
+/* SCROLLBAR PERSONALIZADA */
+.chat-messages::-webkit-scrollbar {
+  width: 4px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 10px;
 }
