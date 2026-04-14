@@ -87,7 +87,7 @@ export default function Friends() {
   return (
     <div className="friends-container">
       <header className="friends-header">
-        <h2>COMUNIDADE <span>GYMPRO</span></h2>
+        <h2>Gym<span>Club</span></h2>
         <p className="subtitle">Conecte-se com outros atletas</p>
       </header>
 
