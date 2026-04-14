@@ -18,7 +18,7 @@ const app = express();
 // 🔐 CORS CONFIGURADO (Corrigido para evitar bloqueios no frontend)
 app.use(
   cors({
-    origin: "http://localhost:5173", 
+    origin: ["http://localhost:5173", "http://localhost:5174"], // Libera as duas portas do Vite
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"]
   })
