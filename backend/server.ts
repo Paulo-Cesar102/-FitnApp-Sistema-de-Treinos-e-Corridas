@@ -7,16 +7,22 @@ import { feedbackRoutes } from "./src/routes/feedback.routes";
 import authRoutes from "./src/routes/auth.routes";
 import exerciseRoutes from "./src/routes/exercise.routes";
 import { workoutRoutes } from "./src/routes/workout.routes";
+<<<<<<< Updated upstream
 import categoryRoutes from "./src/routes/category.routes"; 
 import { rankingRoutes } from "./src/routes/ranking.routes";
 import { badgeRoutes } from "./src/routes/badge.routes";  
+=======
+>>>>>>> Stashed changes
 import categoryRoutes from "./src/routes/category.routes";
 import { rankingRoutes } from "./src/routes/ranking.routes";
 import { router as friendRoutes } from "./src/routes/friendRequest";
 import { router as chatRoutes } from "./src/routes/chat.routes";
+<<<<<<< Updated upstream
 
 
 
+=======
+>>>>>>> Stashed changes
 
 const app = express();
 
@@ -44,6 +50,8 @@ app.use("/ranking", rankingRoutes);
 app.use("/badges", badgeRoutes);
 app.use("/chats", chatRoutes);
 
+
+app.use("/chats", chatRoutes);
 
 app.get("/", (_req, res) => {
   res.json({

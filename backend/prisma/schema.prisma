@@ -54,12 +54,12 @@ model User {
   role      Role     @default(USER)
   createdAt DateTime @default(now())
 
-  workouts                   UserWorkout[]
+  workouts                  UserWorkout[]
   completedWorkouts          CompletedWorkout[]
-  completedWorkoutExercises  CompletedWorkoutExercise[]
-  badges                     UserBadge[]
-  feedbacks                  Feedback[]
-  exercises                  Exercise[]
+  completedWorkoutExercises CompletedWorkoutExercise[]
+  badges                    UserBadge[]
+  feedbacks                 Feedback[]
+  exercises                 Exercise[]
 
   // amizade
   sentRequests     FriendRequest[] @relation("SentRequests")
@@ -144,9 +144,9 @@ model UserWorkout {
   userId String?
   user   User? @relation(fields: [userId], references: [id])
 
-  exercises                  UserWorkoutExercise[]
+  exercises                 UserWorkoutExercise[]
   completedWorkouts          CompletedWorkout[]
-  completedWorkoutExercises  CompletedWorkoutExercise[]
+  completedWorkoutExercises CompletedWorkoutExercise[]
   programWorkouts            ProgramWorkout[]
   sharedWorkouts             WorkoutShare[]
 }
@@ -234,10 +234,11 @@ model ProgramWorkout {
 // =========================
 
 model Badge {
-  id   String @id @default(uuid())
-  name String
-
-  users UserBadge[]
+  id             String      @id @default(uuid())
+  name           String      @unique
+  description    String
+  levelRequired Int
+  users          UserBadge[]
 }
 
 model UserBadge {
@@ -278,8 +279,8 @@ model FriendRequest {
   senderId   String
   receiverId String
 
-  status FriendRequestStatus @default(PENDING)
-  createdAt DateTime @default(now())
+  status    FriendRequestStatus @default(PENDING)
+  createdAt DateTime             @default(now())
 
   sender   User @relation("SentRequests", fields: [senderId], references: [id])
   receiver User @relation("ReceivedRequests", fields: [receiverId], references: [id])
