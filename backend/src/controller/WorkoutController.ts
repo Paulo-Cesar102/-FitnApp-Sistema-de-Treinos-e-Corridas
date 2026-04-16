@@ -17,7 +17,7 @@ export class WorkoutController {
         return res
           .status(400)
           .json({ message: "Nome e exercícios são obrigatórios" });
-      }
+      } 
 
       const workout = await this.workoutService.create({
         name,

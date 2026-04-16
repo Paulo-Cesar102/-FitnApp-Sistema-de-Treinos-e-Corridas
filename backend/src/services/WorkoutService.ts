@@ -12,11 +12,9 @@ export class WorkoutService {
     if (!data.name) {
       throw new Error("Nome do treino é obrigatório");
     }
-
     if (!data.exercises || data.exercises.length === 0) {
       throw new Error("O treino precisa ter pelo menos um exercício");
     }
-
     return this.workoutRepository.create(data);
   }
 
@@ -26,14 +24,10 @@ export class WorkoutService {
 
   async getUserWorkouts(userId: string): Promise<IWorkout[]> {
     return prisma.userWorkout.findMany({
-      where: {
-        userId,
-      },
+      where: { userId },
       include: {
         exercises: {
-          include: {
-            exercise: true,
-          },
+          include: { exercise: true },
         },
       },
     }) as unknown as IWorkout[];
@@ -42,20 +36,17 @@ export class WorkoutService {
   async getCatalog(): Promise<IWorkout[]> {
     return prisma.userWorkout.findMany({
       where: {
-        userId: {
-          equals: null,
-        },
+        userId: null, // No seu schema anterior era userId: { equals: null }
       },
       include: {
         exercises: {
-          include: {
-            exercise: true,
-          },
+          include: { exercise: true },
         },
       },
     }) as unknown as IWorkout[];
   }
 
+  // 🔥 AQUI ESTAVA O PROBLEMA: AJUSTADO PARA DELETAR RELAÇÕES PRIMEIRO
   async delete(id: string): Promise<void> {
     const workout = await this.workoutRepository.findById(id);
 
@@ -63,69 +54,69 @@ export class WorkoutService {
       throw new Error("Treino não encontrado");
     }
 
+    // 1. Deletar os exercícios vinculados a esse treino na tabela pivot
+    await prisma.userWorkoutExercise.deleteMany({
+      where: { userWorkoutId: id },
+    });
+
+    // 2. Deletar históricos de conclusão desse treino específico
+    await prisma.completedWorkout.deleteMany({
+      where: { workoutId: id },
+    });
+
+    await prisma.completedWorkoutExercise.deleteMany({
+      where: { workoutId: id },
+    });
+
+    // 3. Deletar compartilhamentos
+    await prisma.workoutShare.deleteMany({
+      where: { workoutId: id },
+    });
+
+    // 4. Agora o repositório pode deletar o treino sem erro de Foreign Key
     await this.workoutRepository.delete(id);
   }
 
+  // ... (seus métodos de XP permanecem iguais, estão ótimos)
   private calculateLevel(xp: number): number {
     return Math.floor(xp / 100) + 1;
   }
 
   private getDifficultyBaseXp(level: string): number {
     switch (level) {
-      case "BEGINNER":
-        return 10;
-      case "INTERMEDIATE":
-        return 20;
-      case "ADVANCED":
-        return 30;
-      default:
-        return 10;
+      case "BEGINNER": return 10;
+      case "INTERMEDIATE": return 20;
+      case "ADVANCED": return 30;
+      default: return 10;
     }
   }
 
   private calculateWorkoutXp(workout: any): number {
     let totalXp = 0;
-
-    if (!workout.exercises || workout.exercises.length === 0) {
-      return 10;
-    }
-
+    if (!workout.exercises || workout.exercises.length === 0) return 10;
     for (const item of workout.exercises) {
-      const difficultyLevel = item.exercise.level;
-      const baseXp = this.getDifficultyBaseXp(difficultyLevel);
+      const baseXp = this.getDifficultyBaseXp(item.exercise.level);
       const volumeBonus = Math.floor((item.sets * item.reps) / 10);
-
       totalXp += baseXp + volumeBonus;
     }
-
     return totalXp;
   }
 
   private calculateExerciseXp(item: any): number {
     const baseXp = this.getDifficultyBaseXp(item.exercise.level);
     const volumeBonus = Math.floor((item.sets * item.reps) / 10);
-
     return baseXp + volumeBonus;
   }
 
   async completeWorkout(userId: string, workoutId: string) {
     const workout = await this.workoutRepository.findById(workoutId);
+    if (!workout) throw new Error("Treino não encontrado");
 
-    if (!workout) {
-      throw new Error("Treino não encontrado");
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      throw new Error("Usuário não encontrado");
-    }
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new Error("Usuário não encontrado");
 
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
-
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
 
@@ -133,16 +124,11 @@ export class WorkoutService {
       where: {
         userId,
         workoutId,
-        doneAt: {
-          gte: startOfDay,
-          lte: endOfDay,
-        },
+        doneAt: { gte: startOfDay, lte: endOfDay },
       },
     });
 
-    if (alreadyCompletedToday) {
-      throw new Error("Você já concluiu esse treino hoje.");
-    }
+    if (alreadyCompletedToday) throw new Error("Você já concluiu esse treino hoje.");
 
     const xpGained = this.calculateWorkoutXp(workout);
     const currentXp = user.xp ?? 0;
@@ -150,29 +136,16 @@ export class WorkoutService {
     const newLevel = this.calculateLevel(newXp);
 
     await prisma.completedWorkout.create({
-      data: {
-        userId,
-        workoutId,
-        xpEarned: xpGained,
-      },
+      data: { userId, workoutId, xpEarned: xpGained },
     });
 
     await prisma.user.update({
       where: { id: userId },
-      data: {
-        xp: newXp,
-        level: newLevel,
-      },
+      data: { xp: newXp, level: newLevel },
     });
 
-    const totalCompleted = await prisma.completedWorkout.count({
-      where: { userId },
-    });
-
-    const newBadges = await this.badgeService.grantBadgesByLevel(
-      userId,
-      newLevel
-    );
+    const totalCompleted = await prisma.completedWorkout.count({ where: { userId } });
+    const newBadges = await this.badgeService.grantBadgesByLevel(userId, newLevel);
 
     return {
       message: "Treino concluído com sucesso",
@@ -188,49 +161,23 @@ export class WorkoutService {
     const workout = await prisma.userWorkout.findUnique({
       where: { id: workoutId },
       include: {
-        exercises: {
-          include: {
-            exercise: true,
-          },
-        },
+        exercises: { include: { exercise: true } },
       },
     });
 
-    if (!workout) {
-      throw new Error("Treino não encontrado");
-    }
+    if (!workout) throw new Error("Treino não encontrado");
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new Error("Usuário não encontrado");
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      throw new Error("Usuário não encontrado");
-    }
-
-    const workoutExercise = workout.exercises.find(
-      (item) => item.exerciseId === exerciseId
-    );
-
-    if (!workoutExercise) {
-      throw new Error("Exercício não encontrado neste treino");
-    }
+    const workoutExercise = workout.exercises.find((item) => item.exerciseId === exerciseId);
+    if (!workoutExercise) throw new Error("Exercício não encontrado neste treino");
 
     const today = new Date().toISOString().split("T")[0];
+    const alreadyCompletedToday = await prisma.completedWorkoutExercise.findFirst({
+      where: { userId, workoutId, exerciseId, completionDate: today },
+    });
 
-    const alreadyCompletedToday =
-      await prisma.completedWorkoutExercise.findFirst({
-        where: {
-          userId,
-          workoutId,
-          exerciseId,
-          completionDate: today,
-        },
-      });
-
-    if (alreadyCompletedToday) {
-      throw new Error("Você já concluiu esse exercício hoje.");
-    }
+    if (alreadyCompletedToday) throw new Error("Você já concluiu esse exercício hoje.");
 
     const xpGained = this.calculateExerciseXp(workoutExercise);
     const currentXp = user.xp ?? 0;
@@ -238,27 +185,15 @@ export class WorkoutService {
     const newLevel = this.calculateLevel(newXp);
 
     await prisma.completedWorkoutExercise.create({
-      data: {
-        userId,
-        workoutId,
-        exerciseId,
-        xpEarned: xpGained,
-        completionDate: today,
-      },
+      data: { userId, workoutId, exerciseId, xpEarned: xpGained, completionDate: today },
     });
 
     await prisma.user.update({
       where: { id: userId },
-      data: {
-        xp: newXp,
-        level: newLevel,
-      },
+      data: { xp: newXp, level: newLevel },
     });
 
-    const newBadges = await this.badgeService.grantBadgesByLevel(
-      userId,
-      newLevel
-    );
+    const newBadges = await this.badgeService.grantBadgesByLevel(userId, newLevel);
 
     return {
       message: "Exercício concluído com sucesso",
