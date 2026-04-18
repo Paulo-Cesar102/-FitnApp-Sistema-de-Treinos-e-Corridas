@@ -51,6 +51,8 @@ model User {
   sex       Sex      @default(M)
   level     Int      @default(1)
   xp        Int      @default(0)
+  streak    Int      @default(0)
+  lastActivityDate DateTime?
   role      Role     @default(USER)
   createdAt DateTime @default(now())
 

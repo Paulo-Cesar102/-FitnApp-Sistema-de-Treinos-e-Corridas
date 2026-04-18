@@ -3,18 +3,22 @@ import { IWorkout } from "../entities/Workout";
 import { ICreateWorkoutDTO } from "../dtos/ICreateWorkoutDTO";
 import { WorkoutRepository } from "../repository/WorkoutRepository";
 import { BadgeService } from "./BadgeService";
+import { StreakService } from "./StreakService";
 
 export class WorkoutService {
   private workoutRepository = new WorkoutRepository();
   private badgeService = new BadgeService();
+  private streakService = new StreakService();
 
   async create(data: ICreateWorkoutDTO): Promise<IWorkout> {
     if (!data.name) {
       throw new Error("Nome do treino é obrigatório");
     }
+
     if (!data.exercises || data.exercises.length === 0) {
       throw new Error("O treino precisa ter pelo menos um exercício");
     }
+
     return this.workoutRepository.create(data);
   }
 
@@ -26,27 +30,20 @@ export class WorkoutService {
     return prisma.userWorkout.findMany({
       where: { userId },
       include: {
-        exercises: {
-          include: { exercise: true },
-        },
+        exercises: { include: { exercise: true } },
       },
     }) as unknown as IWorkout[];
   }
 
   async getCatalog(): Promise<IWorkout[]> {
     return prisma.userWorkout.findMany({
-      where: {
-        userId: null, // No seu schema anterior era userId: { equals: null }
-      },
+      where: { userId: { equals: null } },
       include: {
-        exercises: {
-          include: { exercise: true },
-        },
+        exercises: { include: { exercise: true } },
       },
     }) as unknown as IWorkout[];
   }
 
-  // 🔥 AQUI ESTAVA O PROBLEMA: AJUSTADO PARA DELETAR RELAÇÕES PRIMEIRO
   async delete(id: string): Promise<void> {
     const workout = await this.workoutRepository.findById(id);
 
@@ -54,30 +51,15 @@ export class WorkoutService {
       throw new Error("Treino não encontrado");
     }
 
-    // 1. Deletar os exercícios vinculados a esse treino na tabela pivot
-    await prisma.userWorkoutExercise.deleteMany({
-      where: { userWorkoutId: id },
-    });
+    // 🔥 Proteção contra erro de Foreign Key (Recuperado do antigo)
+    await prisma.userWorkoutExercise.deleteMany({ where: { userWorkoutId: id } });
+    await prisma.completedWorkout.deleteMany({ where: { workoutId: id } });
+    await prisma.completedWorkoutExercise.deleteMany({ where: { workoutId: id } });
+    await prisma.workoutShare.deleteMany({ where: { workoutId: id } });
 
-    // 2. Deletar históricos de conclusão desse treino específico
-    await prisma.completedWorkout.deleteMany({
-      where: { workoutId: id },
-    });
-
-    await prisma.completedWorkoutExercise.deleteMany({
-      where: { workoutId: id },
-    });
-
-    // 3. Deletar compartilhamentos
-    await prisma.workoutShare.deleteMany({
-      where: { workoutId: id },
-    });
-
-    // 4. Agora o repositório pode deletar o treino sem erro de Foreign Key
     await this.workoutRepository.delete(id);
   }
 
-  // ... (seus métodos de XP permanecem iguais, estão ótimos)
   private calculateLevel(xp: number): number {
     return Math.floor(xp / 100) + 1;
   }
@@ -94,6 +76,7 @@ export class WorkoutService {
   private calculateWorkoutXp(workout: any): number {
     let totalXp = 0;
     if (!workout.exercises || workout.exercises.length === 0) return 10;
+
     for (const item of workout.exercises) {
       const baseXp = this.getDifficultyBaseXp(item.exercise.level);
       const volumeBonus = Math.floor((item.sets * item.reps) / 10);
@@ -146,6 +129,9 @@ export class WorkoutService {
 
     const totalCompleted = await prisma.completedWorkout.count({ where: { userId } });
     const newBadges = await this.badgeService.grantBadgesByLevel(userId, newLevel);
+    
+    // 🔥 Atualiza o foguinho ao completar o treino completo
+    const streakData = await this.streakService.updateUserStreak(userId);
 
     return {
       message: "Treino concluído com sucesso",
@@ -154,15 +140,14 @@ export class WorkoutService {
       newLevel,
       totalCompleted,
       newBadges,
+      streak: streakData.streak,
     };
   }
 
   async completeExercise(userId: string, workoutId: string, exerciseId: string) {
     const workout = await prisma.userWorkout.findUnique({
       where: { id: workoutId },
-      include: {
-        exercises: { include: { exercise: true } },
-      },
+      include: { exercises: { include: { exercise: true } } },
     });
 
     if (!workout) throw new Error("Treino não encontrado");
@@ -195,12 +180,16 @@ export class WorkoutService {
 
     const newBadges = await this.badgeService.grantBadgesByLevel(userId, newLevel);
 
+    // 🔥 Atualiza o foguinho ao completar um exercício individual
+    const streakData = await this.streakService.updateUserStreak(userId);
+
     return {
       message: "Exercício concluído com sucesso",
       xpGained,
       newXp,
       newLevel,
       newBadges,
+      streak: streakData.streak,
     };
   }
 }
