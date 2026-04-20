@@ -25,4 +25,6 @@ router.delete("/:chatId/clear", controller.clearChat.bind(controller));
 // Rota para quando o usuário clicar em "Salvar" no card de treino dentro do chat
 router.post("/save-workout", controller.saveWorkout.bind(controller));
 
+router.delete("/message/:messageId", controller.deleteMessage.bind(controller));
+
 export { router };

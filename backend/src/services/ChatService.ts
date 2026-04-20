@@ -110,4 +110,18 @@ export class ChatService {
       }
     });
   }
+  async deleteMessageForEveryone(messageId: string, userId: string) {
+  const message = await prisma.message.findUnique({
+    where: { id: messageId }
+  });
+
+  if (!message) throw new Error("Mensagem não encontrada.");
+
+  // Validação de segurança: o senderId da mensagem deve ser igual ao userId logado
+  if (message.senderId !== userId) {
+    throw new Error("Você não tem permissão para apagar esta mensagem.");
+  }
+
+  return await this.repo.deleteSingleMessage(messageId);
+}
 }

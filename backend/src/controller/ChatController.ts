@@ -137,4 +137,21 @@ const { chatId } = req.params as { chatId: string };
       });
     }
   }
+
+  async deleteMessage(req: Request, res: Response) {
+  try {
+    const { messageId } = req.params as { messageId: string };
+    const userId = req.user?.id;
+
+    if (!userId) return res.status(401).json({ message: "Não autorizado" });
+
+    await this.service.deleteMessageForEveryone(messageId, userId);
+    
+    return res.json({ message: "Mensagem apagada para todos." });
+  } catch (error) {
+    return res.status(400).json({ 
+      message: error instanceof Error ? error.message : "Erro ao apagar mensagem." 
+    });
+  }
+}
 }

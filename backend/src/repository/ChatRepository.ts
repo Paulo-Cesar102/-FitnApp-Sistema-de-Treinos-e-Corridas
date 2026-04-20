@@ -157,5 +157,11 @@ export class ChatRepository {
         chatId: chatId
       }
     });
-  }
+  }async deleteSingleMessage(messageId: string) {
+  return await prisma.message.delete({
+    where: {
+      id: messageId
+    }
+  });
+}
 }
