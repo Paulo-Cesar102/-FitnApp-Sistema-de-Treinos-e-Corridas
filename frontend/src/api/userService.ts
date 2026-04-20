@@ -14,4 +14,4 @@ export const updateUser = async (id: string, data: any) => {
 
   return response.data;
 
-};
+};  

@@ -44,20 +44,20 @@ enum Difficulty {
 // =========================
 
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
-  sex       Sex      @default(M)
-  level     Int      @default(1)
-  xp        Int      @default(0)
-  streak    Int      @default(0)
+  id               String    @id @default(uuid())
+  name             String
+  email            String    @unique
+  password         String
+  sex              Sex       @default(M)
+  level            Int       @default(1)
+  xp               Int       @default(0)
+  streak           Int       @default(0)
   lastActivityDate DateTime?
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
+  role             Role      @default(USER)
+  createdAt        DateTime  @default(now())
 
   workouts                  UserWorkout[]
-  completedWorkouts          CompletedWorkout[]
+  completedWorkouts         CompletedWorkout[]
   completedWorkoutExercises CompletedWorkoutExercise[]
   badges                    UserBadge[]
   feedbacks                 Feedback[]
@@ -147,10 +147,13 @@ model UserWorkout {
   user   User? @relation(fields: [userId], references: [id])
 
   exercises                 UserWorkoutExercise[]
-  completedWorkouts          CompletedWorkout[]
+  completedWorkouts         CompletedWorkout[]
   completedWorkoutExercises CompletedWorkoutExercise[]
-  programWorkouts            ProgramWorkout[]
-  sharedWorkouts             WorkoutShare[]
+  programWorkouts           ProgramWorkout[]
+  sharedWorkouts            WorkoutShare[]
+  
+  // 🔥 Relacionamento com as mensagens do chat
+  messages                  Message[]
 }
 
 model UserWorkoutExercise {
@@ -188,9 +191,9 @@ model CompletedWorkout {
 model CompletedWorkoutExercise {
   id String @id @default(uuid())
 
-  userId     String
-  workoutId  String
-  exerciseId String
+  userId         String
+  workoutId      String
+  exerciseId     String
 
   xpEarned       Int
   doneAt           DateTime @default(now())
@@ -208,8 +211,8 @@ model CompletedWorkoutExercise {
 // =========================
 
 model TrainingProgram {
-  id           String   @id @default(uuid())
-  name         String
+  id            String   @id @default(uuid())
+  name          String
   description String?
 
   durationWeeks Int
@@ -236,11 +239,11 @@ model ProgramWorkout {
 // =========================
 
 model Badge {
-  id             String      @id @default(uuid())
-  name           String      @unique
-  description    String
+  id              String      @id @default(uuid())
+  name            String      @unique
+  description     String
   levelRequired Int
-  users          UserBadge[]
+  users           UserBadge[]
 }
 
 model UserBadge {
@@ -319,16 +322,20 @@ model ChatParticipant {
 }
 
 model Message {
-  id String @id @default(uuid())
-
+  id        String   @id @default(uuid())
   content   String
   createdAt DateTime @default(now())
-
-  senderId String
-  chatId   String
-
-  // 🔥 ADICIONADO: Campo para controle de notificações
+  senderId  String
+  chatId    String
   read      Boolean  @default(false) 
+
+  // 🔥 Relacionamento com treino compartilhado
+  sharedWorkoutId String?  
+  sharedWorkout   UserWorkout? @relation(fields: [sharedWorkoutId], references: [id])
+
+  // 🔥 Relacionamento com o log de compartilhamento
+  workoutShareId  String?
+  workoutShare    WorkoutShare? @relation(fields: [workoutShareId], references: [id])
 
   sender User @relation(fields: [senderId], references: [id])
   chat   Chat @relation(fields: [chatId], references: [id])
@@ -348,7 +355,8 @@ model WorkoutShare {
   status    ShareStatus @default(PENDING)
   createdAt DateTime    @default(now())
 
-  workout  UserWorkout @relation(fields: [workoutId], references: [id])
-  sender   User        @relation("WorkoutSender", fields: [senderId], references: [id])
-  receiver User        @relation("WorkoutReceiver", fields: [receiverId], references: [id])
+  workout   UserWorkout @relation(fields: [workoutId], references: [id])
+  sender    User        @relation("WorkoutSender", fields: [senderId], references: [id])
+  receiver  User        @relation("WorkoutReceiver", fields: [receiverId], references: [id])
+  messages  Message[]
 }

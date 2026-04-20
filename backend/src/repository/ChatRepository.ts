@@ -1,8 +1,6 @@
 import { prisma } from "../database/prisma";
 
 export class ChatRepository {
-
-  // 🔥 Criar chat (privado ou grupo)
   async createChat(isGroup: boolean, name?: string) {
     return prisma.chat.create({
       data: {
@@ -12,7 +10,6 @@ export class ChatRepository {
     });
   }
 
-  // 🔥 Adicionar participante ao chat
   async addParticipant(chatId: string, userId: string) {
     return prisma.chatParticipant.create({
       data: {
@@ -22,7 +19,6 @@ export class ChatRepository {
     });
   }
 
-  // 🔥 Buscar chat por ID (com participantes e mensagens)
   async findById(chatId: string) {
     return prisma.chat.findUnique({
       where: { id: chatId },
@@ -34,7 +30,15 @@ export class ChatRepository {
         },
         messages: {
           include: {
-            sender: true
+            sender: true,
+            // 🔥 Traz os dados do treino se houver
+            sharedWorkout: {
+              include: {
+                exercises: {
+                  include: { exercise: true }
+                }
+              }
+            }
           },
           orderBy: {
             createdAt: "asc"
@@ -44,7 +48,6 @@ export class ChatRepository {
     });
   }
 
-  // 🔥 Buscar chats do usuário
   async findUserChats(userId: string) {
     return prisma.chatParticipant.findMany({
       where: {
@@ -58,7 +61,7 @@ export class ChatRepository {
             },
             messages: {
               orderBy: { createdAt: "desc" },
-              take: 1 // 🔥 última mensagem (preview tipo WhatsApp)
+              take: 1 
             }
           }
         }
@@ -66,46 +69,54 @@ export class ChatRepository {
     });
   }
 
-  // 🔥 Criar mensagem
-  async createMessage(chatId: string, senderId: string, content: string) {
+  // 🔥 ATUALIZADO: Suporte para sharedWorkoutId
+  async createMessage(chatId: string, senderId: string, content: string, workoutId?: string) {
     return prisma.message.create({
       data: {
         chatId,
         senderId,
-        content
+        content,
+        sharedWorkoutId: workoutId // Se vier vazio, o Prisma ignora por ser opcional (?)
+      },
+      include: {
+        sharedWorkout: true // Retorna o treino logo após criar a mensagem
       }
     });
   }
 
-  // 🔥 Buscar mensagens de um chat
- async getMessages(chatId: string) {
-  const messages = await prisma.message.findMany({
-    where: { chatId },
-    include: {
-      sender: true,
-    },
-    orderBy: {
-      createdAt: "asc",
-    },
-  });
+  // 🔥 ATUALIZADO: Agora inclui os dados do treino na listagem
+  async getMessages(chatId: string) {
+    const messages = await prisma.message.findMany({
+      where: { chatId },
+      include: {
+        sender: true,
+        sharedWorkout: {
+          include: {
+            exercises: {
+              include: { exercise: true }
+            }
+          }
+        }
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
 
-  // 🔥 NORMALIZAÇÃO (isso resolve teu front quebrando)
-  return messages.map((m) => ({
-    id: m.id,
-    content: m.content,
-    createdAt: m.createdAt,
-    read: m.read,
+    return messages.map((m) => ({
+      id: m.id,
+      content: m.content,
+      createdAt: m.createdAt,
+      read: m.read,
+      senderId: m.senderId,
+      sharedWorkout: m.sharedWorkout, // Retorna o objeto do treino completo
+      sender: {
+        id: m.sender?.id,
+        name: m.sender?.name,
+      },
+    }));
+  }
 
-    senderId: m.senderId, // 🔥 ESSENCIAL
-
-    sender: {
-      id: m.sender?.id,
-      name: m.sender?.name,
-    },
-  }));
-}
-
-  // 🔥 Verificar se já existe chat privado entre 2 usuários
   async findPrivateChat(userA: string, userB: string) {
     const chats = await prisma.chat.findMany({
       where: {
@@ -126,17 +137,25 @@ export class ChatRepository {
     return chats.find(chat => chat.participants.length === 2);
   }
 
-  // 🔥 MARCAR COMO LIDA (O que faltava para parar o erro 500)
   async updateMessagesToRead(chatId: string, userId: string) {
     return await prisma.message.updateMany({
       where: {
         chatId: chatId,
-        senderId: { not: userId }, // Atualiza apenas as que VOCÊ recebeu
+        senderId: { not: userId }, 
         read: false,
       },
       data: {
         read: true,
       },
+    });
+  }
+
+  
+  async deleteChatMessages(chatId: string) {
+    return await prisma.message.deleteMany({
+      where: {
+        chatId: chatId
+      }
     });
   }
 }

@@ -6,19 +6,24 @@ export const createPrivateChat = async (friendId: string) => {
   return res.data;
 };
 
-// 📩 Enviar mensagem (Sincronizado com router.post("/message"))
-export const sendMessage = async (chatId: string, content: string) => {
+// 👥 Criar grupo
+export const createGroupChat = async (name: string, userIds: string[]) => {
+  const res = await api.post("/chats/group", { name, userIds });
+  return res.data;
+};
+
+// 📩 Enviar mensagem (Texto ou Treino)
+export const sendMessage = async (chatId: string, content: string, workoutId?: string) => {
   try {
-    // Validação para evitar o erro de "chatId ou texto ausente" visto no console
-    if (!chatId || !content.trim()) {
-      throw new Error("ChatId ou conteúdo da mensagem não fornecidos.");
+    // Agora validamos se tem conteúdo OU se tem um treino sendo enviado
+    if (!chatId || (!content?.trim() && !workoutId)) {
+      throw new Error("Dados insuficientes para enviar a mensagem.");
     }
 
-    // O router espera POST em /chats/message
-    // O prefixo /chats já é definido no app.use do server.ts
     const res = await api.post("/chats/message", {
       chatId,
-      content,
+      content: content.trim(),
+      workoutId, // Enviamos o ID do treino se existir
     });
 
     return res.data;
@@ -38,8 +43,6 @@ export const getChats = async () => {
 export const getMessages = async (chatId: string) => {
   try {
     if (!chatId) return [];
-
-    // O router espera GET em /chats/:chatId/messages
     const res = await api.get(`/chats/${chatId}/messages`);
     return res.data;
   } catch (err: any) {
@@ -52,12 +55,32 @@ export const getMessages = async (chatId: string) => {
 export const markAsRead = async (chatId: string) => {
   try {
     if (!chatId) return null;
-
-    // O router espera POST em /chats/:chatId/read
     const res = await api.post(`/chats/${chatId}/read`);
     return res.data;
   } catch (err: any) {
     console.error("❌ markAsRead error:", err?.response?.data || err);
     return null;
+  }
+};
+
+// 🗑️ Limpar histórico do chat
+export const clearChatHistory = async (chatId: string) => {
+  try {
+    const res = await api.delete(`/chats/${chatId}/clear`);
+    return res.data;
+  } catch (err: any) {
+    console.error("❌ clearChat error:", err?.response?.data || err);
+    throw err;
+  }
+};
+
+// 🏋️ Salvar treino recebido no chat
+export const saveSharedWorkout = async (workoutData: any) => {
+  try {
+    const res = await api.post("/chats/save-workout", { workoutData });
+    return res.data;
+  } catch (err: any) {
+    console.error("❌ saveSharedWorkout error:", err?.response?.data || err);
+    throw err;
   }
 };

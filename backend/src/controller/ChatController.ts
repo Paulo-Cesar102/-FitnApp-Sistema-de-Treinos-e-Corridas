@@ -4,19 +4,14 @@ import { ChatService } from "../services/ChatService";
 export class ChatController {
   private service = new ChatService();
 
-  // 💬 criar chat privado
+  // 💬 Criar chat privado
   async createPrivate(req: Request, res: Response) {
     try {
       const userId = req.user?.id;
       const { friendId } = req.body;
 
-      if (!userId) {
-        return res.status(401).json({ message: "Usuário não autenticado" });
-      }
-
-      if (!friendId) {
-        return res.status(400).json({ message: "friendId é obrigatório" });
-      }
+      if (!userId) return res.status(401).json({ message: "Usuário não autenticado" });
+      if (!friendId) return res.status(400).json({ message: "friendId é obrigatório" });
 
       const chat = await this.service.createPrivateChat(userId, friendId);
       return res.json(chat);
@@ -27,7 +22,7 @@ export class ChatController {
     }
   }
 
-  // 👥 criar grupo
+  // 👥 Criar grupo
   async createGroup(req: Request, res: Response) {
     try {
       const { name, userIds } = req.body;
@@ -40,53 +35,36 @@ export class ChatController {
     }
   }
 
-  // 📩 enviar mensagem
- async sendMessage(req: Request, res: Response) {
-  try {
-     console.log("🔥 BODY:", req.body);
-  console.log("🔥 USER:", req.user);
+  // 📩 Enviar mensagem (Texto ou Treino)
+  async sendMessage(req: Request, res: Response) {
+    try {
+      const senderId = req.user?.id;
+      const { chatId, content, workoutId } = req.body;
 
-    const senderId = req.user?.id;
-    const { chatId, content } = req.body;
+      if (!senderId) return res.status(401).json({ message: "Usuário não autenticado" });
+      if (!chatId) return res.status(400).json({ message: "chatId é obrigatório" });
 
-    if (!senderId) {
-      return res.status(401).json({ message: "Usuário não autenticado" });
+      const message = await this.service.sendMessage(
+        chatId,
+        senderId,
+        content,
+        workoutId // Opcional
+      );
+
+      return res.status(201).json(message);
+    } catch (error) {
+      console.error("Erro sendMessage:", error);
+      return res.status(500).json({
+        message: error instanceof Error ? error.message : "Erro ao enviar mensagem"
+      });
     }
-
-    if (!chatId || !content) {
-      return res.status(400).json({ message: "Dados inválidos" });
-    }
-
-    const message = await this.service.sendMessage(
-      chatId,
-      senderId,
-      content
-    );
-    return res.status(201).json({
-      id: message.id,
-      chatId: message.chatId,
-      senderId: message.senderId,
-      content: message.content,
-      createdAt: message.createdAt,
-      
-    });
- 
-  } catch (error) {
-    console.error("Erro sendMessage:", error);
-
-    return res.status(500).json({
-      message: "Erro ao enviar mensagem"
-    });
   }
-}
-  // 📋 listar chats
+
+  // 📋 Listar chats do usuário
   async getChats(req: Request, res: Response) {
     try {
       const userId = req.user?.id;
-
-      if (!userId) {
-        return res.status(401).json({ message: "Usuário não autenticado" });
-      }
+      if (!userId) return res.status(401).json({ message: "Usuário não autenticado" });
 
       const chats = await this.service.getUserChats(userId);
       return res.json(chats);
@@ -97,11 +75,15 @@ export class ChatController {
     }
   }
 
-  // 💬 mensagens de um chat
+  // 💬 Mensagens de um chat (com auto-read)
   async getMessages(req: Request, res: Response) {
     try {
-      const chatId = String(req.params.chatId);
-      const messages = await this.service.getMessages(chatId);
+const { chatId } = req.params as { chatId: string };
+      const userId = req.user?.id;
+
+      if (!userId) return res.status(401).json({ message: "Não autenticado" });
+
+      const messages = await this.service.getMessages(chatId, userId);
       return res.json(messages);
     } catch (error) {
       return res.status(400).json({
@@ -110,22 +92,49 @@ export class ChatController {
     }
   }
 
-  // 🔥 MARCAR COMO LIDA (Corrigido)
+  // 🔥 Marcar como lida manualmente
   async markAsRead(req: Request, res: Response) {
-  try {
-    const { chatId } = req.params as { chatId: string };
-    const userId = req.user?.id;
+    try {
+   const { chatId } = req.params as { chatId: string };
+      const userId = req.user?.id;
 
-    if (!userId) {
-      return res.status(401).json({ error: "Não autorizado" });
+      if (!userId) return res.status(401).json({ error: "Não autorizado" });
+
+      await this.service.markAsRead(chatId, userId);
+      return res.status(200).json({ message: "Mensagens lidas." });
+    } catch (error) {
+      return res.status(500).json({ error: "Erro ao processar leitura." });
     }
-
-    await this.service.markAsRead(chatId, userId);
-
-    return res.status(200).json({ message: "Mensagens lidas." });
-  } catch (error) {
-    console.error("Erro ao marcar como lida:", error);
-    return res.status(500).json({ error: "Erro interno ao processar leitura." });
   }
-}
+
+  // 🗑️ Limpar histórico (Deletar para todos)
+  async clearChat(req: Request, res: Response) {
+    try {
+     const { chatId } = req.params as { chatId: string };
+      await this.service.clearChatHistory(chatId);
+      return res.json({ message: "Histórico limpo com sucesso." });
+    } catch (error) {
+      return res.status(400).json({ message: "Erro ao limpar histórico." });
+    }
+  }
+
+  /**
+   * 🏋️ Salvar Treino Compartilhado
+   * Chamado quando o usuário clica em "Salvar" no card do chat
+   */
+  async saveWorkout(req: Request, res: Response) {
+    try {
+      const userId = req.user?.id;
+      const { workoutData } = req.body;
+
+      if (!userId) return res.status(401).json({ message: "Não autenticado" });
+
+      const newWorkout = await this.service.saveSharedWorkout(userId, workoutData);
+      return res.status(201).json(newWorkout);
+    } catch (error) {
+      return res.status(400).json({
+        message: error instanceof Error ? error.message : "Erro ao salvar treino"
+      });
+    }
+  }
 }
