@@ -1,458 +1,458 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-// =========================
-// ENUMS
-// =========================
-
-enum Role {
-  USER
-  ADMIN
-  GYM_OWNER // Novo: Para donos de academia
-  PERSONAL  // Novo: Para personais
-}
-
-enum Sex {
-  M
-  F
-}
-
-enum FriendRequestStatus {
-  PENDING
-  ACCEPTED
-  REJECTED
-}
-
-enum ShareStatus {
-  PENDING
-  ACCEPTED
-  REJECTED
-}
-
-enum Difficulty {
-  BEGINNER
-  INTERMEDIATE
-  ADVANCED
-}
-
-enum PaymentStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-enum PaymentType {
-  MENSALIDADE
-  MARKETPLACE
-  EVENTO
-}
-
-// =========================
-// USER
-// =========================
-
-model User {
-  id                String    @id @default(uuid())
-  name              String
-  email             String    @unique
-  password          String
-  sex               Sex       @default(M)
-  level             Int       @default(1)
-  xp                Int       @default(0)
-  streak            Int       @default(0)
-  lastActivityDate  DateTime?
-  role              Role      @default(USER)
-  createdAt         DateTime  @default(now())
-
-  // Relacionamentos Fitness
-  workouts                  UserWorkout[]
-  completedWorkouts         CompletedWorkout[]
-  completedWorkoutExercises CompletedWorkoutExercise[]
-  badges                    UserBadge[]
-  feedbacks                 Feedback[]
-  exercises                 Exercise[]
-
-  // Relacionamento com Academia
-  gymId                     String?
-  gym                       Gym?      @relation(fields: [gymId], references: [id])
-  payments                  Payment[]
-
-  // Amizade
-  sentRequests     FriendRequest[] @relation("SentRequests")
-  receivedRequests FriendRequest[] @relation("ReceivedRequests")
-
-  // Chat
-  chatParticipants ChatParticipant[]
-  messages         Message[]
-
-  // Compartilhar treino
-  sentWorkouts     WorkoutShare[] @relation("WorkoutSender")
-  receivedWorkouts WorkoutShare[] @relation("WorkoutReceiver")
-}
-
-// =========================
-// GYM & ACADEMIA (B2B)
-// =========================
-
-model Gym {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  address     String?
-  inviteCode  String   @unique
-  email       String   @unique 
-  pixKey      String
-  pixType     String
-  qrCodeUrl   String?
-  createdAt   DateTime @default(now())
-
-  members     User[]
-  payments    Payment[]
-  products    Product[]
-  events      GymEvent[]
-  workouts    UserWorkout[]
-}
-// =========================
-// PAYMENTS & RECEPÇÃO
-// =========================
-
-model Payment {
-  id            String        @id @default(uuid())
-  amount        Float
-  payerName     String        // Nome preenchido pelo aluno para a recepção
-  receiptUrl    String?       // Foto do comprovante
-  status        PaymentStatus @default(PENDING)
-  type          PaymentType   @default(MENSALIDADE)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-
-  userId        String
-  user          User          @relation(fields: [userId], references: [id])
-
-  gymId         String
-  gym           Gym           @relation(fields: [gymId], references: [id])
-}
-
-// =========================
-// MARKETPLACE DA ACADEMIA
-// =========================
-
-model Product {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  price       Float
-  stock       Int      @default(0)
-  imageUrl    String?
-  createdAt   DateTime @default(now())
-
-  gymId       String
-  gym         Gym      @relation(fields: [gymId], references: [id])
-}
-
-// =========================
-// EVENTOS & TORNEIOS (GHOST MODE)
-// =========================
-
-model GymEvent {
-  id          String   @id @default(uuid())
-  title       String
-  description String?
-  startDate   DateTime
-  endDate     DateTime
-  fee         Float    @default(0) // Taxa de inscrição via Pix
-  isTournament Boolean  @default(false)
-
-  gymId       String
-  gym         Gym      @relation(fields: [gymId], references: [id])
-}
-
-// =========================
-// CATEGORY / EXERCISE
-// =========================
-
-model Category {
-  id    String     @id @default(uuid())
-  name  String     @unique 
-  exercises Exercise[]
-}
-
-model Exercise {
-  id          String     @id @default(uuid())
-  name        String
-  description String?
-  image       String?
-  tutorial    String?
-  level       Difficulty @default(BEGINNER)
-  duration    String?
-  reps        Int?
-
-  categoryId String
-  category   Category @relation(fields: [categoryId], references: [id])
-
-  primaryMuscleId String
-  primaryMuscle   MuscleGroup @relation("PrimaryMuscle", fields: [primaryMuscleId], references: [id])
-
-  secondaryMuscles ExerciseMuscle[]
-
-  userId String?
-  user   User? @relation(fields: [userId], references: [id])
-
-  workoutExercises          UserWorkoutExercise[]
-  completedWorkoutExercises CompletedWorkoutExercise[]
-}
-
-// =========================
-// MUSCLE
-// =========================
-
-model MuscleGroup {
-  id   String @id @default(uuid())
-  name String @unique
-
-  primaryExercises   Exercise[]       @relation("PrimaryMuscle")
-  secondaryExercises ExerciseMuscle[]
-}
-
-model ExerciseMuscle {
-  id String @id @default(uuid())
-
-  exerciseId String
-  muscleId   String
-
-  exercise Exercise    @relation(fields: [exerciseId], references: [id])
-  muscle   MuscleGroup @relation(fields: [muscleId], references: [id])
-}
-
-// =========================
-// WORKOUT
-// =========================
-
-model UserWorkout {
-  id        String   @id @default(uuid())
-  name      String
-  createdAt DateTime @default(now())
-
-  userId String?
-  user   User? @relation(fields: [userId], references: [id])
-
-  gymId  String?  // Novo: Indica se o treino é de uma academia/personal
-  gym    Gym?     @relation(fields: [gymId], references: [id])
-
-  exercises                 UserWorkoutExercise[]
-  completedWorkouts         CompletedWorkout[]
-  completedWorkoutExercises CompletedWorkoutExercise[]
-  programWorkouts           ProgramWorkout[]
-  sharedWorkouts            WorkoutShare[]
-  
-  messages                  Message[]
-}
-
-model UserWorkoutExercise {
-  id String @id @default(uuid())
-
-  userWorkoutId String
-  exerciseId    String
-
-  sets Int
-  reps Int
-
-  userWorkout UserWorkout @relation(fields: [userWorkoutId], references: [id])
-  exercise    Exercise    @relation(fields: [exerciseId], references: [id])
-
-  @@unique([userWorkoutId, exerciseId])
-}
-
-// =========================
-// COMPLETED
-// =========================
-
-model CompletedWorkout {
-  id String @id @default(uuid())
-
-  userId    String
-  workoutId String
-
-  xpEarned Int
-  doneAt    DateTime @default(now())
-
-  user    User        @relation(fields: [userId], references: [id])
-  workout UserWorkout @relation(fields: [workoutId], references: [id])
-}
-
-model CompletedWorkoutExercise {
-  id String @id @default(uuid())
-
-  userId         String
-  workoutId      String
-  exerciseId     String
-
-  xpEarned       Int
-  doneAt           DateTime @default(now())
-  completionDate String
-
-  user      User        @relation(fields: [userId], references: [id])
-  workout   UserWorkout @relation(fields: [workoutId], references: [id])
-  exercise Exercise    @relation(fields: [exerciseId], references: [id])
-
-  @@unique([userId, workoutId, exerciseId, completionDate])
-}
-
-// =========================
-// PROGRAM
-// =========================
-
-model TrainingProgram {
-  id            String   @id @default(uuid())
-  name          String
-  description String?
-
-  durationWeeks Int
-  createdAt      DateTime @default(now())
-
-  workouts ProgramWorkout[]
-}
-
-model ProgramWorkout {
-  id String @id @default(uuid())
-
-  programId String
-  workoutId String
-
-  week Int
-  day  Int
-
-  program TrainingProgram @relation(fields: [programId], references: [id])
-  workout UserWorkout      @relation(fields: [workoutId], references: [id])
-}
-
-// =========================
-// BADGE
-// =========================
-
-model Badge {
-  id              String      @id @default(uuid())
-  name            String      @unique
-  description     String
-  levelRequired Int
-  users           UserBadge[]
-}
-
-model UserBadge {
-  id String @id @default(uuid())
-
-  userId   String
-  badgeId  String
-  earnedAt DateTime @default(now())
-
-  user  User  @relation(fields: [userId], references: [id])
-  badge Badge @relation(fields: [badgeId], references: [id])
-
-  @@unique([userId, badgeId])
-}
-
-// =========================
-// FEEDBACK
-// =========================
-
-model Feedback {
-  id String @id @default(uuid())
-
-  userId    String
-  message   String
-  rating    Int
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id])
-}
-
-// =========================
-// FRIEND SYSTEM
-// =========================
-
-model FriendRequest {
-  id String @id @default(uuid())
-
-  senderId   String
-  receiverId String
-
-  status    FriendRequestStatus @default(PENDING)
-  createdAt DateTime              @default(now())
-
-  sender   User @relation("SentRequests", fields: [senderId], references: [id])
-  receiver User @relation("ReceivedRequests", fields: [receiverId], references: [id])
-
-  @@unique([senderId, receiverId])
-}
-
-// =========================
-// CHAT
-// =========================
-
-model Chat {
-  id String @id @default(uuid())
-
-  isGroup Boolean @default(false)
-  name    String?
-
-  createdAt DateTime @default(now())
-
-  participants ChatParticipant[]
-  messages      Message[]
-}
-
-model ChatParticipant {
-  id String @id @default(uuid())
-
-  userId String
-  chatId String
-
-  user User @relation(fields: [userId], references: [id])
-  chat Chat @relation(fields: [chatId], references: [id])
-
-  @@unique([userId, chatId])
-}
-
-model Message {
-  id        String   @id @default(uuid())
-  content   String
-  createdAt DateTime @default(now())
-  senderId  String
-  chatId    String
-  read      Boolean  @default(false) 
-
-  sharedWorkoutId String?  
-  sharedWorkout   UserWorkout? @relation(fields: [sharedWorkoutId], references: [id])
-
-  workoutShareId  String?
-  workoutShare    WorkoutShare? @relation(fields: [workoutShareId], references: [id])
-
-  sender User @relation(fields: [senderId], references: [id])
-  chat   Chat @relation(fields: [chatId], references: [id])
-}
-
-// =========================
-// SHARE WORKOUT
-// =========================
-
-model WorkoutShare {
-  id String @id @default(uuid())
-
-  workoutId  String
-  senderId   String
-  receiverId String
-
-  status    ShareStatus @default(PENDING)
-  createdAt DateTime    @default(now())
-
-  workout   UserWorkout @relation(fields: [workoutId], references: [id])
-  sender    User        @relation("WorkoutSender", fields: [senderId], references: [id])
-  receiver  User        @relation("WorkoutReceiver", fields: [receiverId], references: [id])
-  messages  Message[]
-}
+  generator client {
+    provider = "prisma-client-js"
+  }
+
+  datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+  }
+
+  // =========================
+  // ENUMS
+  // =========================
+
+  enum Role {
+    USER
+    ADMIN
+    GYM_OWNER // Novo: Para donos de academia
+    PERSONAL  // Novo: Para personais
+  }
+
+  enum Sex {
+    M
+    F
+  }
+
+  enum FriendRequestStatus {
+    PENDING
+    ACCEPTED
+    REJECTED
+  }
+
+  enum ShareStatus {
+    PENDING
+    ACCEPTED
+    REJECTED
+  }
+
+  enum Difficulty {
+    BEGINNER
+    INTERMEDIATE
+    ADVANCED
+  }
+
+  enum PaymentStatus {
+    PENDING
+    APPROVED
+    REJECTED
+  }
+
+  enum PaymentType {
+    MENSALIDADE
+    MARKETPLACE
+    EVENTO
+  }
+
+  // =========================
+  // USER
+  // =========================
+
+  model User {
+    id                String    @id @default(uuid())
+    name              String
+    email             String    @unique
+    password          String
+    sex               Sex       @default(M)
+    level             Int       @default(1)
+    xp                Int       @default(0)
+    streak            Int       @default(0)
+    lastActivityDate  DateTime?
+    role              Role      @default(USER)
+    createdAt         DateTime  @default(now())
+
+    // Relacionamentos Fitness
+    workouts                  UserWorkout[]
+    completedWorkouts         CompletedWorkout[]
+    completedWorkoutExercises CompletedWorkoutExercise[]
+    badges                    UserBadge[]
+    feedbacks                 Feedback[]
+    exercises                 Exercise[]
+
+    // Relacionamento com Academia
+    gymId                     String?
+    gym                       Gym?      @relation(fields: [gymId], references: [id])
+    payments                  Payment[]
+
+    // Amizade
+    sentRequests     FriendRequest[] @relation("SentRequests")
+    receivedRequests FriendRequest[] @relation("ReceivedRequests")
+
+    // Chat
+    chatParticipants ChatParticipant[]
+    messages         Message[]
+
+    // Compartilhar treino
+    sentWorkouts     WorkoutShare[] @relation("WorkoutSender")
+    receivedWorkouts WorkoutShare[] @relation("WorkoutReceiver")
+  }
+
+  // =========================
+  // GYM & ACADEMIA (B2B)
+  // =========================
+
+  model Gym {
+    id          String   @id @default(uuid())
+    name        String
+    description String?
+    address     String?
+    inviteCode  String   @unique
+    email       String   @unique 
+    pixKey      String
+    pixType     String
+    qrCodeUrl   String?
+    createdAt   DateTime @default(now())
+
+    members     User[]
+    payments    Payment[]
+    products    Product[]
+    events      GymEvent[]
+    workouts    UserWorkout[]
+  }
+  // =========================
+  // PAYMENTS & RECEPÇÃO
+  // =========================
+
+  model Payment {
+    id            String        @id @default(uuid())
+    amount        Float
+    payerName     String        // Nome preenchido pelo aluno para a recepção
+    receiptUrl    String?       // Foto do comprovante
+    status        PaymentStatus @default(PENDING)
+    type          PaymentType   @default(MENSALIDADE)
+    createdAt     DateTime      @default(now())
+    updatedAt     DateTime      @updatedAt
+
+    userId        String
+    user          User          @relation(fields: [userId], references: [id])
+
+    gymId         String
+    gym           Gym           @relation(fields: [gymId], references: [id])
+  }
+
+  // =========================
+  // MARKETPLACE DA ACADEMIA
+  // =========================
+
+  model Product {
+    id          String   @id @default(uuid())
+    name        String
+    description String?
+    price       Float
+    stock       Int      @default(0)
+    imageUrl    String?
+    createdAt   DateTime @default(now())
+
+    gymId       String
+    gym         Gym      @relation(fields: [gymId], references: [id])
+  }
+
+  // =========================
+  // EVENTOS & TORNEIOS (GHOST MODE)
+  // =========================
+
+  model GymEvent {
+    id          String   @id @default(uuid())
+    title       String
+    description String?
+    startDate   DateTime
+    endDate     DateTime
+    fee         Float    @default(0) // Taxa de inscrição via Pix
+    isTournament Boolean  @default(false)
+
+    gymId       String
+    gym         Gym      @relation(fields: [gymId], references: [id])
+  }
+
+  // =========================
+  // CATEGORY / EXERCISE
+  // =========================
+
+  model Category {
+    id    String     @id @default(uuid())
+    name  String     @unique 
+    exercises Exercise[]
+  }
+
+  model Exercise {
+    id          String     @id @default(uuid())
+    name        String
+    description String?
+    image       String?
+    tutorial    String?
+    level       Difficulty @default(BEGINNER)
+    duration    String?
+    reps        Int?
+
+    categoryId String
+    category   Category @relation(fields: [categoryId], references: [id])
+
+    primaryMuscleId String
+    primaryMuscle   MuscleGroup @relation("PrimaryMuscle", fields: [primaryMuscleId], references: [id])
+
+    secondaryMuscles ExerciseMuscle[]
+
+    userId String?
+    user   User? @relation(fields: [userId], references: [id])
+
+    workoutExercises          UserWorkoutExercise[]
+    completedWorkoutExercises CompletedWorkoutExercise[]
+  }
+
+  // =========================
+  // MUSCLE
+  // =========================
+
+  model MuscleGroup {
+    id   String @id @default(uuid())
+    name String @unique
+
+    primaryExercises   Exercise[]       @relation("PrimaryMuscle")
+    secondaryExercises ExerciseMuscle[]
+  }
+
+  model ExerciseMuscle {
+    id String @id @default(uuid())
+
+    exerciseId String
+    muscleId   String
+
+    exercise Exercise    @relation(fields: [exerciseId], references: [id])
+    muscle   MuscleGroup @relation(fields: [muscleId], references: [id])
+  }
+
+  // =========================
+  // WORKOUT
+  // =========================
+
+  model UserWorkout {
+    id        String   @id @default(uuid())
+    name      String
+    createdAt DateTime @default(now())
+
+    userId String?
+    user   User? @relation(fields: [userId], references: [id])
+
+    gymId  String?  // Novo: Indica se o treino é de uma academia/personal
+    gym    Gym?     @relation(fields: [gymId], references: [id])
+
+    exercises                 UserWorkoutExercise[]
+    completedWorkouts         CompletedWorkout[]
+    completedWorkoutExercises CompletedWorkoutExercise[]
+    programWorkouts           ProgramWorkout[]
+    sharedWorkouts            WorkoutShare[]
+    
+    messages                  Message[]
+  }
+
+  model UserWorkoutExercise {
+    id String @id @default(uuid())
+
+    userWorkoutId String
+    exerciseId    String
+
+    sets Int
+    reps Int
+
+    userWorkout UserWorkout @relation(fields: [userWorkoutId], references: [id])
+    exercise    Exercise    @relation(fields: [exerciseId], references: [id])
+
+    @@unique([userWorkoutId, exerciseId])
+  }
+
+  // =========================
+  // COMPLETED
+  // =========================
+
+  model CompletedWorkout {
+    id String @id @default(uuid())
+
+    userId    String
+    workoutId String
+
+    xpEarned Int
+    doneAt    DateTime @default(now())
+
+    user    User        @relation(fields: [userId], references: [id])
+    workout UserWorkout @relation(fields: [workoutId], references: [id])
+  }
+
+  model CompletedWorkoutExercise {
+    id String @id @default(uuid())
+
+    userId         String
+    workoutId      String
+    exerciseId     String
+
+    xpEarned       Int
+    doneAt           DateTime @default(now())
+    completionDate String
+
+    user      User        @relation(fields: [userId], references: [id])
+    workout   UserWorkout @relation(fields: [workoutId], references: [id])
+    exercise Exercise    @relation(fields: [exerciseId], references: [id])
+
+    @@unique([userId, workoutId, exerciseId, completionDate])
+  }
+
+  // =========================
+  // PROGRAM
+  // =========================
+
+  model TrainingProgram {
+    id            String   @id @default(uuid())
+    name          String
+    description String?
+
+    durationWeeks Int
+    createdAt      DateTime @default(now())
+
+    workouts ProgramWorkout[]
+  }
+
+  model ProgramWorkout {
+    id String @id @default(uuid())
+
+    programId String
+    workoutId String
+
+    week Int
+    day  Int
+
+    program TrainingProgram @relation(fields: [programId], references: [id])
+    workout UserWorkout      @relation(fields: [workoutId], references: [id])
+  }
+
+  // =========================
+  // BADGE
+  // =========================
+
+  model Badge {
+    id              String      @id @default(uuid())
+    name            String      @unique
+    description     String
+    levelRequired Int
+    users           UserBadge[]
+  }
+
+  model UserBadge {
+    id String @id @default(uuid())
+
+    userId   String
+    badgeId  String
+    earnedAt DateTime @default(now())
+
+    user  User  @relation(fields: [userId], references: [id])
+    badge Badge @relation(fields: [badgeId], references: [id])
+
+    @@unique([userId, badgeId])
+  }
+
+  // =========================
+  // FEEDBACK
+  // =========================
+
+  model Feedback {
+    id String @id @default(uuid())
+
+    userId    String
+    message   String
+    rating    Int
+    createdAt DateTime @default(now())
+
+    user User @relation(fields: [userId], references: [id])
+  }
+
+  // =========================
+  // FRIEND SYSTEM
+  // =========================
+
+  model FriendRequest {
+    id String @id @default(uuid())
+
+    senderId   String
+    receiverId String
+
+    status    FriendRequestStatus @default(PENDING)
+    createdAt DateTime              @default(now())
+
+    sender   User @relation("SentRequests", fields: [senderId], references: [id])
+    receiver User @relation("ReceivedRequests", fields: [receiverId], references: [id])
+
+    @@unique([senderId, receiverId])
+  }
+
+  // =========================
+  // CHAT
+  // =========================
+
+  model Chat {
+    id String @id @default(uuid())
+
+    isGroup Boolean @default(false)
+    name    String?
+
+    createdAt DateTime @default(now())
+
+    participants ChatParticipant[]
+    messages      Message[]
+  }
+
+  model ChatParticipant {
+    id String @id @default(uuid())
+
+    userId String
+    chatId String
+
+    user User @relation(fields: [userId], references: [id])
+    chat Chat @relation(fields: [chatId], references: [id])
+
+    @@unique([userId, chatId])
+  }
+
+  model Message {
+    id        String   @id @default(uuid())
+    content   String
+    createdAt DateTime @default(now())
+    senderId  String
+    chatId    String
+    read      Boolean  @default(false) 
+
+    sharedWorkoutId String?  
+    sharedWorkout   UserWorkout? @relation(fields: [sharedWorkoutId], references: [id])
+
+    workoutShareId  String?
+    workoutShare    WorkoutShare? @relation(fields: [workoutShareId], references: [id])
+
+    sender User @relation(fields: [senderId], references: [id])
+    chat   Chat @relation(fields: [chatId], references: [id])
+  }
+
+  // =========================
+  // SHARE WORKOUT
+  // =========================
+
+  model WorkoutShare {
+    id String @id @default(uuid())
+
+    workoutId  String
+    senderId   String
+    receiverId String
+
+    status    ShareStatus @default(PENDING)
+    createdAt DateTime    @default(now())
+
+    workout   UserWorkout @relation(fields: [workoutId], references: [id])
+    sender    User        @relation("WorkoutSender", fields: [senderId], references: [id])
+    receiver  User        @relation("WorkoutReceiver", fields: [receiverId], references: [id])
+    messages  Message[]
+  }
