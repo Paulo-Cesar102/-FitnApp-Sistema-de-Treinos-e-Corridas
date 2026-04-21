@@ -105,20 +105,19 @@ model Gym {
   name        String
   description String?
   address     String?
-  inviteCode  String    @unique
-  pixKey      String   // Chave Pix do dono/academia
-  pixType     String   // CPF, CNPJ, Email, Aleatória
-  qrCodeUrl   String?  // Imagem do QR Code estático
+  inviteCode  String   @unique
+  email       String   @unique 
+  pixKey      String
+  pixType     String
+  qrCodeUrl   String?
   createdAt   DateTime @default(now())
 
-  // Relacionamentos
   members     User[]
   payments    Payment[]
   products    Product[]
   events      GymEvent[]
-  workouts    UserWorkout[] // Treinos criados pela academia ou personais dela
+  workouts    UserWorkout[]
 }
-
 // =========================
 // PAYMENTS & RECEPÇÃO
 // =========================
@@ -179,9 +178,8 @@ model GymEvent {
 // =========================
 
 model Category {
-  id   String @id @default(uuid())
-  name String
-
+  id    String     @id @default(uuid())
+  name  String     @unique 
   exercises Exercise[]
 }
 

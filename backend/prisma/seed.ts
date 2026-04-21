@@ -6,11 +6,28 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("🚀 Iniciando Super Seed GymPro...");
 
-  // 1. Usuário Master (Admin)
+  // 1. Criar Academia Base (Necessário para os usuários e treinos)
+  const gym = await prisma.gym.upsert({
+    where: { inviteCode: "GYMPRO2026" },
+    update: {},
+    create: {
+      name: "Academia GymPro Central",
+      inviteCode: "GYMPRO2026",
+      email: "contato@gympro.com",
+      pixKey: "gympro-cnpj-fake",
+      pixType: "CNPJ",
+      address: "Rua Fitness, 123",
+    },
+  });
+  console.log("✅ Academia base pronta.");
+
+  // 2. Usuário Master (Admin)
   const hashedAdminPassword = await bcrypt.hash("admin123", 10);
   const admin = await prisma.user.upsert({
     where: { email: "admin@gympro.com" },
-    update: {},
+    update: {
+      gymId: gym.id,
+    },
     create: {
       name: "GymPro Master",
       email: "admin@gympro.com",
@@ -18,22 +35,27 @@ async function main() {
       role: Role.ADMIN,
       sex: Sex.M,
       level: 10,
+      xp: 1000,
+      gymId: gym.id,
     },
   });
+  console.log("✅ Usuário Admin pronto.");
 
-  // 2. Categorias
+  // 3. Categorias (Requer @unique no campo 'name' no schema.prisma)
   const categoriesData = ["Musculação", "Cardio", "Crossfit", "Yoga"];
   const categories: Record<string, any> = {};
 
   for (const name of categoriesData) {
-    const cat = await prisma.category.create({
-      data: { name },
+    const cat = await prisma.category.upsert({
+      where: { name: name },
+      update: {},
+      create: { name },
     });
     categories[name] = cat;
   }
-  console.log("✅ Categorias criadas.");
+  console.log("✅ Categorias sincronizadas.");
 
-  // 3. Grupos Musculares
+  // 4. Grupos Musculares
   const gruposMusculares = ["Peito", "Costas", "Pernas", "Ombros", "Braços", "Core"];
   const mGroups: Record<string, any> = {};
 
@@ -45,9 +67,9 @@ async function main() {
     });
     mGroups[nome] = group;
   }
-  console.log("✅ Grupos musculares criados.");
+  console.log("✅ Grupos musculares sincronizados.");
 
-  // 4. Exercícios
+  // 5. Exercícios
   const exerciciosData = [
     { id: "ex-supino-reto", name: "Supino Reto", mGroup: "Peito", img: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600" },
     { id: "ex-supino-inc", name: "Supino Inclinado", mGroup: "Peito", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600" },
@@ -62,7 +84,11 @@ async function main() {
   for (const ex of exerciciosData) {
     await prisma.exercise.upsert({
       where: { id: ex.id },
-      update: {},
+      update: {
+        name: ex.name,
+        image: ex.img,
+        primaryMuscleId: mGroups[ex.mGroup].id,
+      },
       create: {
         id: ex.id,
         name: ex.name,
@@ -75,9 +101,9 @@ async function main() {
       },
     });
   }
-  console.log("✅ Exercícios criados.");
+  console.log("✅ Exercícios sincronizados.");
 
-  // 5. Treinos de Exemplo (Associados ao Admin)
+  // 6. Treinos de Exemplo (Associados ao Admin e à Academia)
   const treinos = [
     {
       name: "Peitoral de Ferro",
@@ -96,23 +122,30 @@ async function main() {
   ];
 
   for (const t of treinos) {
-    const workout = await prisma.userWorkout.create({
-      data: {
-        name: t.name,
-        userId: admin.id,
-        exercises: {
-          create: t.exercises.map(e => ({
-            exerciseId: e.id,
-            sets: e.sets,
-            reps: e.reps
-          }))
-        }
-      }
+    const existingWorkout = await prisma.userWorkout.findFirst({
+      where: { name: t.name, userId: admin.id }
     });
-  }
-  console.log("✅ Treinos de exemplo vinculados ao admin.");
 
-  // 6. Conquistas (Badges)
+    if (!existingWorkout) {
+      await prisma.userWorkout.create({
+        data: {
+          name: t.name,
+          userId: admin.id,
+          gymId: gym.id,
+          exercises: {
+            create: t.exercises.map(e => ({
+              exerciseId: e.id,
+              sets: e.sets,
+              reps: e.reps
+            }))
+          }
+        }
+      });
+    }
+  }
+  console.log("✅ Treinos de exemplo vinculados.");
+
+  // 7. Conquistas (Badges)
   const badges = [
     { name: "Frango Maromba", description: "Deu o primeiro passo… mesmo sendo um frango ainda.", levelRequired: 1 },
     { name: "Saiu do Sofá", description: "Milagre: começou a treinar de verdade.", levelRequired: 2 },
