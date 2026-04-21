@@ -12,6 +12,7 @@ export interface IUser {
   sex: string;
   level?: number; 
   xp?: number;    
+  streak:number
   role?: Role;    
   createdAt?: Date;
 

@@ -14,6 +14,8 @@ datasource db {
 enum Role {
   USER
   ADMIN
+  GYM_OWNER // Novo: Para donos de academia
+  PERSONAL  // Novo: Para personais
 }
 
 enum Sex {
@@ -39,23 +41,36 @@ enum Difficulty {
   ADVANCED
 }
 
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PaymentType {
+  MENSALIDADE
+  MARKETPLACE
+  EVENTO
+}
+
 // =========================
 // USER
 // =========================
 
 model User {
-  id               String    @id @default(uuid())
-  name             String
-  email            String    @unique
-  password         String
-  sex              Sex       @default(M)
-  level            Int       @default(1)
-  xp               Int       @default(0)
-  streak           Int       @default(0)
-  lastActivityDate DateTime?
-  role             Role      @default(USER)
-  createdAt        DateTime  @default(now())
+  id                String    @id @default(uuid())
+  name              String
+  email             String    @unique
+  password          String
+  sex               Sex       @default(M)
+  level             Int       @default(1)
+  xp                Int       @default(0)
+  streak            Int       @default(0)
+  lastActivityDate  DateTime?
+  role              Role      @default(USER)
+  createdAt         DateTime  @default(now())
 
+  // Relacionamentos Fitness
   workouts                  UserWorkout[]
   completedWorkouts         CompletedWorkout[]
   completedWorkoutExercises CompletedWorkoutExercise[]
@@ -63,17 +78,100 @@ model User {
   feedbacks                 Feedback[]
   exercises                 Exercise[]
 
-  // amizade
+  // Relacionamento com Academia
+  gymId                     String?
+  gym                       Gym?      @relation(fields: [gymId], references: [id])
+  payments                  Payment[]
+
+  // Amizade
   sentRequests     FriendRequest[] @relation("SentRequests")
   receivedRequests FriendRequest[] @relation("ReceivedRequests")
 
-  // chat
+  // Chat
   chatParticipants ChatParticipant[]
   messages         Message[]
 
-  // compartilhar treino
+  // Compartilhar treino
   sentWorkouts     WorkoutShare[] @relation("WorkoutSender")
   receivedWorkouts WorkoutShare[] @relation("WorkoutReceiver")
+}
+
+// =========================
+// GYM & ACADEMIA (B2B)
+// =========================
+
+model Gym {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  address     String?
+  inviteCode  String    @unique
+  pixKey      String   // Chave Pix do dono/academia
+  pixType     String   // CPF, CNPJ, Email, Aleatória
+  qrCodeUrl   String?  // Imagem do QR Code estático
+  createdAt   DateTime @default(now())
+
+  // Relacionamentos
+  members     User[]
+  payments    Payment[]
+  products    Product[]
+  events      GymEvent[]
+  workouts    UserWorkout[] // Treinos criados pela academia ou personais dela
+}
+
+// =========================
+// PAYMENTS & RECEPÇÃO
+// =========================
+
+model Payment {
+  id            String        @id @default(uuid())
+  amount        Float
+  payerName     String        // Nome preenchido pelo aluno para a recepção
+  receiptUrl    String?       // Foto do comprovante
+  status        PaymentStatus @default(PENDING)
+  type          PaymentType   @default(MENSALIDADE)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+
+  gymId         String
+  gym           Gym           @relation(fields: [gymId], references: [id])
+}
+
+// =========================
+// MARKETPLACE DA ACADEMIA
+// =========================
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  price       Float
+  stock       Int      @default(0)
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+
+  gymId       String
+  gym         Gym      @relation(fields: [gymId], references: [id])
+}
+
+// =========================
+// EVENTOS & TORNEIOS (GHOST MODE)
+// =========================
+
+model GymEvent {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  fee         Float    @default(0) // Taxa de inscrição via Pix
+  isTournament Boolean  @default(false)
+
+  gymId       String
+  gym         Gym      @relation(fields: [gymId], references: [id])
 }
 
 // =========================
@@ -146,13 +244,15 @@ model UserWorkout {
   userId String?
   user   User? @relation(fields: [userId], references: [id])
 
+  gymId  String?  // Novo: Indica se o treino é de uma academia/personal
+  gym    Gym?     @relation(fields: [gymId], references: [id])
+
   exercises                 UserWorkoutExercise[]
   completedWorkouts         CompletedWorkout[]
   completedWorkoutExercises CompletedWorkoutExercise[]
   programWorkouts           ProgramWorkout[]
   sharedWorkouts            WorkoutShare[]
   
-  // 🔥 Relacionamento com as mensagens do chat
   messages                  Message[]
 }
 
@@ -182,7 +282,7 @@ model CompletedWorkout {
   workoutId String
 
   xpEarned Int
-  doneAt   DateTime @default(now())
+  doneAt    DateTime @default(now())
 
   user    User        @relation(fields: [userId], references: [id])
   workout UserWorkout @relation(fields: [workoutId], references: [id])
@@ -285,7 +385,7 @@ model FriendRequest {
   receiverId String
 
   status    FriendRequestStatus @default(PENDING)
-  createdAt DateTime             @default(now())
+  createdAt DateTime              @default(now())
 
   sender   User @relation("SentRequests", fields: [senderId], references: [id])
   receiver User @relation("ReceivedRequests", fields: [receiverId], references: [id])
@@ -306,7 +406,7 @@ model Chat {
   createdAt DateTime @default(now())
 
   participants ChatParticipant[]
-  messages     Message[]
+  messages      Message[]
 }
 
 model ChatParticipant {
@@ -329,11 +429,9 @@ model Message {
   chatId    String
   read      Boolean  @default(false) 
 
-  // 🔥 Relacionamento com treino compartilhado
   sharedWorkoutId String?  
   sharedWorkout   UserWorkout? @relation(fields: [sharedWorkoutId], references: [id])
 
-  // 🔥 Relacionamento com o log de compartilhamento
   workoutShareId  String?
   workoutShare    WorkoutShare? @relation(fields: [workoutShareId], references: [id])
 

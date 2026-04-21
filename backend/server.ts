@@ -12,7 +12,7 @@
   import { badgeRoutes } from "./src/routes/badge.routes";  
   import { router as friendRoutes } from "./src/routes/friendRequest";
   import { router as chatRoutes } from "./src/routes/chat.routes";
-
+  import { gymRoutes } from "./src/routes/GymRoutes";
   const app = express();
 
   // 🔐 CORS CONFIGURADO (Corrigido para evitar bloqueios no frontend)
@@ -37,7 +37,7 @@
   app.use("/ranking", rankingRoutes);
   app.use("/badges", badgeRoutes);
   app.use("/chats", chatRoutes);
-
+  app.use("/gym", gymRoutes)
   app.get("/", (_req, res) => {
     res.json({
       status: "online",
