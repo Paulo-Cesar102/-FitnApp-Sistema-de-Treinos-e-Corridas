@@ -1,11 +1,14 @@
-
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./Register.css";
 import CustomAlert from "../Componentes/CustomAlert";
 
-const FlameIcon = () => <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>;
+const FlameIcon = () => (
+  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+  </svg>
+);
 
 export default function Register() {
   const navigate = useNavigate();
@@ -50,21 +53,37 @@ export default function Register() {
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        sex: formData.gender === "male" ? "M" : "F"
+        // Enviando MALE ou FEMALE para bater com o padrão do Schema/DB
+         sex: formData.gender === "male" ? "M" : "F"
       };
 
       await axios.post("http://localhost:3000/users/register", payload);
 
       setFormData({ name: "", email: "", password: "", confirmPassword: "", gender: "" });
 
-      showAlert("Conta Criada", "Usuário cadastrado com sucesso! Faça login para continuar.", "success", () => {
+      showAlert("Conta Criada", "Usuário cadastrado com sucesso! Faça login.", "success", () => {
         setAlertConfig({ isOpen: false });
         navigate("/login");
       });
 
     } catch (error) {
-      const msg = error.response?.data?.error || "Erro ao conectar com o servidor";
-      showAlert("Erro no Cadastro", msg, "error");
+      // 🚀 A MÁGICA PARA PEGAR O ERRO DO ZOD ESTÁ AQUI
+      let errorMessage = "Erro ao conectar com o servidor";
+
+      if (error.response && error.response.data) {
+        const data = error.response.data;
+
+        // Se o backend enviou a lista de erros do Zod (aquela que fizemos no server.ts)
+        if (data.errors && data.errors.length > 0) {
+          errorMessage = data.errors[0].message; // Pega a primeira mensagem de validação
+        } else if (data.message) {
+          errorMessage = data.message;
+        } else if (data.error) {
+          errorMessage = data.error;
+        }
+      }
+
+      showAlert("Erro no Cadastro", errorMessage, "error");
     } finally {
       setLoading(false);
     }
