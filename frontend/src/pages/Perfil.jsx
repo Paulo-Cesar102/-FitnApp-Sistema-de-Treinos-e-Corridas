@@ -13,14 +13,42 @@ export default function Perfil() {
   const [alertConfig, setAlertConfig] = useState({ isOpen: false });
 
   const [userData, setUserData] = useState({
-    name: "Atleta GymPro",
-    email: "atleta@gympro.com",
-    level: 5,
-    currentXP: 1250,
-    nextLevelXP: 2000,
+    name: "",
+    email: "",
+    level: 1,
+    xp: 0,
+    nextLevelXP: 1000,
     totalWorkouts: 42,
     streak: 5
   });
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if (user.name) {
+      const totalXp = user.xp || 0;
+      // Recalcula o level sempre baseado no XP total (mesma fórmula do backend)
+      const calculatedLevel = Math.floor(totalXp / 100) + 1;
+      
+      // XP do nível atual (ex: nível 2 começa em 100 XP)
+      const xpForCurrentLevel = (calculatedLevel - 1) * 100;
+      // XP no nível atual
+      const currentXP = totalXp - xpForCurrentLevel;
+      // XP necessário para proxímo nível (sempre 100)
+      const nextLevelXP = 100;
+
+      setUserData(prev => ({
+        ...prev,
+        name: user.name,
+        email: user.email || prev.email,
+        level: calculatedLevel,
+        xp: totalXp,
+        currentXP: currentXP,
+        nextLevelXP: nextLevelXP,
+        streak: user.streak || prev.streak,
+        totalWorkouts: user.completedWorkouts?.length || prev.totalWorkouts
+      }));
+    }
+  }, []);
 
   const progressPercentage = (userData.currentXP / userData.nextLevelXP) * 100;
 
@@ -43,7 +71,7 @@ export default function Perfil() {
   return (
     <div className="perfil-container">
       <header className="perfil-header">
-        <h2>MEU <span>PERFIL</span></h2>
+        <h2>Olá <span>{userData.name || "USUÁRIO"}</span> !</h2>
         <button className="btn-logout" onClick={handleLogout}>
           <LogoutIcon />
         </button>

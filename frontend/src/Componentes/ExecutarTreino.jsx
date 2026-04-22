@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./ExecutarTreino.css";
 import CustomAlert from "./CustomAlert";
+import { completeWorkout } from "../api/workoutService";
 
 // Ícones Vetorizados
 const TimerIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
@@ -113,11 +114,8 @@ export default function ExecutarTreino({ workout }) {
         setCurrentExerciseIdx((prev) => prev + 1);
         setCurrentSet(1);
       } else {
-        setIsFinished(true); // Trava o background do timer
-        showAlert("Treino Concluído", "Parabéns! Você finalizou as atividades de hoje.", "success", () => {
-          setAlertConfig({ isOpen: false });
-          navigate("/home");
-        });
+        // Finalizar treino e atualizar XP
+        finalizarTreino();
       }
     }
   };
@@ -128,6 +126,62 @@ export default function ExecutarTreino({ workout }) {
     setRestTime(tempoDescanso);
     setIsResting(true);
     setIsSetRunning(false);
+  };
+
+  // Verifica se a mensagem de aviso já foi mostrada hoje para este treino
+  const hasShownMessageToday = () => {
+    const messages = JSON.parse(localStorage.getItem("shownMessages") || "{}");
+    const today = new Date().toDateString();
+    return messages[treinoAtual.id]?.date === today;
+  };
+
+  // Marca que a mensagem foi mostrada para este treino hoje
+  const markMessageAsShown = () => {
+    const messages = JSON.parse(localStorage.getItem("shownMessages") || "{}");
+    const today = new Date().toDateString();
+    messages[treinoAtual.id] = { date: today };
+    localStorage.setItem("shownMessages", JSON.stringify(messages));
+  };
+
+  const finalizarTreino = async () => {
+    try {
+      const result = await completeWorkout(treinoAtual.id);
+      console.log("Treino completado:", result);
+
+      // Atualizar localStorage com novo XP e level
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      user.xp = result.newXp;
+      user.level = result.newLevel;
+      user.streak = result.streak;
+      localStorage.setItem("user", JSON.stringify(user));
+
+      setIsFinished(true);
+      showAlert("Treino Concluído", `Parabéns! Você ganhou ${result.xpGained} XP. Novo nível: ${result.newLevel}`, "success", () => {
+        setAlertConfig({ isOpen: false });
+        navigate("/home");
+      });
+    } catch (error) {
+      console.error("Erro ao completar treino:", error);
+      
+      // Verifica se é o erro de treino já concluído hoje
+      const errorMessage = error?.response?.data?.message || error?.message || "";
+      
+      if (errorMessage.includes("já concluiu esse treino hoje")) {
+        // Mostra a mensagem apenas se ainda não foi mostrada hoje
+        if (!hasShownMessageToday()) {
+          markMessageAsShown();
+          showAlert("Treino Já Realizado", "Você já completou este treino hoje! Volta amanhã para ganhar mais XP.", "warning", () => {
+            setAlertConfig({ isOpen: false });
+            navigate("/home");
+          });
+        } else {
+          // Se já foi mostrada, apenas navega sem avisar
+          navigate("/home");
+        }
+      } else {
+        showAlert("Erro", "Erro ao salvar o progresso. Tente novamente.", "error");
+      }
+    }
   };
 
   const formatTime = (seconds) => {

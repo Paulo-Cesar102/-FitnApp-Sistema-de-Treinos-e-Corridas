@@ -37,7 +37,10 @@ export class AuthService {
         id: user.id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        level: user.level,
+        xp: user.xp,
+        streak: user.streak
         // Não envie a senha (password) aqui por segurança!
       }
     };
