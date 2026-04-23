@@ -7,8 +7,10 @@ export const createPrivateChat = async (friendId: string) => {
 };
 
 //  Criar grupo
-export const createGroupChat = async (name: string, userIds: string[]) => {
-  const res = await api.post("/chats/group", { name, userIds });
+// Ajustado para receber um objeto, facilitando a chamada do Modal
+export const createGroupChat = async ({ name, participantIds }: { name: string, participantIds: string[] }) => {
+  // Mapeamos 'participantIds' para 'userIds' caso sua rota no backend espere 'userIds'
+  const res = await api.post("/chats/group", { name, userIds: participantIds });
   return res.data;
 };
 

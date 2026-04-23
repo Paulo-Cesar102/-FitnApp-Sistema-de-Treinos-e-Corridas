@@ -1,16 +1,19 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { getFriends } from "../api/friendRequestService";
+import { createGroupChat } from "../api/chatService"; // Importe a função de criação
+import { socket } from "../service/socket"; // Importe o socket
 import "./GroupInfoModal.css";
 
 export default function GroupInfoModal({ 
   isOpen, 
   onClose, 
   groupData, 
-  onAddMembers // Nome da prop que vem do Friends.js
+  onAddMembers // Função loadData que vem do Friends.js para atualizar a lista
 }) {
   const [friends, setFriends] = useState([]);
   const [selectedUsersToAdd, setSelectedUsersToAdd] = useState([]);
   const [groupName, setGroupName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -30,13 +33,35 @@ export default function GroupInfoModal({
     }
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!groupName.trim()) return alert("Dê um nome ao grupo!");
+    
     if (selectedUsersToAdd.length === 0 && !groupData) {
       return alert("Selecione pelo menos um atleta!");
     }
-    // Chama a função enviando os dados
-    onAddMembers(selectedUsersToAdd, groupName);
+
+    setIsLoading(true);
+    try {
+      // 1. Criar o grupo no Banco de Dados
+      const newGroup = await createGroupChat({
+        name: groupName,
+        participantIds: selectedUsersToAdd // Envia o array de IDs selecionados
+      });
+
+      // 2. Avisar o servidor via Socket para que todos os membros entrem na sala
+      socket.emit("group:created", newGroup);
+
+      // 3. Atualizar a lista no componente Friends.js
+      onAddMembers(); 
+
+      // 4. Fechar o modal
+      onClose();
+    } catch (err) {
+      console.error("Erro ao criar grupo:", err);
+      alert("Houve um erro ao criar o grupo. Tente novamente.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -94,9 +119,9 @@ export default function GroupInfoModal({
             <button 
               className="btn-save" 
               onClick={handleCreate}
-              disabled={!groupName.trim()}
+              disabled={!groupName.trim() || isLoading}
             >
-              Criar Grupo
+              {isLoading ? "Criando..." : "Criar Grupo"}
             </button>
           </div>
         </div>
