@@ -1,4 +1,5 @@
 import { prisma } from "../database/prisma";
+import { ChatRole } from "@prisma/client";
 
 export class ChatRepository {
   async createChat(isGroup: boolean, name?: string) {
@@ -10,12 +11,9 @@ export class ChatRepository {
     });
   }
 
-  async addParticipant(chatId: string, userId: string) {
-    return prisma.chatParticipant.create({
-      data: {
-        chatId,
-        userId
-      }
+  async addParticipant(chatId: string, userId: string, role: ChatRole = "MEMBER") {
+    return await prisma.chatParticipant.create({
+      data: { chatId, userId, role }
     });
   }
 
@@ -186,4 +184,22 @@ export class ChatRepository {
     });
     return chat;
   }
+
+  // Verificar se o usuário é admin do chat
+  async checkIfIsAdmin(chatId: string, userId: string): Promise<boolean> {
+    const participant = await prisma.chatParticipant.findFirst({
+      where: { chatId, userId, role: "ADMIN" }
+    });
+    return !!participant;
+  }
+
+  // Remover participante (Sair do grupo)
+  async removeParticipant(chatId: string, userId: string) {
+    return await prisma.chatParticipant.deleteMany({
+      where: { chatId, userId }
+    });
+  }
+  
+  // Buscar chat por ID
+ 
 }

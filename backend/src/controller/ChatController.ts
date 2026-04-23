@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { ChatService } from "../services/ChatService";
-import { io } from "../../server"; 
+import { io } from "../../server";
+
 export class ChatController {
   private service = new ChatService();
 
@@ -22,7 +23,7 @@ export class ChatController {
     }
   }
 
-  // 👥 Criar grupo
+  // 👥 Criar grupo (Criador vira ADMIN)
   async createGroup(req: Request, res: Response) {
     try {
       const userId = req.user?.id;
@@ -34,9 +35,8 @@ export class ChatController {
         return res.status(400).json({ message: "O grupo precisa de participantes" });
       }
 
-      const allUserIds = [userId, ...userIds];
-
-      const chat = await this.service.createGroup(name, allUserIds);
+      // Passamos o userId (criador) separado para o service definir como ADMIN
+      const chat = await this.service.createGroup(name, userId, userIds);
       return res.status(201).json(chat);
     } catch (error) {
       return res.status(400).json({
@@ -45,41 +45,74 @@ export class ChatController {
     }
   }
 
-  async sendMessage(req: Request, res: Response) {
+  async kickMember(req: Request, res: Response) {
   try {
-    const senderId = req.user?.id;
-    const { chatId, content, workoutId } = req.body;
+    const adminId = req.user?.id;
+    const { chatId } = req.params as { chatId: string };
+    const { memberId } = req.body; 
 
-    if (!senderId) {
-      return res.status(401).json({ message: "Usuário não autenticado" });
-    }
+    if (!adminId) return res.status(401).json({ message: "Não autorizado" });
 
-    if (!chatId) {
-      return res.status(400).json({ message: "chatId é obrigatório" });
-    }
-
-    const message = await this.service.sendMessage(
-      chatId,
-      senderId,
-      content,
-      workoutId
-    );
-
-    io.to(chatId).emit("chat:new_message", {
-      chatId,
-      message
-    });
-
-    return res.status(201).json(message);
-
-  } catch (error) {
-    console.error("Erro sendMessage:", error);
-
-    return res.status(500).json({
-      message: error instanceof Error ? error.message : "Erro ao enviar mensagem"
-    });
+    await this.service.removeMember(chatId, adminId, memberId);
+    return res.status(200).json({ message: "Membro removido com sucesso." });
+  } catch (error: any) {
+    return res.status(403).json({ message: error.message });
   }
 }
+
+  // ➕ Adicionar membro (Apenas ADMIN)
+  async addMember(req: Request, res: Response) {
+    try {
+      const adminId = req.user?.id;
+      const { chatId } = req.params as { chatId: string };
+      const { newMemberId } = req.body;
+
+      if (!adminId) return res.status(401).json({ message: "Não autorizado" });
+
+      const participant = await this.service.addMember(chatId, adminId, newMemberId);
+      return res.status(201).json(participant);
+    } catch (error) {
+      return res.status(400).json({
+        message: error instanceof Error ? error.message : "Erro ao adicionar membro"
+      });
+    }
+  }
+
+  // 🚪 Sair do grupo
+  async leaveGroup(req: Request, res: Response) {
+    try {
+      const userId = req.user?.id;
+      const { chatId } = req.params as { chatId: string };
+
+      if (!userId) return res.status(401).json({ message: "Não autorizado" });
+
+      const result = await this.service.leaveGroup(chatId, userId);
+      return res.json(result);
+    } catch (error) {
+      return res.status(400).json({
+        message: error instanceof Error ? error.message : "Erro ao sair do grupo"
+      });
+    }
+  }
+
+  // 📩 Enviar mensagem
+  async sendMessage(req: Request, res: Response) {
+    try {
+      const senderId = req.user?.id;
+      const { chatId, content, workoutId } = req.body;
+
+      if (!senderId) return res.status(401).json({ message: "Usuário não autenticado" });
+      if (!chatId) return res.status(400).json({ message: "chatId é obrigatório" });
+
+      const message = await this.service.sendMessage(chatId, senderId, content, workoutId);
+
+      return res.status(201).json(message);
+    } catch (error) {
+      return res.status(500).json({
+        message: error instanceof Error ? error.message : "Erro ao enviar mensagem"
+      });
+    }
+  }
 
   // 📋 Listar chats do usuário
   async getChats(req: Request, res: Response) {
@@ -96,10 +129,10 @@ export class ChatController {
     }
   }
 
-  // 💬 Mensagens de um chat (com auto-read)
+  // 💬 Buscar mensagens
   async getMessages(req: Request, res: Response) {
     try {
-const { chatId } = req.params as { chatId: string };
+      const { chatId } = req.params as { chatId: string };
       const userId = req.user?.id;
 
       if (!userId) return res.status(401).json({ message: "Não autenticado" });
@@ -113,10 +146,10 @@ const { chatId } = req.params as { chatId: string };
     }
   }
 
-  // 🔥 Marcar como lida manualmente
+  // 🔥 Marcar como lida
   async markAsRead(req: Request, res: Response) {
     try {
-   const { chatId } = req.params as { chatId: string };
+      const { chatId } = req.params as { chatId: string };
       const userId = req.user?.id;
 
       if (!userId) return res.status(401).json({ error: "Não autorizado" });
@@ -128,10 +161,10 @@ const { chatId } = req.params as { chatId: string };
     }
   }
 
-  // 🗑️ Limpar histórico (Deletar para todos)
+  // 🗑️ Limpar histórico
   async clearChat(req: Request, res: Response) {
     try {
-     const { chatId } = req.params as { chatId: string };
+      const { chatId } = req.params as { chatId: string };
       await this.service.clearChatHistory(chatId);
       return res.json({ message: "Histórico limpo com sucesso." });
     } catch (error) {
@@ -139,10 +172,7 @@ const { chatId } = req.params as { chatId: string };
     }
   }
 
-  /**
-   * 🏋️ Salvar Treino Compartilhado
-   * Chamado quando o usuário clica em "Salvar" no card do chat
-   */
+  // 🏋️ Salvar Treino
   async saveWorkout(req: Request, res: Response) {
     try {
       const userId = req.user?.id;
@@ -159,34 +189,33 @@ const { chatId } = req.params as { chatId: string };
     }
   }
 
+  // ❌ Apagar mensagem
   async deleteMessage(req: Request, res: Response) {
-  try {
-    const { messageId } = req.params as { messageId: string };
-    const userId = req.user?.id;
+    try {
+      const { messageId } = req.params as { messageId: string };
+      const userId = req.user?.id;
 
-    if (!userId) return res.status(401).json({ message: "Não autorizado" });
+      if (!userId) return res.status(401).json({ message: "Não autorizado" });
 
-    await this.service.deleteMessageForEveryone(messageId, userId);
-    
-    return res.json({ message: "Mensagem apagada para todos." });
-  } catch (error) {
-    return res.status(400).json({ 
-      message: error instanceof Error ? error.message : "Erro ao apagar mensagem." 
-    });
+      await this.service.deleteMessageForEveryone(messageId, userId);
+      return res.json({ message: "Mensagem apagada para todos." });
+    } catch (error) {
+      return res.status(400).json({
+        message: error instanceof Error ? error.message : "Erro ao apagar mensagem."
+      });
+    }
   }
-}
 
-async chatinfo(req: Request, res: Response){
-  try{
-    const {chatId}= req.params as {chatId: string};
-
-    const chat = await this.service.getchatInfo(chatId);
-    return res.json(chat);
-  } catch (error) {
-    return res.status(400).json({ 
-      message: error instanceof Error ? error.message : "Erro ao buscar informações do chat." 
-    });
-
+  // 📊 Informações do chat
+  async chatinfo(req: Request, res: Response) {
+    try {
+      const { chatId } = req.params as { chatId: string };
+      const chat = await this.service.getchatInfo(chatId);
+      return res.json(chat);
+    } catch (error) {
+      return res.status(400).json({
+        message: error instanceof Error ? error.message : "Erro ao buscar informações do chat."
+      });
+    }
   }
-}
 }

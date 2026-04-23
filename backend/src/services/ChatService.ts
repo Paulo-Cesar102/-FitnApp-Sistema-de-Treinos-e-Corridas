@@ -14,56 +14,111 @@ export class ChatService {
     if (existing) return existing;
 
     const chat = await this.repo.createChat(false);
-    await this.repo.addParticipant(chat.id, userA);
-    await this.repo.addParticipant(chat.id, userB);
+    // Em chat privado, ambos são membros comuns
+    await this.repo.addParticipant(chat.id, userA, "MEMBER");
+    await this.repo.addParticipant(chat.id, userB, "MEMBER");
 
     return chat;
   }
 
-  // 👥 Criar grupo
-  async createGroup(name: string, userIds: string[]) {
+  // 👥 Criar grupo (Criador vira ADMIN automaticamente)
+  async createGroup(name: string, creatorId: string, userIds: string[]) {
     if (!name?.trim()) throw new Error("Nome do grupo é obrigatório");
-    if (!Array.isArray(userIds) || userIds.length === 0) {
-      throw new Error("O grupo precisa de participantes");
-    }
+    
+    // Filtra o criador da lista de convidados para não duplicar
+    const guestIds = userIds.filter(id => id !== creatorId);
 
     const chat = await this.repo.createChat(true, name);
 
+    // 👑 Adiciona o criador como ADMIN
+    await this.repo.addParticipant(chat.id, creatorId, "ADMIN");
+
+    // Adiciona os demais como MEMBER
     await Promise.all(
-      userIds.map((userId) =>
-        this.repo.addParticipant(chat.id, userId)
+      guestIds.map((userId) =>
+        this.repo.addParticipant(chat.id, userId, "MEMBER")
       )
     );
 
-    // 🚀 opcional → avisar participantes
-    userIds.forEach((userId) => {
+    // 🚀 Avisar todos os participantes
+    [creatorId, ...guestIds].forEach((userId) => {
       io.to(userId).emit("group:created", chat);
     });
 
     return chat;
   }
 
- // 📩 ENVIAR MENSAGEM (🔥 PRINCIPAL)
-async sendMessage(chatId: string, senderId: string, content: string, workoutId?: string) {
-  if (!chatId || !senderId) throw new Error("Parâmetros inválidos");
-
-  if (!content?.trim() && !workoutId) {
-    throw new Error("Mensagem vazia");
+  async removeMember(chatId: string, adminId: string, memberIdToRemove: string) {
+  // 1. Verificar se quem está removendo é ADMIN
+  const isAdmin = await this.repo.checkIfIsAdmin(chatId, adminId);
+  if (!isAdmin) {
+    throw new Error("Apenas administradores podem remover membros.");
   }
 
-  const message = await this.repo.createMessage(
-    chatId,
-    senderId,
-    content?.trim(),
-    workoutId
-  );
+  // 2. Impedir que o admin remova a si mesmo por esta rota (ele deve usar 'leave')
+  if (adminId === memberIdToRemove) {
+    throw new Error("Para sair do grupo, use a opção 'Sair'.");
+  }
 
-  // 🚀🔥 EMITE PARA A SALA DO CHAT
-  // Usaremos o nome "chat:new_message" para ser específico
-  io.to(chatId).emit("chat:new_message", message);
+  // 3. Remover o membro
+  await this.repo.removeParticipant(chatId, memberIdToRemove);
 
-  return message;
+  // 4. Notificar via Socket
+  io.to(chatId).emit("group:member_removed", { chatId, memberIdToRemove });
+  
+  return { success: true };
 }
+  // ➕ Adicionar novo membro (Apenas ADMIN pode)
+  async addMember(chatId: string, adminId: string, newMemberId: string) {
+    const isAdmin = await this.repo.checkIfIsAdmin(chatId, adminId);
+    if (!isAdmin) {
+      throw new Error("Apenas administradores podem adicionar membros ao grupo");
+    }
+
+    const participant = await this.repo.addParticipant(chatId, newMemberId, "MEMBER");
+    
+    // Notifica o grupo sobre a chegada do novo membro
+    io.to(chatId).emit("group:member_added", { chatId, newMemberId });
+
+    return participant;
+  }
+
+  // 🚪 Sair do grupo
+  async leaveGroup(chatId: string, userId: string) {
+    const chat = await this.repo.findById(chatId);
+    if (!chat || !chat.isGroup) {
+      throw new Error("Ação permitida apenas para grupos");
+    }
+
+    await this.repo.removeParticipant(chatId, userId);
+
+    // Notifica os outros membros que o usuário saiu
+    io.to(chatId).emit("group:member_left", { chatId, userId });
+
+    return { message: "Você saiu do grupo com sucesso" };
+  }
+
+  // 📩 ENVIAR MENSAGEM
+  async sendMessage(chatId: string, senderId: string, content: string, workoutId?: string) {
+    if (!chatId || !senderId) throw new Error("Parâmetros inválidos");
+
+    if (!content?.trim() && !workoutId) {
+      throw new Error("Mensagem vazia");
+    }
+
+    const message = await this.repo.createMessage(
+      chatId,
+      senderId,
+      content?.trim(),
+      workoutId
+    );
+
+    // 🚀🔥 EMITE PARA A SALA DO CHAT
+    io.to(chatId).emit("chat:new_message", message);
+
+    return message;
+  }
+
   // 📋 Listar chats do usuário
   async getUserChats(userId: string) {
     if (!userId) throw new Error("userId inválido");
@@ -88,7 +143,6 @@ async sendMessage(chatId: string, senderId: string, content: string, workoutId?:
 
     const result = await this.repo.updateMessagesToRead(chatId, userId);
 
-    // 🚀 opcional → avisar outros usuários
     io.to(chatId).emit("chat:read", {
       chatId,
       userId
@@ -103,7 +157,6 @@ async sendMessage(chatId: string, senderId: string, content: string, workoutId?:
 
     const result = await this.repo.deleteChatMessages(chatId);
 
-    // 🚀 tempo real
     io.to(chatId).emit("chat:cleared", chatId);
 
     return result;
@@ -149,7 +202,6 @@ async sendMessage(chatId: string, senderId: string, content: string, workoutId?:
 
     await this.repo.deleteSingleMessage(messageId);
 
-    // 🚀 tempo real
     io.to(message.chatId).emit("chat:delete_message", messageId);
 
     return { message: "Mensagem apagada" };
@@ -157,7 +209,7 @@ async sendMessage(chatId: string, senderId: string, content: string, workoutId?:
 
   // 📊 Info do chat
   async getchatInfo(chatId: string) {
-    const chat = await this.repo.findById(chatId);
+    const chat = await this.repo.chatInfo(chatId);
 
     if (!chat) {
       throw new Error("Ops! Esse grupo não foi encontrado.");
