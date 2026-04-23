@@ -95,3 +95,58 @@ export const saveSharedWorkout = async (workoutData: any) => {
     throw err;
   }
 };
+
+//  Obter informações do grupo (incluindo membros)
+export const getGroupInfo = async (chatId: string) => {
+  try {
+    const res = await api.get(`/chats/${chatId}/info`);
+    return res.data;
+  } catch (err: any) {
+    console.error("❌ getGroupInfo error:", err?.response?.data || err);
+    throw err;
+  }
+};
+
+//  Atualizar descrição do grupo
+export const updateGroupDescription = async (chatId: string, description: string) => {
+  try {
+    const res = await api.patch(`/chats/${chatId}/description`, { description });
+    return res.data;
+  } catch (err: any) {
+    console.error("❌ updateGroupDescription error:", err?.response?.data || err);
+    throw err;
+  }
+};
+
+//  Adicionar membros ao grupo
+export const addGroupMembers = async (chatId: string, userIds: string[]) => {
+  try {
+    const res = await api.post(`/chats/${chatId}/members`, { userIds });
+    return res.data;
+  } catch (err: any) {
+    console.error("❌ addGroupMembers error:", err?.response?.data || err);
+    throw err;
+  }
+};
+
+//  Remover membro do grupo
+export const removeGroupMember = async (chatId: string, memberId: string) => {
+  try {
+    const res = await api.delete(`/chats/${chatId}/members/${memberId}`);
+    return res.data;
+  } catch (err: any) {
+    console.error("❌ removeGroupMember error:", err?.response?.data || err);
+    throw err;
+  }
+};
+
+//  Deletar grupo
+export const deleteGroup = async (chatId: string) => {
+  try {
+    const res = await api.delete(`/chats/${chatId}`);
+    return res.data;
+  } catch (err: any) {
+    console.error("❌ deleteGroup error:", err?.response?.data || err);
+    throw err;
+  }
+};

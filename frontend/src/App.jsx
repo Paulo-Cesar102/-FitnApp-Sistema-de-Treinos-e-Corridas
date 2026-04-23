@@ -8,11 +8,13 @@ import MenuBar from "./Componentes/MenuBar";
 import ExecutarTreino from "./Componentes/ExecutarTreino";
 import Perfil from "./pages/Perfil";
 import Friends from "./pages/friends";
+import Chat from "./pages/chat";
+import GroupChat from "./pages/chat";
 
 function Layout({ children }) {
   const location = useLocation();
 
-  const rotasComMenu = ["/home", "/exercicio", "/perfil", "/amigos"];
+  const rotasComMenu = ["/home", "/exercicio", "/perfil", "/amigos", "/chat-grupo"];
   const mostrarMenu = rotasComMenu.includes(location.pathname);
 
   return (
@@ -53,6 +55,9 @@ export default function App() {
 
           {/* 🔥 COMUNIDADE / AMIGOS */}
           <Route path="/amigos" element={<Friends />} />
+
+          {/* 🔥 CHAT EM GRUPO */}
+          <Route path="/chat-grupo" element={<GroupChat />} />
 
           {/* 🔥 EXECUTAR TREINO (CRONÔMETRO) */}
           <Route path="/executar-treino" element={<ExecutarTreino />} />

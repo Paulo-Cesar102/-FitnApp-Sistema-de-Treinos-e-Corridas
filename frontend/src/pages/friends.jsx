@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { 
   getFriends, 
   getPendingRequests, 
@@ -13,6 +14,7 @@ import ChatBox from "../Componentes/ChatBox";
 import "./Friends.css";
 
 export default function Friends() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("amigos"); 
   const [friends, setFriends] = useState([]);
   const [pending, setPending] = useState([]);
@@ -22,6 +24,11 @@ export default function Friends() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
     loadData();
   }, [activeTab]);
 
@@ -114,6 +121,12 @@ export default function Friends() {
           onClick={() => setActiveTab("buscar")}
         >
           Buscar
+        </button>
+        <button 
+          className={activeTab === "grupos" ? "active" : ""} 
+          onClick={() => navigate("/chat-grupo")}
+        >
+          Grupo(s)
         </button>
       </div>
 

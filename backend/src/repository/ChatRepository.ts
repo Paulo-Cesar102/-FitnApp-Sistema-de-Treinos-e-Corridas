@@ -176,7 +176,7 @@ export class ChatRepository {
             user: {
               select: {
                 name: true,
-
+              
               }
             }
           }

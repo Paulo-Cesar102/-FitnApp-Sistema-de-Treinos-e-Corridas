@@ -1,0 +1,86 @@
+.messages-container {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(to bottom, #020617, #0f172a);
+}
+
+.message {
+  max-width: 70%; /* Aumentei um pouco para caber nomes longos */
+  padding: 10px 14px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  position: relative;
+  animation: pop 0.2s ease-out;
+}
+
+.message.sent {
+  background: #2563eb;
+  align-self: flex-end;
+  border-bottom-right-radius: 2px;
+}
+
+.message.received {
+  background: #1e293b;
+  align-self: flex-start;
+  border-bottom-left-radius: 2px;
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  gap: 12px; /* Espaço entre nome e o ícone de lixeira */
+}
+
+.sender-name {
+  color: #fbbf24; /* O amarelo que você escolheu */
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+/* Deixa o seu nome numa cor diferente (opcional) */
+.message.sent .sender-name {
+  color: #fef3c7;
+  opacity: 0.9;
+}
+
+.message-content {
+  margin: 0;
+  color: white;
+  font-size: 14px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.btn-delete-message {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 5px;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.btn-delete-message:hover {
+  background-color: #ef4444; /* Vermelho ao passar o mouse */
+}
+
+.workout-card {
+  margin-top: 8px;
+  background: #020617;
+  border: 1px solid #2563eb;
+  border-radius: 10px;
+  padding: 8px;
+  font-size: 12px;
+}
+
+@keyframes pop {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}

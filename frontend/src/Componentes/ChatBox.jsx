@@ -1,134 +1,110 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
-import { sendMessage, getMessages, markAsRead } from "../api/chatService";
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { sendMessage, getMessages, markAsRead, getGroupInfo } from "../api/chatService";
+import MessageList from "./MessageList"; 
 import "./ChatBox.css"; 
-export default function ChatBox({ chatId, friend, onClose }) {
+
+export default function ChatBox({ chatId, friend, onClose, onDeleteMessage }) {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
+  const [groupDetails, setGroupDetails] = useState(null); 
   const bottomRef = useRef(null);
   const intervalRef = useRef(null);
 
-  // --- BUSCA O USUÁRIO LOGADO ---
-  const [user] = useState(() => {
+  // --- RECUPERA USUÁRIO LOGADO ---
+  const user = useMemo(() => {
     try {
       const savedUser = localStorage.getItem("user");
-      if (!savedUser || savedUser === "undefined") return null;
-      return JSON.parse(savedUser);
-    } catch (error) {
-      console.error("Erro ao processar JSON do user:", error);
-      return null;
-    }
-  });
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch (e) { return null; }
+  }, []);
 
-  // --- CARREGAR MENSAGENS ---
-  const loadMessages = useCallback(async () => {
+  // --- CARREGA INFOS DO GRUPO (NOMES DOS MEMBROS) ---
+  const loadGroupData = useCallback(async () => {
+    if (!chatId) return;
     try {
-      if (!chatId || !user?.id) return;
+      const data = await getGroupInfo(chatId);
+      // Este log confirmará que o pai recebeu os dados
+      console.log("✅ ChatBox: groupDetails carregado", data);
+      setGroupDetails(data);
+    } catch (err) {
+      console.error("❌ ChatBox: Erro ao carregar nomes:", err);
+    }
+  }, [chatId]);
 
+  // --- CARREGA MENSAGENS ---
+  const loadMessages = useCallback(async () => {
+    if (!chatId || !user?.id) return;
+    try {
       const data = await getMessages(chatId);
       const msgs = Array.isArray(data) ? data : data?.messages || [];
-
       setMessages(msgs);
 
-      // Marca como lida se houver mensagens novas do amigo
-      const hasUnread = msgs.some(
-        (m) => m.senderId !== user.id && !m.read
-      );
-
-      if (hasUnread) {
+      if (msgs.some(m => m.senderId !== user.id && !m.read)) {
         await markAsRead(chatId);
       }
-    } catch (err) {
-      console.error("Erro na carga de mensagens:", err);
-    }
+    } catch (err) { console.error(err); }
   }, [chatId, user?.id]);
 
-  // --- POLLING (ATUALIZAÇÃO AUTOMÁTICA A CADA 3 SEG) ---
+  // --- CICLO DE VIDA ---
   useEffect(() => {
     if (!chatId) return;
-
+    loadGroupData();
     loadMessages();
-    if (intervalRef.current) clearInterval(intervalRef.current);
+    
     intervalRef.current = setInterval(loadMessages, 3000);
-
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [chatId, loadMessages]);
+  }, [chatId, loadMessages, loadGroupData]);
 
-  // --- AUTO-SCROLL PARA A ÚLTIMA MENSAGEM ---
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // --- ENVIAR MENSAGEM ---
   const handleSend = async () => {
-    if (!text.trim() || !chatId || !user?.id) return;
-
+    if (!text.trim() || !chatId) return;
     try {
       await sendMessage(chatId, text);
-      setText(""); 
-      await loadMessages(); 
-    } catch (err) {
-      console.error("Erro ao enviar mensagem:", err);
-    }
+      setText("");
+      loadMessages();
+    } catch (err) { console.error(err); }
   };
 
-  // --- TELA DE ERRO (CASO NÃO IDENTIFIQUE O USUÁRIO) ---
-  if (!user) {
-    return (
-      <div className="chat-box gymclub-theme">
-        <div className="chat-header">
-          <span>Atenção</span>
-          <button onClick={onClose} className="close-btn">✖</button>
-        </div>
-        <div style={{ padding: "30px", textAlign: "center", color: "#ff5c1a" }}>
-          <p>Sessão expirada. Faça login novamente.</p>
-        </div>
-      </div>
-    );
-  }
+  if (!user) return null;
 
   return (
     <div className="chat-box gymclub-theme">
-      {/* HEADER DO CHAT */}
+      {/* HEADER */}
       <div className="chat-header">
         <div className="friend-info">
           <div className="online-dot"></div>
-          <span className="friend-name">{friend?.name || "Atleta"}</span>
+          <span className="friend-name">
+            {groupDetails?.name || friend?.name || "Carregando..."}
+          </span>
         </div>
         <button className="close-btn" onClick={onClose}>✖</button>
       </div>
 
       {/* ÁREA DE MENSAGENS */}
       <div className="chat-messages">
-        {messages.length > 0 ? (
-          messages.map((m) => (
-            <div
-              key={m.id || `msg-${Math.random()}`}
-              className={`msg ${m.senderId === user.id ? "sent" : "received"}`}
-            >
-              {m.content}
-            </div>
-          ))
-        ) : (
-          <div style={{ color: '#666', fontSize: '12px', textAlign: 'center', marginTop: '20px' }}>
-            Nenhuma mensagem aqui ainda. Mande um salve para o parceiro!
-          </div>
-        )}
+        {/* CORREÇÃO CRÍTICA: Passando groupDetails para o filho */}
+        <MessageList 
+          messages={messages} 
+          onDeleteMessage={onDeleteMessage} 
+          groupDetails={groupDetails} 
+        />
         <div ref={bottomRef} />
       </div>
 
-      {/* INPUT DE MENSAGEM */}
+      {/* INPUT */}
       <div className="chat-input">
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          placeholder="Qual o treino de hoje?..."
+          placeholder="Digite uma mensagem..."
         />
-        <button onClick={handleSend} className="send-btn">
-          ➤
-        </button>
+        <button onClick={handleSend} className="send-btn">➤</button>
       </div>
     </div>
   );
