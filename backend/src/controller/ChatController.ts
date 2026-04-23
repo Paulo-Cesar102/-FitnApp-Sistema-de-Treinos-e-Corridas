@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { ChatService } from "../services/ChatService";
-
+import { io } from "../../server"; 
 export class ChatController {
   private service = new ChatService();
 
@@ -34,7 +34,6 @@ export class ChatController {
         return res.status(400).json({ message: "O grupo precisa de participantes" });
       }
 
-      // Adicionar o criador à lista de participantes
       const allUserIds = [userId, ...userIds];
 
       const chat = await this.service.createGroup(name, allUserIds);
@@ -46,30 +45,41 @@ export class ChatController {
     }
   }
 
-  // 📩 Enviar mensagem (Texto ou Treino)
   async sendMessage(req: Request, res: Response) {
-    try {
-      const senderId = req.user?.id;
-      const { chatId, content, workoutId } = req.body;
+  try {
+    const senderId = req.user?.id;
+    const { chatId, content, workoutId } = req.body;
 
-      if (!senderId) return res.status(401).json({ message: "Usuário não autenticado" });
-      if (!chatId) return res.status(400).json({ message: "chatId é obrigatório" });
-
-      const message = await this.service.sendMessage(
-        chatId,
-        senderId,
-        content,
-        workoutId // Opcional
-      );
-
-      return res.status(201).json(message);
-    } catch (error) {
-      console.error("Erro sendMessage:", error);
-      return res.status(500).json({
-        message: error instanceof Error ? error.message : "Erro ao enviar mensagem"
-      });
+    if (!senderId) {
+      return res.status(401).json({ message: "Usuário não autenticado" });
     }
+
+    if (!chatId) {
+      return res.status(400).json({ message: "chatId é obrigatório" });
+    }
+
+    const message = await this.service.sendMessage(
+      chatId,
+      senderId,
+      content,
+      workoutId
+    );
+
+    io.to(chatId).emit("chat:new_message", {
+      chatId,
+      message
+    });
+
+    return res.status(201).json(message);
+
+  } catch (error) {
+    console.error("Erro sendMessage:", error);
+
+    return res.status(500).json({
+      message: error instanceof Error ? error.message : "Erro ao enviar mensagem"
+    });
   }
+}
 
   // 📋 Listar chats do usuário
   async getChats(req: Request, res: Response) {

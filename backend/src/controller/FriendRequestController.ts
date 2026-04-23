@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { FriendRequestService } from "../services/FriendRequestService";
-
+import { io } from "../../server";
 export class FriendRequestController {
   private service = new FriendRequestService();
 

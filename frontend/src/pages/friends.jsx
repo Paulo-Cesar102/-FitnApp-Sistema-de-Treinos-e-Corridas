@@ -1,16 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { socket, connectSocket } from "../service/socket"; 
 import { 
-  getFriends, 
-  getPendingRequests, 
-  searchUsers, 
-  addFriend, 
-  acceptFriend, 
-  rejectFriend, 
-  deleteFriend 
+  getFriends, getPendingRequests, searchUsers, addFriend, 
+  acceptFriend, rejectFriend 
 } from "../api/friendRequestService";
-import { createPrivateChat } from "../api/chatService";
+import { createPrivateChat, getChats, createGroupChat } from "../api/chatService";
+
 import ChatBox from "../Componentes/ChatBox";
+import GroupInfoModal from "../Componentes/GroupInfoModal";
 import "./Friends.css";
 
 export default function Friends() {
@@ -18,194 +16,195 @@ export default function Friends() {
   const [activeTab, setActiveTab] = useState("amigos"); 
   const [friends, setFriends] = useState([]);
   const [pending, setPending] = useState([]);
+  const [groups, setGroups] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeChat, setActiveChat] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [isModalGroupOpen, setIsModalGroupOpen] = useState(false);
+
+  // UseRef para controlar mensagens já processadas e evitar duplicidade
+  const processedMessages = useRef(new Set());
+
+  const totalUnreadGroups = useMemo(() => {
+    return groups.reduce((acc, curr) => acc + (curr.unreadCount || 0), 0);
+  }, [groups]);
+
+  const loadData = useCallback(async () => {
+    try {
+      const [friendsData, pendingData, chatsData] = await Promise.all([
+        getFriends(),
+        getPendingRequests(),
+        getChats()
+      ]);
+      
+      setFriends(Array.isArray(friendsData) ? friendsData : []);
+      setPending(Array.isArray(pendingData) ? pendingData : []);
+      
+      const incomingGroups = Array.isArray(chatsData) ? chatsData.filter(c => c.isGroup) : [];
+
+      setGroups(prevGroups => {
+        return incomingGroups.map(newG => {
+          const existingG = prevGroups.find(p => p.id === newG.id);
+          return {
+            ...newG,
+            unreadCount: existingG ? existingG.unreadCount : (newG.unreadCount || 0)
+          };
+        });
+      });
+
+      incomingGroups.forEach(g => socket.emit("join_chat", g.id));
+    } catch (err) {
+      console.error("Erro ao carregar dados:", err);
+    }
+  }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login");
-      return;
-    }
+    const userJson = localStorage.getItem("user");
+    if (!userJson) return navigate("/login");
+    const user = JSON.parse(userJson);
+    
+    connectSocket(user.id);
+    socket.emit("identify", user.id);
+
+    // Função de tratamento da mensagem
+    const handleNewMessage = (newMessage) => {
+      // 🛡️ BLOQUEIO DE DUPLICIDADE: Se o ID da mensagem já foi processado, ignora
+      if (processedMessages.current.has(newMessage.id)) return;
+      processedMessages.current.add(newMessage.id);
+
+      setGroups(prev => prev.map(g => {
+        if (g.id === newMessage.chatId) {
+          const isNotOpened = activeChat?.chatId !== newMessage.chatId;
+          return { 
+            ...g, 
+            unreadCount: isNotOpened ? (g.unreadCount || 0) + 1 : 0 
+          };
+        }
+        return g;
+      }));
+    };
+
+    socket.on("chat:new_message", handleNewMessage);
+
     loadData();
-  }, [activeTab]);
 
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      if (activeTab === "amigos") {
-        const data = await getFriends();
-        setFriends(Array.isArray(data) ? data : []);
-      } else if (activeTab === "solicitacoes") {
-        const data = await getPendingRequests();
-        setPending(Array.isArray(data) ? data : []);
-      }
-    } catch (err) {
-      console.error("Erro ao carregar:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    return () => {
+      // Limpeza rigorosa para não duplicar ouvintes
+      socket.off("chat:new_message", handleNewMessage);
+    };
+  }, [navigate, loadData, activeChat]); // activeChat aqui garante que o ouvinte saiba qual chat está aberto
 
-  // --- NOVA FUNÇÃO PARA ABRIR O CHAT CORRETAMENTE ---
-  const onOpenChat = async (friend) => {
-    try {
-      // Busca ou cria o chat no banco para pegar o ID real
-      const chat = await createPrivateChat(friend.id);
-      
-      // Agora passamos o ID retornado pela API (chat.id)
-      setActiveChat({ 
-        chatId: chat.id, 
-        friend: friend 
-      });
-    } catch (err) {
-      console.error("Erro ao abrir chat:", err);
-      alert("Não foi possível iniciar o chat.");
-    }
-  };
-
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
-    try {
-      const users = await searchUsers(searchQuery);
-      setSearchResults(Array.isArray(users) ? users : []);
-    } catch (err) {
-      alert("Erro na busca");
-    }
-  };
-
-  const onAccept = async (requestId) => {
-    try {
-      await acceptFriend(requestId);
-      loadData();
-    } catch (err) {
-      alert("Erro ao aceitar");
-    }
-  };
-
-  const onRemove = async (id) => {
-    if (window.confirm("Remover amizade?")) {
+  const onOpenChat = async (target, isGroup = false) => {
+    if (isGroup) {
+      setActiveChat({ chatId: target.id, friend: { name: target.name, isGroup: true } });
+      setGroups(prev => prev.map(g => g.id === target.id ? { ...g, unreadCount: 0 } : g));
+    } else {
       try {
-        await deleteFriend(id);
-        setFriends(prev => prev.filter(f => f.id !== id));
-      } catch (err) {
-        alert("Erro ao remover");
-      }
+        const chat = await createPrivateChat(target.id);
+        setActiveChat({ chatId: chat.id, friend: target });
+      } catch (err) { alert("Erro ao abrir chat."); }
     }
+  };
+
+  const handleSearch = async (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    if (query.length > 2) {
+      const results = await searchUsers(query);
+      setSearchResults(results);
+    } else {
+      setSearchResults([]);
+    }
+  };
+
+  const handleAddFriend = async (id) => {
+    try {
+      await addFriend(id);
+      alert("Solicitação enviada!");
+      setSearchQuery("");
+      setSearchResults([]);
+    } catch (err) { alert("Erro ao enviar solicitação."); }
   };
 
   return (
     <div className="friends-container">
       <header className="friends-header">
         <h2>Gym<span>Club</span></h2>
-        <p className="subtitle">Conecte-se com outros atletas</p>
+        <p className="subtitle">Comunidade e Atletas</p>
       </header>
 
       <div className="friends-tabs">
-        <button 
-          className={activeTab === "amigos" ? "active" : ""} 
-          onClick={() => setActiveTab("amigos")}
-        >
-          Amigos <span className="tab-badge">{friends.length}</span>
+        <button className={activeTab === "amigos" ? "active" : ""} onClick={() => setActiveTab("amigos")}>
+          Amigos
         </button>
-        <button 
-          className={activeTab === "solicitacoes" ? "active" : ""} 
-          onClick={() => setActiveTab("solicitacoes")}
-        >
-          Solicitações <span className="tab-badge">{pending.length}</span>
+        <button className={activeTab === "solicitacoes" ? "active" : ""} onClick={() => setActiveTab("solicitacoes")}>
+          Pedidos {pending.length > 0 && <span className="tab-badge">{pending.length}</span>}
         </button>
-        <button 
-          className={activeTab === "buscar" ? "active" : ""} 
-          onClick={() => setActiveTab("buscar")}
-        >
-          Buscar
+        <button className={activeTab === "grupos" ? "active" : ""} onClick={() => setActiveTab("grupos")}>
+          Grupos {totalUnreadGroups > 0 && <span className="tab-badge-orange">{totalUnreadGroups}</span>}
         </button>
-        <button 
-          className={activeTab === "grupos" ? "active" : ""} 
-          onClick={() => navigate("/chat-grupo")}
-        >
-          Grupo(s)
-        </button>
+        <button className={activeTab === "buscar" ? "active" : ""} onClick={() => setActiveTab("buscar")}>🔍</button>
       </div>
 
       <div className="friends-list">
-        {activeTab === "amigos" && (
-          friends.length === 0 && !loading ? (
-            <p className="empty-msg">Nenhum amigo ainda...</p>
-          ) : (
-            friends.map(f => (
-              <div key={f.id} className="user-card-item">
-                <div className="user-avatar-small">{f.name?.charAt(0)}</div>
-                <div className="user-details">
-                  <h4>{f.name}</h4>
-                  <span>Nível {f.level || 1}</span>
+        {activeTab === "grupos" && (
+          <div className="groups-section">
+            <button className="btn-create-group" onClick={() => setIsModalGroupOpen(true)}>+ Criar Novo Grupo</button>
+            {groups.map(g => (
+              <div key={g.id} className="user-card-item group-card" onClick={() => onOpenChat(g, true)}>
+                <div className="user-avatar-small group-icon-box">
+                  👥
+                  {g.unreadCount > 0 && <div className="unread-badge-dot">{g.unreadCount}</div>}
                 </div>
-                <div className="action-buttons">
-                  {/* ALTERADO: Agora chama onOpenChat(f) em vez de setActiveChat direto */}
-                  <button className="btn-chat" onClick={() => onOpenChat(f)}>💬</button>
-                  <button className="btn-action-ghost" onClick={() => onRemove(f.id)}>Remover</button>
+                <div className="user-details">
+                  <div className="card-header-row">
+                    <h4>{g.name}</h4>
+                    {g.unreadCount > 0 && <span className="new-indicator">NOVA</span>}
+                  </div>
+                  <span>{g.participants?.length || 0} membros</span>
                 </div>
               </div>
-            ))
-          )
+            ))}
+          </div>
         )}
 
-        {activeTab === "solicitacoes" && (
-          pending.length === 0 && !loading ? (
-            <p className="empty-msg">Nenhuma solicitação pendente.</p>
-          ) : (
-            pending.map(req => (
-              <div key={req.id} className="user-card-item">
-                <div className="user-avatar-small">{req.sender?.name?.charAt(0)}</div>
-                <div className="user-details">
-                  <h4>{req.sender?.name}</h4>
-                  <span>Quer ser seu amigo</span>
-                </div>
-                <div className="action-pair">
-                  <button className="btn-circle-accept" onClick={() => onAccept(req.id)}>✓</button>
-                  <button className="btn-circle-reject" onClick={() => rejectFriend(req.id).then(loadData)}>✕</button>
-                </div>
-              </div>
-            ))
-          )
-        )}
+        {activeTab === "amigos" && friends.map(f => (
+          <div key={f.id} className="user-card-item">
+            <div className="user-avatar-small">{f.name?.charAt(0)}</div>
+            <div className="user-details"><h4>{f.name}</h4><span>Nível {f.level || 1}</span></div>
+            <button className="btn-chat" onClick={() => onOpenChat(f)}>💬</button>
+          </div>
+        ))}
+
+        {activeTab === "solicitacoes" && pending.map(req => (
+          <div key={req.id} className="user-card-item">
+            <div className="user-avatar-small">{req.sender?.name?.charAt(0)}</div>
+            <div className="user-details"><h4>{req.sender?.name}</h4><span>Quer treinar com você</span></div>
+            <div className="action-buttons">
+              <button className="btn-accept" onClick={async () => { await acceptFriend(req.id); loadData(); }}>✓</button>
+              <button className="btn-reject" onClick={async () => { await rejectFriend(req.id); loadData(); }}>✕</button>
+            </div>
+          </div>
+        ))}
 
         {activeTab === "buscar" && (
-          <>
-            <div className="friends-search-bar">
-              <input 
-                placeholder="Nome ou ID do atleta..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              />
-              <span style={{cursor: 'pointer'}} onClick={handleSearch}>🔍</span>
-            </div>
+          <div className="search-section">
+             <div className="friends-search-bar">
+                <input type="text" placeholder="Nome do atleta..." value={searchQuery} onChange={handleSearch} />
+             </div>
             {searchResults.map(u => (
               <div key={u.id} className="user-card-item">
                 <div className="user-avatar-small">{u.name?.charAt(0)}</div>
-                <div className="user-details">
-                  <h4>{u.name}</h4>
-                  <span>Nível {u.level || 1}</span>
-                </div>
-                <button className="btn-add-friend" onClick={() => addFriend(u.id).then(() => alert("Solicitação enviada!"))}>
-                  +
-                </button>
+                <div className="user-details"><h4>{u.name}</h4></div>
+                <button className="btn-add-friend" onClick={() => handleAddFriend(u.id)}>+</button>
               </div>
             ))}
-          </>
+          </div>
         )}
       </div>
 
-      {activeChat && (
-        <ChatBox 
-          chatId={activeChat.chatId} // Agora o ID real chega aqui!
-          friend={activeChat.friend} 
-          onClose={() => setActiveChat(null)} 
-        />
-      )}
+      <GroupInfoModal isOpen={isModalGroupOpen} onClose={() => setIsModalGroupOpen(false)} onAddMembers={loadData} />
+      {activeChat && <ChatBox chatId={activeChat.chatId} friend={activeChat.friend} onClose={() => setActiveChat(null)} />}
     </div>
   );
 }

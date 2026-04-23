@@ -81,3 +81,29 @@
   margin-top: 5px;
   margin-bottom: 8px;
 }
+.tab-icon {
+  position: relative; /* CRUCIAL: Permite que a badge se posicione em relação ao ícone */
+  display: flex;
+  align-items: center;
+  color: #777;
+  transition: color 0.2s;
+}
+
+.notification-badge-small {
+  position: absolute;
+  top: -6px; /* Ajusta para cima do ícone */
+  right: -8px; /* Ajusta para o lado do ícone */
+  background-color: #FF4500; /* Laranja GymClub */
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2px;
+  border: 2px solid #0a0a0a; /* Borda preta para destacar do fundo */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}

@@ -1,16 +1,24 @@
+/* Friends.css - Versão Mobile Final Otimizada */
+
+/* CONTAINER PRINCIPAL */
 .friends-container {
   background: radial-gradient(circle at top, #1a1a1a 0%, #000 100%);
   min-height: 100vh;
   color: #fff;
-  padding: 24px;
-  padding-bottom: 110px;
+  padding: 16px;
+  padding-bottom: 110px; /* Espaço para o MenuBar */
   font-family: 'Inter', sans-serif;
-  animation: pageFadeIn 0.4s ease-out;
+  animation: pageFadeIn 0.5s ease-out;
+  max-width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  overflow-x: hidden; /* Evita scroll lateral indesejado na página */
 }
 
+/* HEADER */
 .friends-header {
   margin-top: 10px;
-  margin-bottom: 30px;
+  margin-bottom: 25px;
   text-align: center;
 }
 
@@ -18,122 +26,312 @@
   font-size: 1.8rem;
   font-weight: 900;
   letter-spacing: -1px;
+  margin: 0;
 }
 
 .friends-header span {
   color: #ff4500;
-  text-shadow: 0 0 20px rgba(255, 69, 0, 0.3);
+  background: linear-gradient(135deg, #ff4500, #ff8c00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .friends-header .subtitle {
-  font-size: 0.85rem;
-  color: #666;
+  font-size: 0.7rem;
+  color: #888;
   text-transform: uppercase;
   letter-spacing: 1px;
-  margin-top: 5px;
+  margin-top: 4px;
 }
 
+/* TABS - SISTEMA DE ROLAGEM SUAVE */
 .friends-tabs {
   display: flex;
   background: rgba(255, 255, 255, 0.05);
-  padding: 6px;
+  padding: 5px;
   border-radius: 14px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   gap: 5px;
+  overflow-x: auto; /* Permite deslizar se houver muitas abas */
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid rgba(255, 255, 255, 0.03);
 }
 
-.friends-tabs button {
+.friends-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+/* Estilo unificado para botões normais e o botão de Grupos */
+.friends-tabs button, 
+.friends-tabs .tab-groups-btn {
   flex: 1;
+  min-width: 95px; /* Tamanho mínimo para o texto não esmagar */
   background: transparent;
   border: none;
-  color: #888;
-  padding: 12px;
+  color: #777;
+  padding: 12px 8px;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   border-radius: 10px;
   cursor: pointer;
-  transition: 0.3s;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  white-space: nowrap;
 }
 
 .friends-tabs button.active {
   background: #ff4500;
   color: #fff;
-  box-shadow: 0 4px 15px rgba(255, 69, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(255, 69, 0, 0.25);
 }
 
+/* BADGES DAS ABAS SUPERIORES */
 .tab-badge {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  margin-left: 6px;
+}
+
+.tab-badge-orange {
+  background: #ff4500;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 0.65rem;
+  font-weight: bold;
+  margin-left: 6px;
+}
+
+.active .tab-badge {
+  background: rgba(255, 255, 255, 0.9);
+  color: #ff4500;
+}
+
+.active .tab-badge-orange {
   background: #fff;
   color: #ff4500;
-  padding: 2px 6px;
-  border-radius: 6px;
-  font-size: 0.7rem;
 }
 
-.user-card-item {
-  background: rgba(26, 26, 26, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 18px;
-  padding: 16px;
-  margin-bottom: 12px;
+/* BUSCA */
+.friends-search-bar {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 14px 18px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.friends-search-bar input {
+  background: transparent;
+  border: none;
+  color: #fff;
+  width: 100%;
+  outline: none;
+  font-size: 0.95rem;
+}
+
+/* CARDS DE USUÁRIO */
+.user-card-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 22px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  animation: slideUp 0.3s ease-out;
 }
 
 .user-avatar-small {
-  width: 45px;
-  height: 45px;
+  width: 50px;
+  height: 50px;
   background: linear-gradient(135deg, #ff4500, #ff8c00);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
-.user-details { flex: 1; }
-.user-details h4 { margin: 0; font-size: 1rem; }
-.user-details span { font-size: 0.8rem; color: #888; }
+.user-details {
+  flex: 1;
+  min-width: 0;
+}
 
-.friends-search-bar {
+.user-details h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-details span {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+/* BOTÕES DE AÇÃO */
+.action-buttons, .action-pair {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-chat, .btn-circle-accept, .btn-circle-reject, .btn-add-friend, .btn-accept, .btn-reject {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: none;
   display: flex;
   align-items: center;
-  gap: 12px;
-  background: #111;
-  padding: 12px 16px;
-  border-radius: 14px;
-  margin-bottom: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-.friends-search-bar input { background: transparent; border: none; color: #fff; width: 100%; outline: none; }
-
-.action-pair { display: flex; gap: 8px; }
-.btn-circle-accept { background: #00ff88; color: #000; border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-.btn-circle-reject { background: rgba(255, 255, 255, 0.1); color: #fff; border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-.btn-add-friend { background: #ff4500; color: #fff; border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-.btn-action-ghost { background: transparent; border: 1px solid #333; color: #888; padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; }
-
-.action-buttons { display: flex; gap: 8px; }
-
-.btn-chat {
-  background: linear-gradient(135deg, #00c6ff, #0072ff);
-  border: none;
-  color: #fff;
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
+  justify-content: center;
+  font-size: 1.1rem;
   cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.btn-chat:active, .btn-circle-accept:active, .btn-add-friend:active, .btn-accept:active, .btn-reject:active {
+  transform: scale(0.92);
+}
+
+.btn-chat { background: #0072ff; color: #fff; }
+.btn-circle-accept, .btn-accept { background: #00ff88; color: #000; }
+.btn-circle-reject, .btn-reject { 
+  background: rgba(255, 59, 48, 0.1); 
+  color: #ff3b30; 
+  border: 1px solid rgba(255, 59, 48, 0.2); 
+}
+.btn-add-friend { background: #ff4500; color: #fff; }
+
+.btn-action-ghost {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #999;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.empty-msg, .empty-message {
+  text-align: center;
+  color: #555;
+  margin-top: 40px;
+  font-size: 0.9rem;
+}
+
+/* BOTÃO CRIAR GRUPO */
+.btn-create-group {
+  width: 100%;
+  background: rgba(255, 69, 0, 0.1);
+  border: 1px dashed #ff4500;
+  color: #ff4500;
+  padding: 12px;
+  border-radius: 14px;
+  font-weight: 700;
+  margin-bottom: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-create-group:active {
+  background: #ff4500;
+  color: #fff;
+  transform: scale(0.98);
+}
+
+/* CARDS ESPECÍFICOS DE GRUPO & BADGES DE NOTIFICAÇÃO */
+.groups-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.group-card {
+  cursor: pointer;
+  border-left: 4px solid #ff4500; /* Destaque para grupos */
+}
+
+/* Classe unificada para o ícone do grupo com posição relativa para o dot */
+.group-icon-box, .group-icon {
+  position: relative;
+  background: linear-gradient(135deg, #333, #111);
   font-size: 1rem;
-  transition: 0.2s;
+}
+
+.unread-badge-dot {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #ff4500; /* Laranja GymClub */
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #121212; /* Borda da cor do fundo para dar destaque */
+  box-shadow: 0 0 10px rgba(255, 69, 0, 0.4);
+}
+
+/* Header do card do grupo para colocar o nome e a label 'NOVA' na mesma linha */
+.card-header-row, .group-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.new-indicator {
+  color: #ff4500;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  background: rgba(255, 69, 0, 0.15);
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.last-msg-time {
+  font-size: 10px;
+  color: #ff4500;
+  font-weight: 700;
+}
+
+/* ANIMAÇÕES */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes pageFadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* MOBILE PEQUENO (iPhone SE) */
+@media (max-width: 375px) {
+  .friends-tabs button, .friends-tabs .tab-groups-btn {
+    min-width: 85px;
+    font-size: 0.7rem;
+  }
+  .user-avatar-small { width: 44px; height: 44px; }
+  .btn-chat, .btn-circle-accept, .btn-circle-reject, .btn-accept, .btn-reject { width: 38px; height: 38px; }
 }

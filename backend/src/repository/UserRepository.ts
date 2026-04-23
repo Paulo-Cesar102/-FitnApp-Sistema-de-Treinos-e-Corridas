@@ -53,12 +53,12 @@ export class UserRepository implements IUserRepository {
       }
     });
 
-    // Mapeamos para que o objeto fique mais limpo para o frontend (opcional)
+    
     return users.map(user => ({
       ...user,
       totalExercisesDone: user._count.completedWorkoutExercises,
       totalWorkoutsDone: user._count.completedWorkouts,
-      _count: undefined // Remove o objeto bruto do Prisma se preferir
+      _count: undefined 
     })) as unknown as IUser[];
   }
 

@@ -1,5 +1,6 @@
 import { ChatRepository } from "../repository/ChatRepository";
 import { prisma } from "../database/prisma";
+import { io } from "../../server";
 
 export class ChatService {
   private repo = new ChatRepository();
@@ -34,58 +35,81 @@ export class ChatService {
       )
     );
 
+    // 🚀 opcional → avisar participantes
+    userIds.forEach((userId) => {
+      io.to(userId).emit("group:created", chat);
+    });
+
     return chat;
   }
 
-  // 📩 ENVIAR MENSAGEM (Com suporte a Treino)
-  async sendMessage(chatId: string, senderId: string, content: string, workoutId?: string) {
-    if (!chatId) throw new Error("chatId inválido");
-    if (!senderId) throw new Error("senderId inválido");
-    
-    // Agora aceita conteúdo vazio SE houver um workoutId (enviando só o treino)
-    if (!content?.trim() && !workoutId) {
-      throw new Error("Mensagem vazia");
-    }
+ // 📩 ENVIAR MENSAGEM (🔥 PRINCIPAL)
+async sendMessage(chatId: string, senderId: string, content: string, workoutId?: string) {
+  if (!chatId || !senderId) throw new Error("Parâmetros inválidos");
 
-    return this.repo.createMessage(chatId, senderId, content.trim(), workoutId);
+  if (!content?.trim() && !workoutId) {
+    throw new Error("Mensagem vazia");
   }
 
-  // 📋 Listar chats do usuário formatados
+  const message = await this.repo.createMessage(
+    chatId,
+    senderId,
+    content?.trim(),
+    workoutId
+  );
+
+  // 🚀🔥 EMITE PARA A SALA DO CHAT
+  // Usaremos o nome "chat:new_message" para ser específico
+  io.to(chatId).emit("chat:new_message", message);
+
+  return message;
+}
+  // 📋 Listar chats do usuário
   async getUserChats(userId: string) {
     if (!userId) throw new Error("userId inválido");
 
     const chatParticipants = await this.repo.findUserChats(userId);
 
-    // Mapeamos para retornar o objeto do chat limpo
     return chatParticipants.map((c: any) => c.chat);
   }
 
-  // 💬 Buscar mensagens e marcar como lidas
+  // 💬 Buscar mensagens
   async getMessages(chatId: string, userId: string) {
     if (!chatId) throw new Error("chatId inválido");
 
-    // Marcar como lido ao abrir a conversa
     await this.repo.updateMessagesToRead(chatId, userId);
 
     return this.repo.getMessages(chatId);
   }
 
-  // 🔥 Marcar como lido manualmente
+  // 🔥 Marcar como lido
   async markAsRead(chatId: string, userId: string) {
     if (!chatId || !userId) throw new Error("Parâmetros inválidos");
-    return this.repo.updateMessagesToRead(chatId, userId);
+
+    const result = await this.repo.updateMessagesToRead(chatId, userId);
+
+    // 🚀 opcional → avisar outros usuários
+    io.to(chatId).emit("chat:read", {
+      chatId,
+      userId
+    });
+
+    return result;
   }
 
-  // 🗑️ Limpar histórico de mensagens
+  // 🗑️ Limpar histórico
   async clearChatHistory(chatId: string) {
     if (!chatId) throw new Error("chatId inválido");
-    return this.repo.deleteChatMessages(chatId);
+
+    const result = await this.repo.deleteChatMessages(chatId);
+
+    // 🚀 tempo real
+    io.to(chatId).emit("chat:cleared", chatId);
+
+    return result;
   }
 
-  /**
-   * 🏋️ CLONAR TREINO COMPARTILHADO
-   * Cria uma cópia independente para o usuário que salvou.
-   */
+  // 🏋️ Salvar treino compartilhado
   async saveSharedWorkout(targetUserId: string, workoutData: any) {
     if (!workoutData || !workoutData.exercises) {
       throw new Error("Dados do treino incompletos.");
@@ -110,22 +134,30 @@ export class ChatService {
       }
     });
   }
+
+  // ❌ Deletar mensagem
   async deleteMessageForEveryone(messageId: string, userId: string) {
-  const message = await prisma.message.findUnique({
-    where: { id: messageId }
-  });
+    const message = await prisma.message.findUnique({
+      where: { id: messageId }
+    });
 
-  if (!message) throw new Error("Mensagem não encontrada.");
+    if (!message) throw new Error("Mensagem não encontrada.");
 
-  // Validação de segurança: o senderId da mensagem deve ser igual ao userId logado
-  if (message.senderId !== userId) {
-    throw new Error("Você não tem permissão para apagar esta mensagem.");
+    if (message.senderId !== userId) {
+      throw new Error("Você não tem permissão para apagar esta mensagem.");
+    }
+
+    await this.repo.deleteSingleMessage(messageId);
+
+    // 🚀 tempo real
+    io.to(message.chatId).emit("chat:delete_message", messageId);
+
+    return { message: "Mensagem apagada" };
   }
 
-  return await this.repo.deleteSingleMessage(messageId);
-}
-async getchatInfo(chatId: string){
-const chat = await this.repo.findById(chatId);
+  // 📊 Info do chat
+  async getchatInfo(chatId: string) {
+    const chat = await this.repo.findById(chatId);
 
     if (!chat) {
       throw new Error("Ops! Esse grupo não foi encontrado.");

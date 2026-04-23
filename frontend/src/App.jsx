@@ -1,4 +1,8 @@
+import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { connectSocket } from "./service/socket"; 
+
+// Páginas e Componentes
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Home from "./pages/home";
@@ -8,13 +12,11 @@ import MenuBar from "./Componentes/MenuBar";
 import ExecutarTreino from "./Componentes/ExecutarTreino";
 import Perfil from "./pages/Perfil";
 import Friends from "./pages/friends";
-import Chat from "./pages/chat";
-import GroupChat from "./pages/chat";
 
 function Layout({ children }) {
   const location = useLocation();
-
-  const rotasComMenu = ["/home", "/exercicio", "/perfil", "/amigos", "/chat-grupo"];
+  // Rotas onde o MenuBar inferior deve aparecer
+  const rotasComMenu = ["/home", "/exercicio", "/perfil", "/amigos"];
   const mostrarMenu = rotasComMenu.includes(location.pathname);
 
   return (
@@ -32,39 +34,45 @@ function Layout({ children }) {
   );
 }
 
+function AppContent() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const userJson = localStorage.getItem("user");
+    if (userJson) {
+      try {
+        const user = JSON.parse(userJson);
+        if (user?.id) {
+          connectSocket(user.id);
+        }
+      } catch (error) {
+        console.error("Erro ao ler dados do usuário no App:", error);
+      }
+    }
+  }, [location.pathname]);
+
+  return (
+    <Layout>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/exercicio" element={<Treinos />} />
+        <Route path="/criar-treino" element={<CriarTreino />} />
+        <Route path="/perfil" element={<Perfil />} />
+        <Route path="/amigos" element={<Friends />} />
+        <Route path="/executar-treino" element={<ExecutarTreino />} />
+        <Route path="*" element={<Navigate to="/home" />} />
+      </Routes>
+    </Layout>
+  );
+}
+
 export default function App() {
   return (
     <Router>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Navigate to="/login" />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-
-          {/* 🔥 HOME (CATÁLOGO) */}
-          <Route path="/home" element={<Home />} />
-
-          {/* 🔥 TREINOS DO USUÁRIO */}
-          <Route path="/exercicio" element={<Treinos />} />
-
-          {/* 🔥 CRIAR TREINO */}
-          <Route path="/criar-treino" element={<CriarTreino />} />
-
-          {/* 🔥 PERFIL DO USUÁRIO */}
-          <Route path="/perfil" element={<Perfil />} />
-
-          {/* 🔥 COMUNIDADE / AMIGOS */}
-          <Route path="/amigos" element={<Friends />} />
-
-          {/* 🔥 CHAT EM GRUPO */}
-          <Route path="/chat-grupo" element={<GroupChat />} />
-
-          {/* 🔥 EXECUTAR TREINO (CRONÔMETRO) */}
-          <Route path="/executar-treino" element={<ExecutarTreino />} />
-
-          <Route path="*" element={<Navigate to="/home" />} />
-        </Routes>
-      </Layout>
+      <AppContent />
     </Router>
   );
 }
