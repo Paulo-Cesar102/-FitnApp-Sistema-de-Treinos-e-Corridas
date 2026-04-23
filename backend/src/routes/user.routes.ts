@@ -12,7 +12,7 @@ userRoutes.post("/register", validate(creatUserSchema), userController.create.bi
 
 // ROTAS PROTEGIDAS
 userRoutes.get("/users", authMiddleware, userController.findAll.bind(userController));
-userRoutes.get("/user/:id", authMiddleware, userController.findById.bind(userController));
-userRoutes.delete("/user/:id", authMiddleware, userController.delete.bind(userController));
+userRoutes.get("/:id", authMiddleware, userController.findById.bind(userController));
+userRoutes.delete("/:id", authMiddleware, userController.delete.bind(userController));
 
 export { userRoutes };
