@@ -21,16 +21,7 @@ export class UserRepository implements IUserRepository {
 
   async findById(id: string): Promise<IUser | null> {
     return prisma.user.findUnique({
-      where: { id },
-      include: {
-
-        _count: {
-          select: {
-            completedWorkoutExercises: true,
-            completedWorkouts: true
-          }
-        }
-      }
+      where: { id }
     }) as unknown as IUser | null;
   }
 

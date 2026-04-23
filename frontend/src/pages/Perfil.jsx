@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Perfil.css";
 import CustomAlert from "../Componentes/CustomAlert";
+import { getUser } from "../api/userService";
 
 const TrophyIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff4500" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>;
 const DumbbellIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff4500" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.4 14.4 9.6 9.6"/><path d="M18.65 21.35a2 2 0 0 1-2.83 0l-5.66-5.66a2 2 0 0 1 0-2.83l.06-.06a2 2 0 0 1 2.83 0l5.66 5.66a2 2 0 0 1 0 2.83Z"/><path d="m2 2 2.83 2.83"/><path d="M4 4l-2 2"/><path d="m4 4 2-2"/><path d="m4 4 5.66 5.66a2 2 0 0 0 2.83 0l.06-.06a2 2 0 0 0 0-2.83L6.89 1.11a2 2 0 0 0-2.83 0l-2.83 2.83Z"/><path d="m22 22-2.83-2.83"/><path d="M20 20l2-2"/><path d="m20 20-2 2"/></svg>;
@@ -18,36 +19,68 @@ export default function Perfil() {
     level: 1,
     xp: 0,
     nextLevelXP: 1000,
-    totalWorkouts: 42,
+    totalWorkouts: 0,
     streak: 5
   });
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (user.name) {
-      const totalXp = user.xp || 0;
-      // Recalcula o level sempre baseado no XP total (mesma fórmula do backend)
-      const calculatedLevel = Math.floor(totalXp / 100) + 1;
-      
-      // XP do nível atual (ex: nível 2 começa em 100 XP)
-      const xpForCurrentLevel = (calculatedLevel - 1) * 100;
-      // XP no nível atual
-      const currentXP = totalXp - xpForCurrentLevel;
-      // XP necessário para proxímo nível (sempre 100)
-      const nextLevelXP = 100;
+    const loadUserData = async () => {
+      const userFromStorage = JSON.parse(localStorage.getItem("user") || "{}");
+      if (!userFromStorage?.id) return;
 
-      setUserData(prev => ({
-        ...prev,
-        name: user.name,
-        email: user.email || prev.email,
-        level: calculatedLevel,
-        xp: totalXp,
-        currentXP: currentXP,
-        nextLevelXP: nextLevelXP,
-        streak: user.streak || prev.streak,
-        totalWorkouts: user.completedWorkouts?.length || prev.totalWorkouts
-      }));
-    }
+      try {
+        const user = await getUser(userFromStorage.id);
+        const totalXp = user.xp || 0;
+        const calculatedLevel = Math.floor(totalXp / 100) + 1;
+        const xpForCurrentLevel = (calculatedLevel - 1) * 100;
+        const currentXP = totalXp - xpForCurrentLevel;
+        const nextLevelXP = 100;
+
+        setUserData({
+          name: user.name,
+          email: user.email,
+          level: calculatedLevel,
+          xp: totalXp,
+          currentXP,
+          nextLevelXP,
+          totalWorkouts: userFromStorage.totalCompleted || 0,
+          streak: user.streak
+        });
+      } catch (error) {
+        console.error("Error loading user data", error);
+        // fallback to localStorage
+        const totalXp = userFromStorage.xp || 0;
+        const calculatedLevel = Math.floor(totalXp / 100) + 1;
+        const xpForCurrentLevel = (calculatedLevel - 1) * 100;
+        const currentXP = totalXp - xpForCurrentLevel;
+        const nextLevelXP = 100;
+
+        setUserData(prev => ({
+          ...prev,
+          name: userFromStorage.name,
+          email: userFromStorage.email || prev.email,
+          level: calculatedLevel,
+          xp: totalXp,
+          currentXP,
+          nextLevelXP,
+          totalWorkouts: userFromStorage.totalCompleted || 0,
+          streak: userFromStorage.streak || prev.streak
+        }));
+      }
+    };
+
+    loadUserData();
+
+    // Escutar mudanças no userData
+    const handleUserDataUpdate = () => {
+      loadUserData();
+    };
+
+    window.addEventListener('userDataUpdated', handleUserDataUpdate);
+
+    return () => {
+      window.removeEventListener('userDataUpdated', handleUserDataUpdate);
+    };
   }, []);
 
   const progressPercentage = (userData.currentXP / userData.nextLevelXP) * 100;

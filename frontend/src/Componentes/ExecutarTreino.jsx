@@ -148,12 +148,16 @@ export default function ExecutarTreino({ workout }) {
       const result = await completeWorkout(treinoAtual.id);
       console.log("Treino completado:", result);
 
-      // Atualizar localStorage com novo XP e level
+      // Atualizar localStorage com novo XP, level e total de treinos completados
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       user.xp = result.newXp;
       user.level = result.newLevel;
       user.streak = result.streak;
+      user.totalCompleted = result.totalCompleted;
       localStorage.setItem("user", JSON.stringify(user));
+
+      // Emitir evento para atualizar outros componentes
+      window.dispatchEvent(new Event('userDataUpdated'));
 
       setIsFinished(true);
       showAlert("Treino Concluído", `Parabéns! Você ganhou ${result.xpGained} XP. Novo nível: ${result.newLevel}`, "success", () => {
@@ -179,7 +183,16 @@ export default function ExecutarTreino({ workout }) {
           navigate("/home");
         }
       } else {
-        showAlert("Erro", "Erro ao salvar o progresso. Tente novamente.", "error");
+        // Se erro de API (backend down), simular incremento local para teste
+        const user = JSON.parse(localStorage.getItem("user") || "{}");
+        user.totalCompleted = (user.totalCompleted || 0) + 1;
+        localStorage.setItem("user", JSON.stringify(user));
+        window.dispatchEvent(new Event('userDataUpdated'));
+        
+        showAlert("Treino Simulado", "Treino completado localmente (backend indisponível).", "info", () => {
+          setAlertConfig({ isOpen: false });
+          navigate("/home");
+        });
       }
     }
   };
