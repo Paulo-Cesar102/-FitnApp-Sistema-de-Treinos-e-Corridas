@@ -124,4 +124,13 @@ export class ChatService {
 
   return await this.repo.deleteSingleMessage(messageId);
 }
+async getchatInfo(chatId: string){
+const chat = await this.repo.findById(chatId);
+
+    if (!chat) {
+      throw new Error("Ops! Esse grupo não foi encontrado.");
+    }
+
+    return chat;
+  }
 }

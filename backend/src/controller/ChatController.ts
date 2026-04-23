@@ -25,8 +25,19 @@ export class ChatController {
   // 👥 Criar grupo
   async createGroup(req: Request, res: Response) {
     try {
+      const userId = req.user?.id;
       const { name, userIds } = req.body;
-      const chat = await this.service.createGroup(name, userIds);
+
+      if (!userId) return res.status(401).json({ message: "Usuário não autenticado" });
+      if (!name?.trim()) return res.status(400).json({ message: "Nome do grupo é obrigatório" });
+      if (!Array.isArray(userIds) || userIds.length === 0) {
+        return res.status(400).json({ message: "O grupo precisa de participantes" });
+      }
+
+      // Adicionar o criador à lista de participantes
+      const allUserIds = [userId, ...userIds];
+
+      const chat = await this.service.createGroup(name, allUserIds);
       return res.status(201).json(chat);
     } catch (error) {
       return res.status(400).json({
@@ -152,6 +163,20 @@ const { chatId } = req.params as { chatId: string };
     return res.status(400).json({ 
       message: error instanceof Error ? error.message : "Erro ao apagar mensagem." 
     });
+  }
+}
+
+async chatinfo(req: Request, res: Response){
+  try{
+    const {chatId}= req.params as {chatId: string};
+
+    const chat = await this.service.getchatInfo(chatId);
+    return res.json(chat);
+  } catch (error) {
+    return res.status(400).json({ 
+      message: error instanceof Error ? error.message : "Erro ao buscar informações do chat." 
+    });
+
   }
 }
 }

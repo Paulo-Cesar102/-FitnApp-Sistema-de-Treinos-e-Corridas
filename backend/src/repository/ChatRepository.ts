@@ -61,7 +61,7 @@ export class ChatRepository {
             },
             messages: {
               orderBy: { createdAt: "desc" },
-              take: 1 
+              take: 1
             }
           }
         }
@@ -141,7 +141,7 @@ export class ChatRepository {
     return await prisma.message.updateMany({
       where: {
         chatId: chatId,
-        senderId: { not: userId }, 
+        senderId: { not: userId },
         read: false,
       },
       data: {
@@ -150,18 +150,40 @@ export class ChatRepository {
     });
   }
 
-  
+
   async deleteChatMessages(chatId: string) {
     return await prisma.message.deleteMany({
       where: {
         chatId: chatId
       }
     });
-  }async deleteSingleMessage(messageId: string) {
-  return await prisma.message.delete({
-    where: {
-      id: messageId
-    }
-  });
-}
+  } async deleteSingleMessage(messageId: string) {
+    return await prisma.message.delete({
+      where: {
+        id: messageId
+      }
+    });
+  }
+
+  async chatInfo(chatId: string) { // Removi o UserName se ele não for usado no filtro
+    const chat = await prisma.chat.findUnique({
+      where: {
+        id: chatId
+      },
+      include: {
+        participants: {
+          include: {
+            user: {
+              select: {
+                name: true,
+
+              }
+            }
+          }
+        }
+      }
+      
+    });
+    return chat;
+  }
 }

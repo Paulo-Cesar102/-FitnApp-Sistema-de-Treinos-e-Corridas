@@ -27,4 +27,5 @@ router.post("/save-workout", controller.saveWorkout.bind(controller));
 
 router.delete("/message/:messageId", controller.deleteMessage.bind(controller));
 
+router.get("/:chatId/info", controller.chatinfo.bind(controller));
 export { router };
