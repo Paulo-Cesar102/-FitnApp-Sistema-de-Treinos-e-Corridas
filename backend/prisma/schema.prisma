@@ -72,6 +72,7 @@ model User {
   level             Int       @default(1)
   xp                Int       @default(0)
   streak            Int       @default(0)
+  maxStreak         Int       @default(0)
   lastActivityDate  DateTime?
   role              Role      @default(USER)
   createdAt         DateTime  @default(now())
@@ -83,6 +84,7 @@ model User {
   badges                    UserBadge[]
   feedbacks                 Feedback[]
   exercises                 Exercise[]
+  weightLogs                WeightLog[]
 
   // Relacionamento com Academia
   gymId                     String?
@@ -100,6 +102,18 @@ model User {
   // Compartilhar treino
   sentWorkouts     WorkoutShare[] @relation("WorkoutSender")
   receivedWorkouts WorkoutShare[] @relation("WorkoutReceiver")
+}
+
+// =========================
+// WEIGHT LOG
+// =========================
+
+model WeightLog {
+  id        String   @id @default(uuid())
+  weight    Float
+  date      DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // =========================

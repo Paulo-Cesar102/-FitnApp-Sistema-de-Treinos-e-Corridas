@@ -146,12 +146,65 @@
 
 .stat-card {
   background: rgba(26, 26, 26, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
-  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 120px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+}
+
+@media (max-width: 760px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-card {
+  background: rgba(26, 26, 26, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+}
+
+.chart-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 18px;
+  gap: 12px;
+}
+
+.chart-card-header h4 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+}
+
+.chart-card-header p {
+  margin: 0;
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 18px;
+  margin-bottom: 30px;
+}
+
+@media (max-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.badges-list {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   gap: 12px;
 }
 
@@ -178,6 +231,15 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.badge-placeholder {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px dashed rgba(255, 69, 0, 0.4);
+  border-radius: 16px;
+  padding: 20px;
+  color: #bbb;
+  text-align: center;
 }
 
 .badge-item {

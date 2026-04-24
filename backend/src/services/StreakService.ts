@@ -57,10 +57,12 @@ export class StreakService {
     }
 
     if (this.isYesterday(lastActivityDate, today)) {
+      const newStreak = (user.streak ?? 0) + 1;
       const updatedUser = await prisma.user.update({
         where: { id: userId },
         data: {
-          streak: (user.streak ?? 0) + 1,
+          streak: newStreak,
+          maxStreak: Math.max(user.maxStreak ?? 0, newStreak),
           lastActivityDate: todayNormalized,
         },
       });

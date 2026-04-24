@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import "./ExecutarTreino.css";
 import CustomAlert from "./CustomAlert";
 import { completeWorkout } from "../api/workoutService";
+import { addWeightLog } from "../api/weightService";
 
 // Ícones Vetorizados
 const TimerIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
@@ -34,6 +35,9 @@ export default function ExecutarTreino({ workout }) {
   const [activeTime, setActiveTime] = useState(0); // Cronômetro da série
   const [restTime, setRestTime] = useState(0);     // Timer de descanso
   const [alertConfig, setAlertConfig] = useState({ isOpen: false });
+  const [showWeightModal, setShowWeightModal] = useState(false);
+  const [weightInput, setWeightInput] = useState("");
+  const [weightLoading, setWeightLoading] = useState(false);
 
   const showAlert = (title, message, type, onConfirm) => {
     setAlertConfig({
@@ -144,6 +148,11 @@ export default function ExecutarTreino({ workout }) {
   };
 
   const finalizarTreino = async () => {
+    if (!treinoAtual?.id) {
+      showAlert("Erro", "Não foi possível identificar o treino para concluir.", "error");
+      return;
+    }
+
     try {
       const result = await completeWorkout(treinoAtual.id);
       console.log("Treino completado:", result);
@@ -162,16 +171,13 @@ export default function ExecutarTreino({ workout }) {
       setIsFinished(true);
       showAlert("Treino Concluído", `Parabéns! Você ganhou ${result.xpGained} XP. Novo nível: ${result.newLevel}`, "success", () => {
         setAlertConfig({ isOpen: false });
-        navigate("/home");
+        setShowWeightModal(true); // Mostrar modal de peso em vez de navegar
       });
     } catch (error) {
-      console.error("Erro ao completar treino:", error);
-      
-      // Verifica se é o erro de treino já concluído hoje
-      const errorMessage = error?.response?.data?.message || error?.message || "";
-      
+      const errorMessage = error?.response?.data?.message || error?.message || "Erro ao completar treino.";
+      console.error("Erro ao completar treino:", errorMessage, error);
+
       if (errorMessage.includes("já concluiu esse treino hoje")) {
-        // Mostra a mensagem apenas se ainda não foi mostrada hoje
         if (!hasShownMessageToday()) {
           markMessageAsShown();
           showAlert("Treino Já Realizado", "Você já completou este treino hoje! Volta amanhã para ganhar mais XP.", "warning", () => {
@@ -179,20 +185,25 @@ export default function ExecutarTreino({ workout }) {
             navigate("/home");
           });
         } else {
-          // Se já foi mostrada, apenas navega sem avisar
           navigate("/home");
         }
-      } else {
-        // Se erro de API (backend down), simular incremento local para teste
+      } else if (errorMessage.includes("Treino não encontrado") || errorMessage.includes("Usuário não encontrado") || errorMessage.includes("workoutId é obrigatório")) {
+        showAlert("Erro", errorMessage, "error", () => {
+          setAlertConfig({ isOpen: false });
+          navigate("/home");
+        });
+      } else if (error?.response && error.response.status >= 500) {
         const user = JSON.parse(localStorage.getItem("user") || "{}");
         user.totalCompleted = (user.totalCompleted || 0) + 1;
         localStorage.setItem("user", JSON.stringify(user));
         window.dispatchEvent(new Event('userDataUpdated'));
-        
+
         showAlert("Treino Simulado", "Treino completado localmente (backend indisponível).", "info", () => {
           setAlertConfig({ isOpen: false });
           navigate("/home");
         });
+      } else {
+        showAlert("Erro", errorMessage, "error");
       }
     }
   };
@@ -201,6 +212,31 @@ export default function ExecutarTreino({ workout }) {
     const m = Math.floor(seconds / 60).toString().padStart(2, "0");
     const s = (seconds % 60).toString().padStart(2, "0");
     return `${m}:${s}`;
+  };
+
+  const handleWeightSubmit = async () => {
+    if (!weightInput || isNaN(parseFloat(weightInput))) {
+      showAlert("Erro", "Por favor, insira um peso válido.", "error");
+      return;
+    }
+
+    setWeightLoading(true);
+    try {
+      await addWeightLog(parseFloat(weightInput));
+      showAlert("Peso Registrado", "Seu peso foi registrado com sucesso!", "success", () => {
+        setAlertConfig({ isOpen: false });
+        navigate("/home");
+      });
+    } catch (error) {
+      console.error("Erro ao registrar peso:", error);
+      showAlert("Erro", "Não foi possível registrar o peso. Tente novamente.", "error");
+    } finally {
+      setWeightLoading(false);
+    }
+  };
+
+  const skipWeightRegistration = () => {
+    navigate("/home");
   };
 
   if (!currentItem) return <div className="execucao-container">Carregando...</div>;
@@ -256,6 +292,49 @@ export default function ExecutarTreino({ workout }) {
       </div>
 
       <CustomAlert config={alertConfig} />
+
+      {/* Modal de Registro de Peso */}
+      {showWeightModal && (
+        <div className="weight-modal-overlay" onClick={skipWeightRegistration}>
+          <div className="weight-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="weight-modal-header">
+              <h3>Registrar Peso</h3>
+              <p>Acompanhe sua evolução registrando seu peso atual</p>
+            </div>
+
+            <div className="weight-input-section">
+              <label htmlFor="weight-input">Peso Atual (kg)</label>
+              <input
+                id="weight-input"
+                type="number"
+                step="0.1"
+                placeholder="Ex: 75.5"
+                value={weightInput}
+                onChange={(e) => setWeightInput(e.target.value)}
+                className="weight-input"
+                autoFocus
+              />
+            </div>
+
+            <div className="weight-modal-actions">
+              <button
+                className="btn-skip-weight"
+                onClick={skipWeightRegistration}
+                disabled={weightLoading}
+              >
+                Pular
+              </button>
+              <button
+                className="btn-submit-weight"
+                onClick={handleWeightSubmit}
+                disabled={weightLoading || !weightInput}
+              >
+                {weightLoading ? "Registrando..." : "Registrar Peso"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

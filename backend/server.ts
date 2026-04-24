@@ -17,6 +17,7 @@ import { badgeRoutes } from "./src/routes/badge.routes";
 import { router as friendRoutes } from "./src/routes/friendRequest";
 import { router as chatRoutes } from "./src/routes/chat.routes";
 import { gymRoutes } from "./src/routes/GymRoutes";
+import { weightRoutes } from "./src/routes/weight.routes";
 
 const app = express();
 
@@ -54,6 +55,7 @@ app.use("/ranking", rankingRoutes);
 app.use("/badges", badgeRoutes);
 app.use("/chats", chatRoutes);
 app.use("/gym", gymRoutes);
+app.use("/weight", weightRoutes);
 
 // Rota de Health Check
 app.get("/", (_req, res) => {
