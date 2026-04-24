@@ -15,6 +15,7 @@ export default function Friends() {
   const [friends, setFriends] = useState([]);
   const [pending, setPending] = useState([]);
   const [groups, setGroups] = useState([]);
+  const [friendChats, setFriendChats] = useState({});
   const [searchResults, setSearchResults] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeChat, setActiveChat] = useState(null);
@@ -34,20 +35,32 @@ export default function Friends() {
         getChats()
       ]);
       
-      // Garante que amigos sejam salvos se existirem
-      setFriends(Array.isArray(friendsData) ? friendsData : []);
-      setPending(Array.isArray(pendingData) ? pendingData : []);
-      
-      // Filtro de Grupos: Se não tiver a flag, ele tenta identificar pelo tipo ou nome
+      const currentUserId = localStorage.getItem("userId");
       const allChats = Array.isArray(chatsData) ? chatsData : [];
       const incomingGroups = allChats.filter(c => 
         c.isGroup === true || 
         c.is_group === true || 
         c.type === 'group' || 
-        c.group_id // Caso o back use group_id como referência
+        c.group_id
       );
       
+      const privateChatMap = {};
+      allChats
+        .filter((chat) => !chat.isGroup && !chat.is_group && chat.participants?.length === 2)
+        .forEach((chat) => {
+          const other = chat.participants.find((p) => p.userId !== currentUserId);
+          if (other?.userId) {
+            privateChatMap[other.userId] = {
+              chatId: chat.id,
+              unreadCount: Number(chat.unreadCount || 0)
+            };
+          }
+        });
+
+      setFriends(Array.isArray(friendsData) ? friendsData : []);
+      setPending(Array.isArray(pendingData) ? pendingData : []);
       setGroups(incomingGroups);
+      setFriendChats(privateChatMap);
 
       incomingGroups.forEach(g => {
         if (g.id) socket.emit("join_chat", g.id);
@@ -73,6 +86,9 @@ export default function Friends() {
     });
     
     socket.on("group:created", handleSocketUpdate);
+    socket.on("group:member_added", handleSocketUpdate);
+    socket.on("group:member_left", handleSocketUpdate);
+    socket.on("group:deleted", handleSocketUpdate);
     socket.on("friend:new_request", handleSocketUpdate);
 
     loadData();
@@ -80,6 +96,9 @@ export default function Friends() {
     return () => {
       socket.off("chat:new_message");
       socket.off("group:created");
+      socket.off("group:member_added");
+      socket.off("group:member_left");
+      socket.off("group:deleted");
       socket.off("friend:new_request");
     };
   }, [loadData]);
@@ -98,18 +117,25 @@ export default function Friends() {
   }, [searchQuery]);
 
   const onOpenChat = async (target, isGroup = false) => {
+    const existingChat = friendChats[target.id];
     let chatId = target.id;
+
     if (isGroup) {
       setActiveChat({ chatId, friend: { name: target.name, isGroup: true } });
     } else {
       try {
-        const chat = await createPrivateChat(target.id);
-        chatId = chat.id;
+        if (existingChat?.chatId) {
+          chatId = existingChat.chatId;
+        } else {
+          const chat = await createPrivateChat(target.id);
+          chatId = chat.id;
+        }
         setActiveChat({ chatId, friend: target });
       } catch (err) { return; }
     }
 
-    if (chatId && target.unreadCount > 0) {
+    const hasUnread = existingChat?.unreadCount > 0;
+    if (chatId && hasUnread) {
       await markAsRead(chatId);
       socket.emit("chat:read", { chatId });
       loadData();
@@ -139,13 +165,23 @@ export default function Friends() {
       <div className="friends-list-content">
         {activeTab === "amigos" && (
           friends.length === 0 ? <p className="empty-msg">Sua lista de amigos está vazia.</p> :
-          friends.map(f => (
-            <div key={f.id} className="user-card-item">
-              <div className="user-avatar-small">{f.name?.charAt(0).toUpperCase()}</div>
-              <div className="user-details"><h4>{f.name}</h4></div>
-              <button className="btn-chat" onClick={() => onOpenChat(f)}>💬</button>
-            </div>
-          ))
+          friends.map(f => {
+            const chatInfo = friendChats[f.id];
+            return (
+              <div key={f.id} className="user-card-item">
+                <div className="user-avatar-small">{f.name?.charAt(0).toUpperCase()}</div>
+                <div className="user-details">
+                  <h4>{f.name}</h4>
+                  {chatInfo?.unreadCount > 0 && (
+                    <span className="friend-unread">{chatInfo.unreadCount > 9 ? "9+" : chatInfo.unreadCount} nova</span>
+                  )}
+                </div>
+                <button className="btn-chat btn-chat-theme" onClick={() => onOpenChat(f)} title="Abrir conversa">
+                  ✉
+                </button>
+              </div>
+            );
+          })
         )}
 
         {activeTab === "grupos" && (
@@ -180,8 +216,8 @@ export default function Friends() {
                 <span>Enviou um pedido</span>
               </div>
               <div className="action-pair">
-                <button className="btn-circle-accept" onClick={async () => { await acceptFriend(req.id); loadData(); }}>✓</button>
-                <button className="btn-circle-reject" onClick={async () => { await rejectFriend(req.id); loadData(); }}>✕</button>
+                <button className="btn-accept" onClick={async () => { await acceptFriend(req.id); loadData(); }}>Aceitar</button>
+                <button className="btn-reject" onClick={async () => { await rejectFriend(req.id); loadData(); }}>Recusar</button>
               </div>
             </div>
           ))

@@ -44,8 +44,16 @@ export default function MessageList({ messages, onDeleteMessage, groupDetails })
             <div className="message-header">
               <strong className="sender-name">{getSenderName(msg)}</strong>
               {isMe && hoveredMessageId === msg.id && (
-                <button onClick={(e) => { e.stopPropagation(); onDeleteMessage(msg.id); }}>
-                  🗑️
+                <button
+                  className="btn-delete-message"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteMessage(msg.id);
+                  }}
+                  title="Apagar esta mensagem para todos"
+                >
+                  <span>Excluir</span>
+                  <span className="delete-icon">🗑️</span>
                 </button>
               )}
             </div>

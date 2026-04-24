@@ -42,6 +42,11 @@ export const leaveGroup = async (chatId: string) => {
   return res.data;
 };
 
+export const deleteGroup = async (chatId: string) => {
+  const res = await api.delete(`/chats/${chatId}`);
+  return res.data;
+};
+
 // 📩 Enviar mensagem (Texto ou Treino)
 export const sendMessage = async (chatId: string, content: string, workoutId?: string) => {
   try {

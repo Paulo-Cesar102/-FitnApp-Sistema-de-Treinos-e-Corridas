@@ -1,0 +1,192 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 11000;
+}
+
+.modal-content {
+  width: min(550px, 90%);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #0c1119;
+  border: 1px solid #222;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  padding: 24px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 22px;
+  color: #ff6c00;
+}
+
+.modal-header p {
+  margin: 6px 0 0;
+  color: #cbd5e1;
+  font-size: 14px;
+}
+
+.btn-close {
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.section {
+  background: #11171f;
+  border: 1px solid #212938;
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.section h3 {
+  margin: 0 0 12px;
+  color: #fff;
+  font-size: 16px;
+}
+
+.member-list {
+  display: grid;
+  gap: 10px;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+}
+
+.member-item span {
+  color: #e2e8f0;
+  font-size: 14px;
+}
+
+.member-role {
+  background: rgba(255, 165, 0, 0.12);
+  color: #ffb347;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.member-you {
+  color: #34d399;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.user-selection {
+  display: grid;
+  gap: 10px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid #2b3443;
+  border-radius: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.checkbox-label.active {
+  border-color: #ff6c00;
+  background: rgba(255, 108, 0, 0.12);
+}
+
+.member-name {
+  color: #e2e8f0;
+  font-size: 14px;
+}
+
+.no-friends-message {
+  color: #94a3b8;
+  font-size: 14px;
+  margin: 0;
+}
+
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.btn-cancel,
+.btn-save,
+.btn-leave,
+.btn-danger,
+.btn-remove {
+  border: none;
+  border-radius: 12px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.btn-cancel {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+}
+
+.btn-save {
+  background: #2563eb;
+  color: #fff;
+}
+
+.btn-leave {
+  background: #f97316;
+  color: #fff;
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: #fff;
+}
+
+.btn-remove {
+  background: #7c3aed;
+  color: #fff;
+  padding: 6px 10px;
+}
+
+.btn-cancel:disabled,
+.btn-save:disabled,
+.btn-leave:disabled,
+.btn-danger:disabled,
+.btn-remove:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

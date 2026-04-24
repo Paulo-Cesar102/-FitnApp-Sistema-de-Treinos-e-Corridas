@@ -58,16 +58,26 @@ export default function MenuBar() {
     // Escuta eventos que alteram contagens globais
     socket.on("chat:new_message", fetchCounts);
     socket.on("chat:read", fetchCounts);
+    socket.on("chat:delete_message", fetchCounts);
+    socket.on("chat:cleared", fetchCounts);
     socket.on("friend:update", fetchCounts);
     socket.on("friend:new_request", fetchCounts);
     socket.on("group:created", fetchCounts);
+    socket.on("group:member_added", fetchCounts);
+    socket.on("group:member_left", fetchCounts);
+    socket.on("group:deleted", fetchCounts);
 
     return () => {
       socket.off("chat:new_message", fetchCounts);
       socket.off("chat:read", fetchCounts);
+      socket.off("chat:delete_message", fetchCounts);
+      socket.off("chat:cleared", fetchCounts);
       socket.off("friend:update", fetchCounts);
       socket.off("friend:new_request", fetchCounts);
       socket.off("group:created", fetchCounts);
+      socket.off("group:member_added", fetchCounts);
+      socket.off("group:member_left", fetchCounts);
+      socket.off("group:deleted", fetchCounts);
     };
   }, [fetchCounts]);
 

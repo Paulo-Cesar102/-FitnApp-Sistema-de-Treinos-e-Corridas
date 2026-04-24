@@ -149,9 +149,72 @@
   margin-bottom: 15px;
 }
 
-.btn-chat { background: #0072ff; color: #fff; border: none; width: 40px; height: 40px; border-radius: 10px; }
-.btn-accept { background: #00ff88; color: #000; border: none; width: 40px; height: 40px; border-radius: 10px; }
-.btn-reject { background: rgba(255,0,0,0.1); color: #ff4444; border: 1px solid #ff4444; width: 40px; height: 40px; border-radius: 10px; }
+.btn-chat {
+  background: #141414;
+  color: #ff4500;
+  border: 1px solid rgba(255, 69, 0, 0.25);
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  font-size: 18px;
+  display: grid;
+  place-items: center;
+  transition: all 0.2s ease;
+}
+
+.btn-chat:hover {
+  background: rgba(255, 69, 0, 0.08);
+}
+
+.btn-chat-theme {
+  color: #ff4500;
+}
+
+.friend-unread {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 4px;
+  background: rgba(255, 69, 0, 0.12);
+  color: #ffb347;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.action-pair {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-accept {
+  background: linear-gradient(135deg, #ff4500, #ff8c00);
+  color: #fff;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  transition: 0.2s ease;
+}
+
+.btn-accept:hover {
+  transform: translateY(-1px);
+}
+
+.btn-reject {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ff4500;
+  border: 1px solid rgba(255, 69, 0, 0.4);
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  transition: 0.2s ease;
+}
+
+.btn-reject:hover {
+  background: rgba(255, 69, 0, 0.12);
+}
+
 .btn-add-friend { background: #ff4500; color: #fff; border: none; width: 40px; height: 40px; border-radius: 10px; }
 
 .empty-msg {

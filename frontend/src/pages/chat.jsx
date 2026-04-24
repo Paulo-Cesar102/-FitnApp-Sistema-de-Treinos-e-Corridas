@@ -158,7 +158,7 @@ export default function Friends() {
                   <span>Nível {f.level || 1}</span>
                 </div>
                 <div className="action-buttons">
-                  <button className="btn-chat" onClick={() => onOpenChat(f)}>💬</button>
+                  <button className="btn-chat btn-chat-theme" onClick={() => onOpenChat(f)} title="Abrir conversa">✉</button>
                   <button className="btn-action-ghost" onClick={() => onRemove(f.id)}>Remover</button>
                 </div>
               </div>
@@ -178,8 +178,8 @@ export default function Friends() {
                   <span>Quer ser seu amigo</span>
                 </div>
                 <div className="action-pair">
-                  <button className="btn-circle-accept" onClick={() => onAccept(req.id)}>✓</button>
-                  <button className="btn-circle-reject" onClick={() => rejectFriend(req.id).then(loadData)}>✕</button>
+                  <button className="btn-accept" onClick={() => onAccept(req.id)}>Aceitar</button>
+                  <button className="btn-reject" onClick={() => rejectFriend(req.id).then(loadData)}>Recusar</button>
                 </div>
               </div>
             ))

@@ -161,3 +161,45 @@
 /* Scrollbar Style */
 .user-selection::-webkit-scrollbar { width: 4px; }
 .user-selection::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+
+.group-subtitle {
+  margin-top: 6px;
+  color: #cbd5e1;
+  font-size: 14px;
+}
+
+.section-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.selected-count {
+  color: #f59e0b;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.member-list {
+  display: grid;
+  gap: 10px;
+}
+
+.member-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 12px;
+}
+
+.member-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
