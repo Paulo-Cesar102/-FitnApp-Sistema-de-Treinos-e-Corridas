@@ -1,5 +1,5 @@
-import { IUser } from './User.js';
-import { IWorkout } from './Workout.js';
+import { IUser } from './User';
+import { IWorkout } from './Workout';
 
 export interface CompletedWorkout {
   id?: string;

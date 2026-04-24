@@ -25,8 +25,19 @@ class GymRepository {
         });
         
     }
- async updateMember(userId:string , gymId:string){
- return await prisma.user.update({
+ async findByName(name: string) {
+     return await prisma.gym.findMany({
+         where: {
+             name: {
+                 contains: name,
+                 mode: 'insensitive'
+             }
+         },
+         take: 10
+     });
+ }
+
+ async updateMember(userId:string , gymId:string){ return await prisma.user.update({
 
     where: {id:userId},
     data: {gymId}

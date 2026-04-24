@@ -76,6 +76,7 @@ model User {
   weightGoal        Float?    @default(0)
   lastActivityDate  DateTime?
   role              Role      @default(USER)
+  lastUnsubscribedAt DateTime?
   createdAt         DateTime  @default(now())
 
   // Relacionamentos Fitness
@@ -87,10 +88,13 @@ model User {
   exercises                 Exercise[]
   weightLogs                WeightLog[]
 
-  // Relacionamento com Academia
+  // Relacionamento com Academia (como membro)
   gymId                     String?
   gym                       Gym?      @relation(fields: [gymId], references: [id])
   payments                  Payment[]
+
+  // Academia que o usuário possui, se for proprietário
+  ownedGym                  Gym?      @relation("GymOwner")
 
   // Amizade
   sentRequests     FriendRequest[] @relation("SentRequests")
@@ -103,6 +107,18 @@ model User {
   // Compartilhar treino
   sentWorkouts     WorkoutShare[] @relation("WorkoutSender")
   receivedWorkouts WorkoutShare[] @relation("WorkoutReceiver")
+
+  // Personal (se for personal) 
+  personalProfile GymPersonal?
+
+  // Check-in
+  checkIns CheckIn[]
+
+  // Ranking da academia
+  gymRankings GymRanking[]
+
+  // Alunos do personal (se for personal)
+  studentsAssigned GymPersonalStudent[]
 }
 
 // =========================
@@ -131,6 +147,8 @@ model Gym {
   pixKey      String
   pixType     String
   qrCodeUrl   String?
+  ownerId     String?  @unique   // Proprietário da academia
+  owner       User?    @relation("GymOwner", fields: [ownerId], references: [id])
   createdAt   DateTime @default(now())
 
   members     User[]
@@ -138,6 +156,18 @@ model Gym {
   products    Product[]
   events      GymEvent[]
   workouts    UserWorkout[]
+
+  // Personals da academia
+  personals   GymPersonal[]
+
+  // Check-ins registrados
+  checkIns    CheckIn[]
+
+  // Avisos/comunicados
+  announcements GymAnnouncement[]
+
+  // Ranking da academia
+  rankings    GymRanking[]
 }
 
 // =========================
@@ -427,6 +457,9 @@ model Chat {
 
   participants ChatParticipant[]
   messages      Message[]
+
+  // Suporte de personal
+  personalSupports GymPersonalChat[]
 }
 
 model ChatParticipant {
@@ -480,4 +513,114 @@ model WorkoutShare {
   sender    User        @relation("WorkoutSender", fields: [senderId], references: [id])
   receiver  User        @relation("WorkoutReceiver", fields: [receiverId], references: [id])
   messages  Message[]
+}
+
+// =========================
+// GYM STAFF & PERSONALS
+// =========================
+
+model GymPersonal {
+  id            String   @id @default(uuid())
+  specialization String?   // Ex: "Musculação", "CrossFit", etc
+  bio           String?
+  certifications String[]   // Array de certificações
+  createdAt     DateTime @default(now())
+
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  gymId         String
+  gym           Gym      @relation(fields: [gymId], references: [id], onDelete: Cascade)
+
+  // Relação com alunos do personal
+  students      GymPersonalStudent[]
+  
+  // Chats de suporte com alunos
+  supportChats  GymPersonalChat[]
+}
+
+model GymPersonalStudent {
+  id String @id @default(uuid())
+
+  personalId    String
+  studentId     String
+  assignedAt    DateTime @default(now())
+
+  personal      GymPersonal @relation(fields: [personalId], references: [id], onDelete: Cascade)
+  student       User        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([personalId, studentId])
+}
+
+model GymPersonalChat {
+  id String @id @default(uuid())
+
+  personalId    String
+  chatId        String
+  createdAt     DateTime @default(now())
+
+  personal      GymPersonal @relation(fields: [personalId], references: [id], onDelete: Cascade)
+  chat          Chat        @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@unique([personalId, chatId])
+}
+
+// =========================
+// CHECK-IN SYSTEM
+// =========================
+
+model CheckIn {
+  id            String   @id @default(uuid())
+  checkedInAt   DateTime @default(now())
+
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  gymId         String
+  gym           Gym      @relation(fields: [gymId], references: [id], onDelete: Cascade)
+
+  // Ofensiva/Streak da academia
+  streakBonus   Int      @default(10) // XP bonus based on streak
+
+  @@unique([userId, gymId, checkedInAt])  // Um check-in por usuário por dia
+}
+
+// =========================
+// GYM ANNOUNCEMENTS
+// =========================
+
+model GymAnnouncement {
+  id          String   @id @default(uuid())
+  title       String
+  content     String
+  imageUrl    String?
+  priority    Int      @default(0) // 0 = normal, 1 = importante, 2 = urgente
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  gymId       String
+  gym         Gym      @relation(fields: [gymId], references: [id], onDelete: Cascade)
+
+  createdBy   String   // ID do personal/admin que criou
+}
+
+// =========================
+// GYM RANKING
+// =========================
+
+model GymRanking {
+  id              String   @id @default(uuid())
+  position        Int      // Posição no ranking
+  checkInCount    Int      @default(0) // Quantidade de check-ins
+  totalXpGained   Int      @default(0) // XP total ganhado na academia
+  lastCheckedIn   DateTime?
+  updatedAt       DateTime @updatedAt
+
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  gymId           String
+  gym             Gym      @relation(fields: [gymId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, gymId])
 }

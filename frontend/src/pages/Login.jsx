@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { gymAuthService } from "../api/gymAuthService";
 import "./Login.css"; 
 import CustomAlert from "../Componentes/CustomAlert";
 
@@ -37,18 +37,24 @@ export default function Login() {
     try {
       setLoading(true);
 
-      const response = await axios.post(
-        "http://localhost:3000/auth/login",
-        formData
-      );
+      const response = await gymAuthService.login(formData);
 
-      console.log("RESPOSTA LOGIN:", response.data);
+      console.log("RESPOSTA LOGIN:", response);
 
       // 🔥 SALVA TOKEN
-      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("token", response.token);
 
-      // 🔥 SALVA USUÁRIO (ESSENCIAL PRA FRIENDS)
-      localStorage.setItem("user", JSON.stringify(response.data.user));
+      // 🔥 SALVA USUÁRIO E DADOS EXTRAS
+      const user = response.user;
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("role", user.role);
+
+      const gymId = user.gymId || user.gym?.id;
+      const gymName = user.gymName || user.gym?.name || "";
+
+      localStorage.setItem("gymId", gymId);
+      localStorage.setItem("gymName", gymName);
+      localStorage.setItem("userId", user.id);
 
       showAlert(
         "Acesso Liberado",
@@ -56,7 +62,11 @@ export default function Login() {
         "success",
         () => {
           setAlertConfig({ isOpen: false });
-          navigate("/home");
+          if (user.role === "GYM_OWNER") {
+            navigate("/academy");
+          } else {
+            navigate("/home");
+          }
         }
       );
 
@@ -65,6 +75,7 @@ export default function Login() {
 
       const msg =
         error.response?.data?.message ||
+        error.response?.data?.error ||
         "E-mail ou senha incorretos.";
 
       showAlert("Falha no Login", msg, "error");

@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.feedbackRoutes = void 0;
+const express_1 = require("express");
+const FeedbackController_1 = require("../controller/FeedbackController");
+const feedbackRoutes = (0, express_1.Router)();
+exports.feedbackRoutes = feedbackRoutes;
+const feedbackController = new FeedbackController_1.FeedbackController();
+feedbackRoutes.post("/", (req, res) => feedbackController.create(req, res));
+feedbackRoutes.delete("/:id", (req, res) => feedbackController.delete(req, res));

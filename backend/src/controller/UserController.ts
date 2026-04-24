@@ -97,7 +97,7 @@ export class UserController {
 
   async update(req: Request, res: Response): Promise<Response> {
     try {
-      const { id } = req.params;
+      const { id } = req.params as any;
       const data = req.body;
       const user = await this.userService.update(id, data);
       return res.json(user);

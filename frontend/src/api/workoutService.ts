@@ -7,8 +7,9 @@ export const getCatalogWorkouts = async () => {
 };
 
 // 🔥 USUÁRIO (Treinos personalizados do aluno)
-export const getUserWorkouts = async () => {
-  const response = await api.get("/workouts/user");
+export const getUserWorkouts = async (userId?: string) => {
+  const url = userId ? `/workouts/user/${userId}` : "/workouts/user";
+  const response = await api.get(url);
   return response.data;
 };
 
@@ -57,4 +58,16 @@ export const deleteWorkout = async (id: string) => {
   // Nota: No seu controller, o delete retorna 204 (No Content), 
   // então não haverá response.data aqui.
   await api.delete(`/workouts/${id}`);
+};
+
+export const workoutService = {
+  getCatalogWorkouts,
+  getUserWorkouts,
+  getExercises,
+  createPersonalWorkout,
+  completeWorkout,
+  completeExercise,
+  getFocusStats,
+  getWeeklyStats,
+  deleteWorkout,
 };

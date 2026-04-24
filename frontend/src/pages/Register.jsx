@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./Register.css";
 import CustomAlert from "../Componentes/CustomAlert";
+import { registerUser } from "../api/userService";
 
 const FlameIcon = () => (
   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -53,11 +53,10 @@ export default function Register() {
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        // Enviando MALE ou FEMALE para bater com o padrão do Schema/DB
          sex: formData.gender === "male" ? "M" : "F"
       };
 
-      await axios.post("http://localhost:3000/users/register", payload);
+      await registerUser(payload);
 
       setFormData({ name: "", email: "", password: "", confirmPassword: "", gender: "" });
 
@@ -67,15 +66,13 @@ export default function Register() {
       });
 
     } catch (error) {
-      // 🚀 A MÁGICA PARA PEGAR O ERRO DO ZOD ESTÁ AQUI
       let errorMessage = "Erro ao conectar com o servidor";
 
       if (error.response && error.response.data) {
         const data = error.response.data;
 
-        // Se o backend enviou a lista de erros do Zod (aquela que fizemos no server.ts)
         if (data.errors && data.errors.length > 0) {
-          errorMessage = data.errors[0].message; // Pega a primeira mensagem de validação
+          errorMessage = data.errors[0].message;
         } else if (data.message) {
           errorMessage = data.message;
         } else if (data.error) {
@@ -170,6 +167,8 @@ export default function Register() {
 
         <footer className="register-footer">
           Já tem uma conta? <a href="/login" onClick={(e) => { e.preventDefault(); navigate("/login"); }}>Faça Login</a>
+          <br /><br />
+          Quer gerenciar sua academia? <a href="/register-owner" onClick={(e) => { e.preventDefault(); navigate("/register-owner"); }}>Cadastre-se aqui</a>
         </footer>
       </div>
 

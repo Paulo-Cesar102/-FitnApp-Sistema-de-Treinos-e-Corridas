@@ -2,13 +2,23 @@ import { prisma } from "../database/prisma";
 import { ChatRole } from "@prisma/client";
 
 export class ChatRepository {
-  async createChat(isGroup: boolean, name?: string) {
-    return prisma.chat.create({
+  async createChat(data: { isGroup: boolean; name?: string; participantIds?: string[] }) {
+    const chat = await prisma.chat.create({
       data: {
-        isGroup,
-        name
+        isGroup: data.isGroup,
+        name: data.name
       }
     });
+
+    if (data.participantIds && data.participantIds.length > 0) {
+      await Promise.all(
+        data.participantIds.map(userId =>
+          this.addParticipant(chat.id, userId, data.isGroup ? "MEMBER" : "MEMBER")
+        )
+      );
+    }
+
+    return chat;
   }
 
   async addParticipant(chatId: string, userId: string, role: ChatRole = "MEMBER") {

@@ -3,7 +3,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import "./ExecutarTreino.css";
 import CustomAlert from "./CustomAlert";
 import { completeWorkout } from "../api/workoutService";
-import { addWeightLog } from "../api/weightService";
+import { weightService } from "../api/weightService";
+import { socket } from "../service/socket";
 
 // Ícones Vetorizados
 const TimerIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
@@ -147,6 +148,24 @@ export default function ExecutarTreino({ workout }) {
     localStorage.setItem("shownMessages", JSON.stringify(messages));
   };
 
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+  useEffect(() => {
+    // Ao iniciar o treino, avisa ao personal (se houver)
+    // O aluno pode estar inscrito em vários personals (um de cada academia ou especialidade)
+    // Buscamos o personal vinculado que pertence a esta academia
+    const personalId = user.personalSubscriptions?.[0] || localStorage.getItem("personalId");
+    
+    if (treinoAtual?.id && socket && user.id && personalId) {
+      socket.emit("student_activity", {
+        personalId,
+        studentName: user.name,
+        workoutName: workoutName,
+        status: "started"
+      });
+    }
+  }, [treinoAtual?.id]);
+
   const finalizarTreino = async () => {
     if (!treinoAtual?.id) {
       showAlert("Erro", "Não foi possível identificar o treino para concluir.", "error");
@@ -222,7 +241,7 @@ export default function ExecutarTreino({ workout }) {
 
     setWeightLoading(true);
     try {
-      await addWeightLog(parseFloat(weightInput));
+      await weightService.addWeightLog(parseFloat(weightInput));
       showAlert("Peso Registrado", "Seu peso foi registrado com sucesso!", "success", () => {
         setAlertConfig({ isOpen: false });
         navigate("/home");

@@ -1,4 +1,4 @@
-import { IUser } from './User.js';
+import { IUser } from './User';
 
 export interface Feedback {
   id?: string;

@@ -9,13 +9,16 @@ const ArrowLeftIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill
 const SearchIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>;
 const CheckIcon = () => <svg width="32" height="32" viewBox="0 0 24 24" fill="#ff4500" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>;
 
-export default function CriarTreino() {
+export default function CriarTreino({ onCreated, students = [] }) {
   const navigate = useNavigate();
   const [nomeTreino, setNomeTreino] = useState("");
   const [exerciciosBanco, setExerciciosBanco] = useState([]);
   const [selecionados, setSelecionados] = useState([]);
   const [busca, setBusca] = useState("");
   const [alertConfig, setAlertConfig] = useState({ isOpen: false });
+  const [targetUserId, setTargetUserId] = useState(localStorage.getItem("userId"));
+
+  const isPersonal = localStorage.getItem("role") === "PERSONAL";
 
   const showAlert = (title, message, type, onConfirm) => {
     setAlertConfig({
@@ -55,6 +58,7 @@ export default function CriarTreino() {
     try {
       const payload = {
         name: nomeTreino,
+        userId: targetUserId, // O treino será criado para este usuário
         exercises: selecionados.map((ex) => ({
           exerciseId: ex.id,
           sets: 3,
@@ -62,9 +66,13 @@ export default function CriarTreino() {
         })),
       };
       await createPersonalWorkout(payload);
-      showAlert("Sucesso", "Treino criado e salvo no seu perfil!", "success", () => {
+      showAlert("Sucesso", "Treino criado com sucesso!", "success", () => {
         setAlertConfig({ isOpen: false });
-        navigate("/exercicio");
+        if (onCreated) {
+          onCreated();
+        } else {
+          navigate("/exercicio");
+        }
       });
     } catch (err) {
       showAlert("Erro", "Ocorreu um erro ao salvar o treino. Tente novamente.", "error");
@@ -87,6 +95,22 @@ export default function CriarTreino() {
           <h2 className="title-glow">NOVO <span>TREINO</span></h2>
           <div style={{ width: 45 }}></div> 
         </div>
+
+        {isPersonal && students.length > 0 && (
+          <div className="student-selector-box glass" style={{ marginBottom: "15px", padding: "10px", borderRadius: "10px" }}>
+            <label style={{ fontSize: "0.8rem", color: "var(--text-dim)", display: "block", marginBottom: "5px" }}>Criar treino para:</label>
+            <select 
+              value={targetUserId} 
+              onChange={(e) => setTargetUserId(e.target.value)}
+              style={{ width: "100%", padding: "8px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "white", borderRadius: "8px" }}
+            >
+              <option value={localStorage.getItem("userId")}>Para mim</option>
+              {students.map(s => (
+                <option key={s.id} value={s.id}>{s.name} (Aluno)</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="input-group-stack">
           <input

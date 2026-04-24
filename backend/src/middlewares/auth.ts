@@ -4,13 +4,17 @@ import jwt from "jsonwebtoken";
 
 interface JwtPayload {
   id: string;
+  role: string;
+  gymId?: string;
 }
-
 
 declare global {
   namespace Express {
     interface Request {
       user?: JwtPayload;
+      userId?: string; // Mantendo para retrocompatibilidade se necessário
+      role?: string;
+      gymId?: string;
     }
   }
 }
@@ -48,15 +52,23 @@ export function authMiddleware(
 
   try {
    
+    const secret = process.env.JWT_SECRET || "segredo-super-secreto";
     const decoded = jwt.verify(
       token,
-      process.env.JWT_SECRET as string
+      secret
     ) as JwtPayload;
 
     // 🔥 salva no request
     req.user = {
-      id: decoded.id
+      id: decoded.id,
+      role: decoded.role,
+      gymId: decoded.gymId
     };
+    
+    // Para compatibilidade com controllers que usam req.userId ou req.role diretamente
+    (req as any).userId = decoded.id;
+    (req as any).role = decoded.role;
+    (req as any).gymId = decoded.gymId;
 
     console.log("Usuário autenticado:", req.user);
 

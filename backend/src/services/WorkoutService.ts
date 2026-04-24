@@ -22,6 +22,33 @@ export class WorkoutService {
     return this.workoutRepository.create(data);
   }
 
+  async update(id: string, data: any): Promise<IWorkout> {
+    if (!data.name) {
+      throw new Error("Nome do treino é obrigatório");
+    }
+
+    // Primeiro removemos os exercícios antigos
+    await prisma.userWorkoutExercise.deleteMany({ where: { userWorkoutId: id } });
+
+    // Atualizamos o treino com os novos
+    const updatedWorkout = await prisma.userWorkout.update({
+      where: { id },
+      data: {
+        name: data.name,
+        exercises: {
+          create: data.exercises.map((ex: any) => ({
+            exerciseId: ex.exerciseId,
+            sets: ex.sets,
+            reps: ex.reps
+          }))
+        }
+      },
+      include: { exercises: { include: { exercise: true } } }
+    });
+
+    return updatedWorkout as unknown as IWorkout;
+  }
+
   async findAll(userId: string): Promise<IWorkout[]> {
     return this.workoutRepository.findAll(userId);
   }

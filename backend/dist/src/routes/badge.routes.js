@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.badgeRoutes = void 0;
+const express_1 = require("express");
+const BadgeController_1 = require("../controller/BadgeController");
+const auth_1 = require("../middlewares/auth");
+const badgeRoutes = (0, express_1.Router)();
+exports.badgeRoutes = badgeRoutes;
+const badgeController = new BadgeController_1.BadgeController();
+badgeRoutes.get("/", (req, res) => badgeController.listAll(req, res));
+badgeRoutes.get("/me", auth_1.authMiddleware, (req, res) => badgeController.listMyBadges(req, res));

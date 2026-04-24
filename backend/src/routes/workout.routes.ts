@@ -10,14 +10,24 @@ workoutRoutes.get("/catalog", (req, res) =>
   workoutController.getCatalog(req, res)
 );
 
-// TREINOS DO USUÁRIO
+// TREINOS DO USUÁRIO LOGADO
 workoutRoutes.get("/user", authMiddleware, (req, res) =>
   workoutController.getUserWorkouts(req, res)
+);
+
+// TREINOS DE UM USUÁRIO ESPECÍFICO (ex: personal)
+workoutRoutes.get("/user/:userId", authMiddleware, (req, res) =>
+  workoutController.getWorkoutsByUserId(req, res)
 );
 
 // CRIAR TREINO
 workoutRoutes.post("/", authMiddleware, (req, res) =>
   workoutController.create(req, res)
+);
+
+// ATUALIZAR TREINO
+workoutRoutes.put("/:id", authMiddleware, (req, res) =>
+  workoutController.update(req, res)
 );
 
 // COMPLETAR TREINO INTEIRO

@@ -1,4 +1,5 @@
 import { UserRepository } from "../repository/UserRepository";
+import { prisma } from "../database/prisma";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
@@ -31,6 +32,16 @@ export class AuthService {
     );
 
     // --- ALTERAÇÃO AQUI: RETORNANDO O TOKEN + DADOS DO USUÁRIO ---
+    const userData = user as any;
+    const gymId = userData.role === "GYM_OWNER" ? userData.ownedGym?.id : userData.gymId;
+    const gymName = userData.role === "GYM_OWNER" ? userData.ownedGym?.name : userData.gym?.name;
+
+    // Busca inscrições com personals se for aluno
+    const personalSubscriptions = await prisma.gymPersonalStudent.findMany({
+      where: { studentId: user.id },
+      select: { personalId: true }
+    });
+
     return { 
       token, 
       user: {
@@ -40,8 +51,10 @@ export class AuthService {
         role: user.role,
         level: user.level,
         xp: user.xp,
-        streak: user.streak
-        // Não envie a senha (password) aqui por segurança!
+        streak: user.streak,
+        gymId,
+        gymName,
+        personalSubscriptions: personalSubscriptions.map(s => s.personalId)
       }
     };
   }

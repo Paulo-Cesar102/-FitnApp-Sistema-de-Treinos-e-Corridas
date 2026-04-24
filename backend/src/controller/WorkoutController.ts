@@ -22,6 +22,7 @@ export class WorkoutController {
       const workout = await this.workoutService.create({
         name,
         userId,
+        gymId: req.user?.gymId,
         exercises,
       });
 
@@ -29,6 +30,32 @@ export class WorkoutController {
     } catch (error) {
       return res.status(400).json({
         message: error instanceof Error ? error.message : "Erro ao criar treino",
+      });
+    }
+  }
+
+  async update(req: Request, res: Response) {
+    try {
+      const { id } = req.params as any;
+      const { name, exercises } = req.body;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ message: "Usuário não identificado" });
+      }
+
+      if (!name || !exercises) {
+        return res
+          .status(400)
+          .json({ message: "Nome e exercícios são obrigatórios" });
+      }
+
+      // Idealmente, deve-se verificar se o usuário é o dono do treino antes de atualizar
+      const workout = await this.workoutService.update(id, { name, exercises });
+      return res.status(200).json(workout);
+    } catch (error) {
+      return res.status(400).json({
+        message: error instanceof Error ? error.message : "Erro ao atualizar treino",
       });
     }
   }
@@ -53,7 +80,7 @@ export class WorkoutController {
 
   async getUserWorkouts(req: Request, res: Response) {
     try {
-      const userId = req.user?.id;
+      const userId = req.user?.id as string;
 
       if (!userId) {
         return res.status(401).json({ message: "Usuário não identificado" });
@@ -67,6 +94,26 @@ export class WorkoutController {
           error instanceof Error
             ? error.message
             : "Erro ao buscar treinos do usuário",
+      });
+    }
+  }
+
+  async getWorkoutsByUserId(req: Request, res: Response) {
+    try {
+      const { userId } = req.params as any;
+
+      if (!userId) {
+        return res.status(400).json({ message: "userId é obrigatório" });
+      }
+
+      const workouts = await this.workoutService.getUserWorkouts(userId);
+      return res.status(200).json(workouts);
+    } catch (error) {
+      return res.status(400).json({
+        message:
+          error instanceof Error
+            ? error.message
+            : "Erro ao buscar treinos do usuário específico",
       });
     }
   }

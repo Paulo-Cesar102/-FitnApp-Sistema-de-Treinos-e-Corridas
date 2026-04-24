@@ -25,7 +25,7 @@ export class FeedbackController {
 
     async delete(req: Request, res: Response): Promise<Response> {
         try {
-            const { id } = req.params;
+            const { id } = req.params as { id: string };
 
             await this.feedbackService.delete(String(id));
 

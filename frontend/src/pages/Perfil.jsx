@@ -4,7 +4,8 @@ import "./Perfil.css";
 import CustomAlert from "../Componentes/CustomAlert";
 import { getUser, updateUser } from "../api/userService";
 import { getUserBadges } from "../api/badgeService";
-import { getWeightLogs } from "../api/weightService";
+import { weightService } from "../api/weightService";
+const { getWeightLogs } = weightService;
 import { getFocusStats, getWeeklyStats } from "../api/workoutService";
 import {
   ResponsiveContainer,

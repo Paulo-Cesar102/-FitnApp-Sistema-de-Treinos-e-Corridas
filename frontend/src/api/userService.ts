@@ -1,5 +1,11 @@
 import { api } from "./api";
 
+// REGISTRAR USUÁRIO
+export const registerUser = async (data: any) => {
+  const response = await api.post("/users/register", data);
+  return response.data;
+};
+
 // BUSCAR DADOS DO USUÁRIO PELO ID
 export const getUser = async (id: string) => {
   const response = await api.get(`/users/${id}`);

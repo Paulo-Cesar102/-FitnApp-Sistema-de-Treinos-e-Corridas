@@ -27,6 +27,11 @@ const UserIcon = () => (
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
   </svg>
 );
+const AcademyIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2L2 8v10h20V8l-10-6z"/><path d="M12 10v8"/><path d="M6 14h12"/>
+  </svg>
+);
 
 export default function MenuBar() {
   const navigate = useNavigate();
@@ -84,6 +89,7 @@ export default function MenuBar() {
   const menus = [
     { id: "home", label: "Início", path: "/home", icon: <HomeIcon /> },
     { id: "exercicio", label: "Treinos", path: "/exercicio", icon: <BarbellIcon /> },
+    { id: "academy", label: "Academia", path: "/academy", icon: <AcademyIcon /> },
     { id: "friends", label: "Amigos", path: "/amigos", icon: <FriendsIcon />, hasBadge: true },
     { id: "perfil", label: "Perfil", path: "/perfil", icon: <UserIcon /> },
   ];

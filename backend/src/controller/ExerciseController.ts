@@ -16,7 +16,7 @@ export class ExerciseController {
 
   async getById(req: Request, res: Response) {
 
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
 const exercise = await this.service.getExerciseById(id as string);
 
@@ -33,7 +33,7 @@ const exercise = await this.service.getExerciseById(id as string);
 
   async getByCategory(req: Request, res: Response) {
 
-  const { categoryId } = req.params;
+  const { categoryId } = req.params as { categoryId: string };
 
   const exercises = await this.service.getExercisesByCategory(categoryId as string);
 

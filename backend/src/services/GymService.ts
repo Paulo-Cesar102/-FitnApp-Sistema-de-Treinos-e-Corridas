@@ -20,6 +20,11 @@ class GymService{
 
     }
 
+    async findGymByIdentifier(identifier: string) {
+        const gym = await GymRepository.findByIdOrCode(identifier);
+        return gym ? [gym] : [];
+    }
+
     async registerGym (data:any){
 
         const inviteCode = data.inviteCode ||  Math.random().toString(36).substring(2, 8).toUpperCase();

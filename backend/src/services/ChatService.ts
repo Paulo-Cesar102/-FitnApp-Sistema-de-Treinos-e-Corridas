@@ -13,7 +13,7 @@ export class ChatService {
     const existing = await this.repo.findPrivateChat(userA, userB);
     if (existing) return existing;
 
-    const chat = await this.repo.createChat(false);
+    const chat = await this.repo.createChat({ isGroup: false });
     // Em chat privado, ambos são membros comuns
     await this.repo.addParticipant(chat.id, userA, "MEMBER");
     await this.repo.addParticipant(chat.id, userB, "MEMBER");
@@ -28,7 +28,7 @@ export class ChatService {
     // Filtra o criador da lista de convidados para não duplicar
     const guestIds = userIds.filter(id => id !== creatorId);
 
-    const chat = await this.repo.createChat(true, name);
+    const chat = await this.repo.createChat({ isGroup: true, name });
 
     // 👑 Adiciona o criador como ADMIN
     await this.repo.addParticipant(chat.id, creatorId, "ADMIN");

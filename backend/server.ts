@@ -9,6 +9,7 @@ import { Server } from "socket.io";
 import { userRoutes } from "./src/routes/user.routes";
 import { feedbackRoutes } from "./src/routes/feedback.routes";
 import authRoutes from "./src/routes/auth.routes";
+import authGymRoutes from "./src/routes/auth-gym.routes";
 import exerciseRoutes from "./src/routes/exercise.routes";
 import { workoutRoutes } from "./src/routes/workout.routes";
 import categoryRoutes from "./src/routes/category.routes";
@@ -45,6 +46,7 @@ app.use(express.json());
 
 // Definição das Rotas
 app.use("/auth", authRoutes);
+app.use("/auth-gym", authGymRoutes);
 app.use("/users", userRoutes);
 app.use("/friends", friendRoutes);
 app.use("/exercises", exerciseRoutes);
@@ -97,6 +99,46 @@ io.on("connection", (socket) => {
   socket.on("leave_chat", (chatId: string) => {
     socket.leave(chatId);
     console.log(`🚪 Socket ${socket.id} saiu do chat ${chatId}`);
+  });
+
+  // --- LÓGICA DE SALAS DA ACADEMIA ---
+  socket.on("join_gym_room", (gymId: string) => {
+    if (gymId) {
+      socket.join(`gym_${gymId}`);
+      console.log(`🏢 Socket ${socket.id} entrou na sala da academia gym_${gymId}`);
+    }
+  });
+
+  socket.on("leave_gym_room", (gymId: string) => {
+    if (gymId) {
+      socket.leave(`gym_${gymId}`);
+      console.log(`🚪 Socket ${socket.id} saiu da sala da academia gym_${gymId}`);
+    }
+  });
+
+  socket.on("new_checkin", (data: { gymId: string, userId: string }) => {
+    console.log(`📍 Novo checkin na academia ${data.gymId} pelo usuário ${data.userId}`);
+    // Repassa o evento para todos na sala da academia para atualizarem o ranking
+    io.to(`gym_${data.gymId}`).emit("ranking_updated", { gymId: data.gymId });
+  });
+
+  // --- MONITORAMENTO PERSONAL/ALUNO ---
+  socket.on("join_personal_room", (personalId: string) => {
+    if (personalId) {
+      socket.join(`personal_${personalId}`);
+      console.log(`👨‍🏫 Personal ${personalId} ouvindo atualizações de seus alunos`);
+    }
+  });
+
+  socket.on("student_activity", (data: { personalId: string, studentName: string, workoutName: string, status: "started" | "completed", xpGained?: number }) => {
+    console.log(`🏋️ Atividade do Aluno: ${data.studentName} em ${data.workoutName} (${data.status})`);
+    // Notifica apenas o personal deste aluno
+    io.to(`personal_${data.personalId}`).emit("live_activity", data);
+  });
+
+  socket.on("student_enrolled", (data: { personalId: string }) => {
+    console.log(`👥 Novo aluno inscrito para o personal ${data.personalId}`);
+    io.to(`personal_${data.personalId}`).emit("new_student_joined");
   });
 
   socket.on("disconnect", () => {

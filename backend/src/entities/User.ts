@@ -1,7 +1,7 @@
 import { Role } from '@prisma/client';
-import { CompletedWorkout } from './CompletedWorkout.js';
-import type { UserBadge } from './UserBadge.js'; 
-import { Feedback } from './Feedback.js';
+import { CompletedWorkout } from './CompletedWorkout';
+import type { UserBadge } from './UserBadge'; 
+import { Feedback } from './Feedback';
 
 export interface IUser {
   
@@ -15,6 +15,8 @@ export interface IUser {
   streak: number;
   maxStreak: number;
   weightGoal?: number;
+  lastActivityDate?: Date;
+  gymId?: string;
   role?: Role;    
   createdAt?: Date;
 

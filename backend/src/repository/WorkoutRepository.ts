@@ -8,6 +8,7 @@ export class WorkoutRepository {
       data: {
         name: data.name,
         userId: data.userId,
+        gymId: data.gymId,
         exercises: {
           create: data.exercises.map((exercise) => ({
             exerciseId: exercise.exerciseId,

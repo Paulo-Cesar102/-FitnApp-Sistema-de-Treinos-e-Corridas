@@ -21,13 +21,21 @@ export class UserRepository implements IUserRepository {
 
   async findById(id: string): Promise<IUser | null> {
     return prisma.user.findUnique({
-      where: { id }
+      where: { id },
+      include: {
+        ownedGym: true,
+        gym: true
+      }
     }) as unknown as IUser | null;
   }
 
   async findByEmail(email: string): Promise<IUser | null> {
     return prisma.user.findUnique({
-      where: { email }
+      where: { email },
+      include: {
+        ownedGym: true,
+        gym: true
+      }
     }) as unknown as IUser | null;
   }
 

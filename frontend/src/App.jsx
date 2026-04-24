@@ -4,6 +4,7 @@ import { connectSocket } from "./service/socket";
 
 // Páginas e Componentes
 import Register from "./pages/Register";
+import RegisterOwner from "./pages/RegisterOwner";
 import Login from "./pages/Login";
 import Home from "./pages/home";
 import Treinos from "./pages/Treinos";
@@ -12,12 +13,22 @@ import MenuBar from "./Componentes/MenuBar";
 import ExecutarTreino from "./Componentes/ExecutarTreino";
 import Perfil from "./pages/Perfil";
 import Friends from "./pages/friends";
+import Academy from "./pages/academy";
 
 function Layout({ children }) {
   const location = useLocation();
+  const role = localStorage.getItem("role");
+  
   // Rotas onde o MenuBar inferior deve aparecer
-  const rotasComMenu = ["/home", "/exercicio", "/perfil", "/amigos"];
-  const mostrarMenu = rotasComMenu.includes(location.pathname);
+  const rotasComMenu = ["/home", "/exercicio", "/perfil", "/amigos", "/academy"];
+  let mostrarMenu = rotasComMenu.includes(location.pathname);
+  
+  // Se for dono de academia, não mostre o MenuBar inferior (o Dashboard já tem sidebar)
+  if (role === "GYM_OWNER" || role === "PERSONAL") {
+     if (location.pathname === "/academy") {
+         mostrarMenu = false;
+     }
+  }
 
   return (
     <div
@@ -57,11 +68,13 @@ function AppContent() {
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/register-owner" element={<RegisterOwner />} />
         <Route path="/home" element={<Home />} />
         <Route path="/exercicio" element={<Treinos />} />
         <Route path="/criar-treino" element={<CriarTreino />} />
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/amigos" element={<Friends />} />
+        <Route path="/academy" element={<Academy />} />
         <Route path="/executar-treino" element={<ExecutarTreino />} />
         <Route path="*" element={<Navigate to="/home" />} />
       </Routes>

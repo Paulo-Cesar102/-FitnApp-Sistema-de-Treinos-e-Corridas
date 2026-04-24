@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.router = void 0;
+const express_1 = require("express");
+const FriendRequestController_1 = require("../controller/FriendRequestController");
+const auth_1 = require("../middlewares/auth");
+const router = (0, express_1.Router)();
+exports.router = router;
+const controller = new FriendRequestController_1.FriendRequestController();
+router.post("/request", auth_1.authMiddleware, controller.send.bind(controller));
+router.post("/accept", auth_1.authMiddleware, controller.accept.bind(controller));
+router.post("/reject", auth_1.authMiddleware, controller.reject.bind(controller));
+router.get("/", auth_1.authMiddleware, controller.friends.bind(controller));
+router.get("/pending", auth_1.authMiddleware, controller.pending.bind(controller));
+router.delete("/:id", auth_1.authMiddleware, controller.delete.bind(controller));
+router.get("/search", auth_1.authMiddleware, controller.search.bind(controller));

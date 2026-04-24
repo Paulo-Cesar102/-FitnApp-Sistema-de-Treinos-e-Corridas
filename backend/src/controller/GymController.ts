@@ -25,8 +25,17 @@ export default class GymController {
     }
 }
 
-async create (req: Request, res: Response){
+async search(req: Request, res: Response) {
+    const { identifier } = req.query;
     try {
+        const gyms = await GymService.findGymByIdentifier(identifier as string || "");
+        return res.status(200).json(gyms);
+    } catch (error: any) {
+        return res.status(400).json({ message: error.message });
+    }
+}
+
+async create (req: Request, res: Response){    try {
         const gym = GymService.registerGym(req.body);
         return res.status(201).json(gym)
     }catch(error: any){

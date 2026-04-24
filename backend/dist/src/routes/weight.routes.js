@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.weightRoutes = void 0;
+const express_1 = require("express");
+const WeightController_1 = require("../controller/WeightController");
+const auth_1 = require("../middlewares/auth");
+const weightRoutes = (0, express_1.Router)();
+exports.weightRoutes = weightRoutes;
+weightRoutes.post("/", auth_1.authMiddleware, WeightController_1.addWeightLog);
+weightRoutes.get("/", auth_1.authMiddleware, WeightController_1.getWeightLogs);
