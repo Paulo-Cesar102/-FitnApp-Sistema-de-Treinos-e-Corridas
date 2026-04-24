@@ -160,4 +160,38 @@ export class WorkoutController {
       });
     }
   }
+
+  async getFocusStats(req: Request, res: Response) {
+    try {
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ message: "Usuário não identificado" });
+      }
+
+      const stats = await this.workoutService.getFocusDistribution(userId);
+      return res.json(stats);
+    } catch (error) {
+      return res.status(400).json({
+        message: error instanceof Error ? error.message : "Erro ao buscar foco",
+      });
+    }
+  }
+
+  async getWeeklyStats(req: Request, res: Response) {
+    try {
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ message: "Usuário não identificado" });
+      }
+
+      const stats = await this.workoutService.getWeeklyStats(userId);
+      return res.json(stats);
+    } catch (error) {
+      return res.status(400).json({
+        message: error instanceof Error ? error.message : "Erro ao buscar semanal",
+      });
+    }
+  }
 }

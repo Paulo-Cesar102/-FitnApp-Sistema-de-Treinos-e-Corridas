@@ -40,6 +40,18 @@ export const completeExercise = async (workoutId: string, exerciseId: string) =>
   return response.data;
 };
 
+// 🔥 ESTATÍSTICAS: Distribuição de grupos musculares (Gráfico de Pizza)
+export const getFocusStats = async () => {
+  const response = await api.get("/workouts/stats/focus");
+  return response.data;
+};
+
+// 🔥 ESTATÍSTICAS: Treinos realizados na semana (Gráfico de Barras)
+export const getWeeklyStats = async () => {
+  const response = await api.get("/workouts/stats/weekly");
+  return response.data;
+};
+
 // 🔥 DELETE
 export const deleteWorkout = async (id: string) => {
   // Nota: No seu controller, o delete retorna 204 (No Content), 

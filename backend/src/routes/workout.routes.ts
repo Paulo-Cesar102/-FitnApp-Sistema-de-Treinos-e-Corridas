@@ -25,9 +25,19 @@ workoutRoutes.post("/complete", authMiddleware, (req, res) =>
   workoutController.complete(req, res)
 );
 
-// COMPLETAR EXERCÍCIO
+// COMPLETAR EXERCÍCIO INDIVIDUAL
 workoutRoutes.post("/complete-exercise", authMiddleware, (req, res) =>
   workoutController.completeExercise(req, res)
+);
+
+// ESTATÍSTICAS: Distribuição de foco por grupo muscular (Gráfico de Pizza)
+workoutRoutes.get("/stats/focus", authMiddleware, (req, res) =>
+  workoutController.getFocusStats(req, res)
+);
+
+// ESTATÍSTICAS: Volume de treinos realizados na semana atual (Gráfico de Barras)
+workoutRoutes.get("/stats/weekly", authMiddleware, (req, res) =>
+  workoutController.getWeeklyStats(req, res)
 );
 
 // DELETAR TREINO

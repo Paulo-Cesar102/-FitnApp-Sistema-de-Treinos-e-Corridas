@@ -2,9 +2,10 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Perfil.css";
 import CustomAlert from "../Componentes/CustomAlert";
-import { getUser } from "../api/userService";
+import { getUser, updateUser } from "../api/userService";
 import { getUserBadges } from "../api/badgeService";
 import { getWeightLogs } from "../api/weightService";
+import { getFocusStats, getWeeklyStats } from "../api/workoutService";
 import {
   ResponsiveContainer,
   BarChart,
@@ -17,17 +18,27 @@ import {
   Pie,
   Cell,
   Legend,
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
 } from "recharts";
 
-const TrophyIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff4500" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>;
-const BarbellIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff4500" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12h20"/><path d="M6 7v10"/><path d="M4 9v6"/><path d="M18 7v10"/><path d="M20 9v6"/></svg>;
-const FlameIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff4500" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>;
+const TrophyIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>;
+const BarbellIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12h20"/><path d="M6 7v10"/><path d="M4 9v6"/><path d="M18 7v10"/><path d="M20 9v6"/></svg>;
+const FlameIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>;
 const LogoutIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>;
+const TargetIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>;
+const EditIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>;
 
 export default function Perfil() {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("evolucao");
+  const [isEditingGoal, setIsEditingGoal] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [newGoal, setNewGoal] = useState("");
+  const [editData, setEditProfileData] = useState({ name: "", sex: "M" });
+  const [focusData, setFocusData] = useState([]);
+  const [weeklyData, setWeeklyStats] = useState([]);
+  
   const [alertConfig, setAlertConfig] = useState({ isOpen: false });
   const [badges, setBadges] = useState([]);
   const [badgesLoading, setBadgesLoading] = useState(true);
@@ -35,296 +46,379 @@ export default function Perfil() {
   const [weightLoading, setWeightLoading] = useState(true);
 
   const [userData, setUserData] = useState({
+    id: "",
     name: "",
     email: "",
     level: 1,
     xp: 0,
     currentXP: 0,
-    nextLevelXP: 1000,
+    nextLevelXP: 100,
     totalWorkouts: 0,
-    streak: 5,
-    maxStreak: 0
+    streak: 0,
+    maxStreak: 0,
+    weightGoal: 0,
+    sex: "M"
   });
 
+  const loadAllData = async () => {
+    const userFromStorage = JSON.parse(localStorage.getItem("user") || "{}");
+    if (!userFromStorage?.id) return;
+
+    try {
+      const [user, userBadges, logs, stats, weekly] = await Promise.all([
+        getUser(userFromStorage.id),
+        getUserBadges(),
+        getWeightLogs(),
+        getFocusStats(),
+        getWeeklyStats()
+      ]);
+
+      const totalXp = user.xp || 0;
+      const calculatedLevel = Math.floor(totalXp / 100) + 1;
+      const currentXP = totalXp % 100;
+
+      setUserData({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        level: calculatedLevel,
+        xp: totalXp,
+        currentXP,
+        nextLevelXP: 100,
+        totalWorkouts: userFromStorage.totalCompleted || 0,
+        streak: user.streak,
+        maxStreak: user.maxStreak || 0,
+        weightGoal: user.weightGoal || 0,
+        sex: user.sex || "M"
+      });
+      setNewGoal(user.weightGoal?.toString() || "");
+      setEditProfileData({ name: user.name, sex: user.sex || "M" });
+      setBadges(userBadges);
+      setWeightLogs(logs);
+      setFocusData(stats);
+      setWeeklyStats(weekly);
+    } catch (error) {
+      console.error("Error loading data", error);
+    } finally {
+      setBadgesLoading(false);
+      setWeightLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadUserData = async () => {
-      const userFromStorage = JSON.parse(localStorage.getItem("user") || "{}");
-      if (!userFromStorage?.id) return;
-
-      try {
-        const user = await getUser(userFromStorage.id);
-        const totalXp = user.xp || 0;
-        const calculatedLevel = Math.floor(totalXp / 100) + 1;
-        const xpForCurrentLevel = (calculatedLevel - 1) * 100;
-        const currentXP = totalXp - xpForCurrentLevel;
-        const nextLevelXP = 100;
-
-        setUserData({
-          name: user.name,
-          email: user.email,
-          level: calculatedLevel,
-          xp: totalXp,
-          currentXP,
-          nextLevelXP,
-          totalWorkouts: userFromStorage.totalCompleted || 0,
-          streak: user.streak,
-          maxStreak: user.maxStreak || 0
-        });
-      } catch (error) {
-        console.error("Error loading user data", error);
-        // fallback to localStorage
-        const totalXp = userFromStorage.xp || 0;
-        const calculatedLevel = Math.floor(totalXp / 100) + 1;
-        const xpForCurrentLevel = (calculatedLevel - 1) * 100;
-        const currentXP = totalXp - xpForCurrentLevel;
-        const nextLevelXP = 100;
-
-        setUserData(prev => ({
-          ...prev,
-          name: userFromStorage.name,
-          email: userFromStorage.email || prev.email,
-          level: calculatedLevel,
-          xp: totalXp,
-          currentXP,
-          nextLevelXP,
-          totalWorkouts: userFromStorage.totalCompleted || 0,
-          streak: userFromStorage.streak || prev.streak,
-          maxStreak: userFromStorage.maxStreak || prev.maxStreak
-        }));
-      }
-    };
-
-    const loadBadges = async () => {
-      setBadgesLoading(true);
-      try {
-        const userBadges = await getUserBadges();
-        setBadges(userBadges);
-      } catch (error) {
-        console.error("Erro ao buscar badges", error);
-      } finally {
-        setBadgesLoading(false);
-      }
-    };
-
-    const loadWeightLogs = async () => {
-      setWeightLoading(true);
-      try {
-        const logs = await getWeightLogs();
-        setWeightLogs(logs);
-      } catch (error) {
-        console.error("Erro ao buscar logs de peso", error);
-      } finally {
-        setWeightLoading(false);
-      }
-    };
-
-    (async () => {
-      await Promise.all([loadUserData(), loadBadges(), loadWeightLogs()]);
-    })();
-
-    // Escutar mudanças no userData
-    const handleUserDataUpdate = () => {
-      loadUserData();
-      loadBadges();
-      loadWeightLogs();
-    };
-
-    window.addEventListener('userDataUpdated', handleUserDataUpdate);
-
-    return () => {
-      window.removeEventListener('userDataUpdated', handleUserDataUpdate);
-    };
+    loadAllData();
   }, []);
 
   const progressPercentage = (userData.currentXP / userData.nextLevelXP) * 100;
+  const currentWeight = weightLogs.length > 0 ? weightLogs[weightLogs.length - 1].weight : 0;
+  
+  const motivationalMessage = useMemo(() => {
+    if (!userData.weightGoal || currentWeight === 0) return null;
+    const diff = parseFloat((currentWeight - userData.weightGoal).toFixed(1));
+    const absDiff = Math.abs(diff);
 
-  const dashboardBarData = useMemo(() => {
-    return [
-      { name: "Seg", treinos: Math.max(1, Math.min(6, userData.totalWorkouts - 3)), xp: 120 },
-      { name: "Ter", treinos: Math.max(1, Math.min(6, userData.totalWorkouts - 2)), xp: 180 },
-      { name: "Qua", treinos: Math.max(1, Math.min(6, userData.totalWorkouts - 1)), xp: 210 },
-      { name: "Qui", treinos: Math.max(1, Math.min(6, userData.totalWorkouts)), xp: 240 },
-      { name: "Sex", treinos: Math.max(1, Math.min(6, userData.totalWorkouts - 1)), xp: 200 },
-      { name: "Sáb", treinos: Math.max(1, Math.min(6, userData.totalWorkouts - 2)), xp: 160 },
-      { name: "Dom", treinos: Math.max(1, Math.min(6, userData.totalWorkouts - 4)), xp: 110 },
-    ];
-  }, [userData.totalWorkouts]);
+    if (diff === 0) return "Meta atingida! Parabéns!";
+    
+    if (diff > 0) {
+      const messages = [
+        `Faltam ${absDiff} kg para a meta`,
+        `Foco! Faltam ${absDiff} kg`,
+        `Quase lá! Faltam ${absDiff} kg`
+      ];
+      return messages[Math.floor(Math.random() * messages.length)];
+    } else {
+      const messages = [
+        `Faltam ${absDiff} kg para o objetivo`,
+        `Rumo ao topo! Faltam ${absDiff} kg`,
+        `Foco no ganho! Faltam ${absDiff} kg`
+      ];
+      return messages[Math.floor(Math.random() * messages.length)];
+    }
+  }, [userData.weightGoal, currentWeight]);
 
-  const dashboardPieData = useMemo(() => {
-    return [
-      { name: "Força", value: 42 },
-      { name: "Cardio", value: 30 },
-      { name: "Flex", value: 18 },
-      { name: "Mobilidade", value: 10 },
-    ];
-  }, []);
+  const handleUpdateGoal = async () => {
+    if (!userData.id || !newGoal) return;
+    try {
+      const updatedUser = await updateUser(userData.id, {
+        weightGoal: parseFloat(newGoal)
+      });
+      setUserData(prev => ({ ...prev, weightGoal: updatedUser.weightGoal }));
+      setIsEditingGoal(false);
+      const userFromStorage = JSON.parse(localStorage.getItem("user") || "{}");
+      localStorage.setItem("user", JSON.stringify({ ...userFromStorage, weightGoal: updatedUser.weightGoal }));
+    } catch (error) {
+      console.error("Erro ao atualizar meta", error);
+    }
+  };
 
-  const weightData = useMemo(() => {
-    return weightLogs.map((log, index) => ({
-      date: new Date(log.date).toLocaleDateString(),
-      weight: log.weight,
-      index,
-    }));
-  }, [weightLogs]);
+  const handleUpdateProfile = async () => {
+    if (!userData.id || !editData.name) return;
+    try {
+      const updatedUser = await updateUser(userData.id, {
+        name: editData.name,
+        sex: editData.sex
+      });
+      setUserData(prev => ({ ...prev, name: updatedUser.name, sex: updatedUser.sex }));
+      setIsEditingProfile(false);
+      const userFromStorage = JSON.parse(localStorage.getItem("user") || "{}");
+      localStorage.setItem("user", JSON.stringify({ ...userFromStorage, name: updatedUser.name }));
+    } catch (error) {
+      console.error("Erro ao atualizar perfil", error);
+    }
+  };
 
-  const pieColors = ["#ff4500", "#ff8c00", "#f6b042", "#ffaa33"];
+  const weightData = useMemo(() => weightLogs.map((log) => ({
+    date: new Date(log.date).toLocaleDateString("pt-BR", { day: '2-digit', month: '2-digit' }),
+    weight: log.weight,
+  })).slice(-7), [weightLogs]);
+
+  const pieColors = ["#ff4500", "#ff8c00", "#f6b042", "#ffaa33", "#ffcc00", "#d44000"];
 
   const handleLogout = () => {
     setAlertConfig({
       isOpen: true,
       title: "Sair da Conta",
-      message: "Tem certeza que deseja desconectar do aplicativo?",
+      message: "Tem certeza que deseja desconectar?",
       type: "error",
-      confirmText: "Sair",
-      cancelText: "Cancelar",
       onConfirm: () => {
         localStorage.removeItem("token");
+        localStorage.removeItem("user");
         navigate("/login");
-      },
-      onCancel: () => setAlertConfig({ isOpen: false })
+      }
     });
   };
 
   return (
     <div className="perfil-container">
-      <header className="perfil-header">
-        <h2>Olá <span>{userData.name || "USUÁRIO"}</span> !</h2>
-        <button className="btn-logout" onClick={handleLogout}>
+      <header className="perfil-header-v3">
+        <div className="header-spacer"></div>
+        <div className="app-logo">
+          <span className="logo-white">Gym</span><span className="logo-orange">Club</span>
+        </div>
+        <button className="btn-logout-v3" onClick={handleLogout}>
           <LogoutIcon />
         </button>
       </header>
 
-      <section className="profile-card">
-        <div className="profile-info">
-          <div className="profile-avatar">
-            {userData.name.charAt(0)}
-          </div>
-          <div className="profile-text">
-            <h3>{userData.name}</h3>
-            <p>{userData.email}</p>
-          </div>
-        </div>
-
-        <div className="xp-section">
-          <div className="xp-header">
-            <span className="level-badge">Nível {userData.level}</span>
-            <span className="xp-text">{userData.currentXP} / {userData.nextLevelXP} XP</span>
-          </div>
-          <div className="xp-bar-bg">
-            <div className="xp-bar-fill" style={{ width: `${progressPercentage}%` }}></div>
-          </div>
-        </div>
-      </section>
-
-      <h3 className="section-title">Desempenho</h3>
-      <section className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon"><BarbellIcon /></div>
-          <div className="stat-info">
-            <h4>Treinos Feitos</h4>
-            <p>{userData.totalWorkouts}</p>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon"><FlameIcon /></div>
-          <div className="stat-info">
-            <h4>Máx. Ofensiva</h4>
-            <p>{userData.maxStreak} dias</p>
-          </div>
-        </div>
-      </section>
-
-      <h3 className="section-title">Dashboard de Treinos</h3>
-      <section className="dashboard-grid">
-        <div className="chart-card">
-          <div className="chart-card-header">
-            <div>
-              <h4>Atividade Semanal</h4>
-              <p>Treinos e XP por dia</p>
-            </div>
-          </div>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={dashboardBarData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-              <CartesianGrid stroke="#2c2c2c" vertical={false} />
-              <XAxis dataKey="name" tick={{ fill: "#ccc", fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "#ccc", fontSize: 12 }} axisLine={false} tickLine={false} />
-              <Tooltip wrapperStyle={{ background: "#111", border: "1px solid #333" }} />
-              <Bar dataKey="treinos" fill="#ff4500" radius={[8, 8, 0, 0]} barSize={18} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="chart-card">
-          <div className="chart-card-header">
-            <div>
-              <h4>Modalidades</h4>
-              <p>Distribuição dos treinos</p>
-            </div>
-          </div>
-          <ResponsiveContainer width="100%" height={280}>
-            <PieChart>
-              <Pie data={dashboardPieData} dataKey="value" nameKey="name" innerRadius={60} outerRadius={100} paddingAngle={4}>
-                {dashboardPieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
-                ))}
-              </Pie>
-              <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ color: "#ccc" }} />
-              <Tooltip wrapperStyle={{ background: "#111", border: "1px solid #333" }} />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="chart-card">
-          <div className="chart-card-header">
-            <div>
-              <h4>Acompanhamento de Peso</h4>
-              <p>Evolução do peso ao longo do tempo</p>
-            </div>
-          </div>
-          <ResponsiveContainer width="100%" height={280}>
-            {weightLoading ? (
-              <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%", color: "#ccc" }}>
-                Carregando dados de peso...
+      <section className="profile-card-premium">
+        {isEditingProfile ? (
+          <div className="profile-edit-form fade-in">
+             <input 
+                type="text" 
+                value={editData.name} 
+                onChange={(e) => setEditProfileData({...editData, name: e.target.value})}
+                placeholder="Seu nome"
+              />
+              <select 
+                value={editData.sex} 
+                onChange={(e) => setEditProfileData({...editData, sex: e.target.value})}
+              >
+                <option value="M">Masculino</option>
+                <option value="F">Feminino</option>
+              </select>
+              <div className="goal-edit-buttons">
+                <button onClick={handleUpdateProfile} className="btn-save-goal">Salvar</button>
+                <button onClick={() => setIsEditingProfile(false)} className="btn-cancel-goal">Cancelar</button>
               </div>
-            ) : weightData.length > 0 ? (
-              <LineChart data={weightData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                <CartesianGrid stroke="#2c2c2c" vertical={false} />
-                <XAxis dataKey="date" tick={{ fill: "#ccc", fontSize: 12 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: "#ccc", fontSize: 12 }} axisLine={false} tickLine={false} />
-                <Tooltip wrapperStyle={{ background: "#111", border: "1px solid #333" }} />
-                <Line type="monotone" dataKey="weight" stroke="#ff4500" strokeWidth={3} dot={{ fill: "#ff4500", strokeWidth: 2, r: 4 }} />
-              </LineChart>
-            ) : (
-              <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%", color: "#ccc" }}>
-                Nenhum dado de peso disponível. Adicione seu primeiro registro!
+          </div>
+        ) : (
+          <>
+            <div className="profile-main-info">
+              <div className="avatar-container">
+                <div className="profile-avatar-large">
+                  {userData.name.charAt(0)}
+                </div>
+                <div className="level-badge-float">NÍVEL {userData.level}</div>
               </div>
-            )}
-          </ResponsiveContainer>
-        </div>
-      </section>
-
-      <h3 className="section-title">Conquistas Recentes</h3>
-      <section className="badges-list">
-        {badgesLoading ? (
-          <div className="badge-placeholder">Carregando conquistas...</div>
-        ) : badges.length > 0 ? (
-          badges.map((userBadge) => {
-            const badge = userBadge.badge || userBadge;
-            return (
-              <div key={badge.id} className="badge-item">
-                <div className="badge-icon"><TrophyIcon /></div>
-                <div className="badge-text">
-                  <h4>{badge.name}</h4>
-                  <p>{badge.description}</p>
+              <div className="profile-meta-full">
+                <div className="name-edit-row">
+                  <h3>{userData.name}</h3>
+                  <button className="btn-edit-inline" onClick={() => setIsEditingProfile(true)}>
+                    <EditIcon />
+                  </button>
+                </div>
+                <div className="xp-container-full">
+                  <div className="xp-label-full">
+                    <span>Progresso de nível</span>
+                    <span>{Math.round(progressPercentage)}%</span>
+                  </div>
+                  <div className="xp-bar-bg-full">
+                    <div className="xp-bar-fill-full" style={{ width: `${progressPercentage}%` }}></div>
+                  </div>
+                  <p className="xp-tip">Ganhe XP completando treinos hoje!</p>
                 </div>
               </div>
-            );
-          })
-        ) : (
-          <div className="badge-placeholder">Você ainda não conquistou badges. Complete treinos para desbloquear novas conquistas!</div>
+            </div>
+
+            <div className="goal-status-card" onClick={() => !isEditingGoal && setIsEditingGoal(true)}>
+              <div className="goal-info">
+                <div className="goal-icon"><TargetIcon /></div>
+                <div style={{ flex: 1 }}>
+                  <p>Meta de Peso</p>
+                  {isEditingGoal ? (
+                    <div className="goal-edit-container" onClick={(e) => e.stopPropagation()}>
+                      <input 
+                        type="number" 
+                        value={newGoal} 
+                        onChange={(e) => setNewGoal(e.target.value)}
+                        placeholder="kg"
+                        autoFocus
+                      />
+                      <div className="goal-edit-buttons">
+                        <button onClick={handleUpdateGoal} className="btn-save-goal">Salvar</button>
+                        <button onClick={() => setIsEditingGoal(false)} className="btn-cancel-goal">Voltar</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="goal-display-row">
+                      <h4>{userData.weightGoal || 0} kg <span>/ {currentWeight} kg atual</span></h4>
+                      {motivationalMessage && (
+                        <div className={`weight-diff-badge ${parseFloat(currentWeight) > parseFloat(userData.weightGoal) ? 'above' : 'below'}`}>
+                          {motivationalMessage}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
         )}
       </section>
+
+      <div className="stats-mini-grid">
+        <div className="stat-item">
+          <BarbellIcon />
+          <span>{userData.totalWorkouts} Treinos</span>
+        </div>
+        <div className="stat-item">
+          <FlameIcon />
+          <span>{userData.maxStreak} Dias</span>
+        </div>
+      </div>
+
+      <nav className="tab-navigation">
+        <button className={activeTab === "evolucao" ? "active" : ""} onClick={() => setActiveTab("evolucao")}>Evolução</button>
+        <button className={activeTab === "peso" ? "active" : ""} onClick={() => setActiveTab("peso")}>Peso</button>
+        <button className={activeTab === "conquistas" ? "active" : ""} onClick={() => setActiveTab("conquistas")}>Conquistas</button>
+      </nav>
+
+      <main className="tab-content">
+        {activeTab === "evolucao" && (
+          <div className="fade-in">
+            <div className="chart-card-v2">
+              <h4>Atividade Semanal</h4>
+              {weeklyData.some(d => d.treinos > 0) ? (
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={weeklyData}>
+                    <CartesianGrid stroke="#222" vertical={false} strokeDasharray="3 3" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#666', fontSize: 12}} />
+                    <Tooltip cursor={{fill: 'rgba(255,69,0,0.1)'}} contentStyle={{background: '#111', border: 'none', borderRadius: '8px'}} />
+                    <Bar dataKey="treinos" fill="#ff4500" radius={[4, 4, 0, 0]} barSize={20} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="empty-state-v2">
+                  <p>Você ainda não realizou treinos esta semana.</p>
+                  <button onClick={() => navigate("/treinos")} className="btn-action-empty">Começar Agora</button>
+                </div>
+              )}
+            </div>
+            
+            <div className="chart-card-v2">
+              <h4>Distribuição de Foco</h4>
+              <ResponsiveContainer width="100%" height={220}>
+                <PieChart>
+                  <Pie 
+                    data={focusData.length > 0 && focusData[0].name !== "Sem dados" ? focusData : [{name: 'Sem treinos', value: 1}]} 
+                    innerRadius={60} 
+                    outerRadius={80} 
+                    paddingAngle={5} 
+                    dataKey="value"
+                  >
+                    {focusData.map((_, i) => <Cell key={i} fill={pieColors[i % pieColors.length]} />)}
+                    {(focusData.length === 0 || focusData[0].name === "Sem dados") && <Cell fill="#222" />}
+                  </Pie>
+                  <Tooltip contentStyle={{background: '#111', border: 'none', borderRadius: '8px'}} />
+                  <Legend iconType="circle" />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "peso" && (
+          <div className="fade-in">
+            <div className="chart-card-v2">
+              <div className="chart-header-inline">
+                <h4>Evolução de Peso</h4>
+                <span className="weight-trend">Últimos 7 registros</span>
+              </div>
+              <ResponsiveContainer width="100%" height={200}>
+                {weightData.length > 0 ? (
+                  <AreaChart data={weightData}>
+                    <defs>
+                      <linearGradient id="colorWeight" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#ff4500" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#ff4500" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid stroke="#222" vertical={false} />
+                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: '#666', fontSize: 12}} />
+                    <YAxis hide domain={['dataMin - 2', 'dataMax + 2']} />
+                    <Tooltip contentStyle={{background: '#111', border: 'none', borderRadius: '8px'}} />
+                    <Area type="monotone" dataKey="weight" stroke="#ff4500" strokeWidth={3} fill="url(#colorWeight)" />
+                  </AreaChart>
+                ) : (
+                  <div className="empty-state-v2">Nenhum dado de peso registrado.</div>
+                )}
+              </ResponsiveContainer>
+            </div>
+
+            <div className="history-section">
+              <h4 className="section-subtitle">Histórico Recente</h4>
+              <div className="weight-list">
+                {weightLogs.length > 0 ? (
+                  weightLogs.slice().reverse().map((log, index) => {
+                    const prevLog = weightLogs[weightLogs.length - 1 - index - 1];
+                    const diff = prevLog ? (log.weight - prevLog.weight).toFixed(1) : null;
+                    return (
+                      <div key={log.id} className="weight-item">
+                        <div className="weight-item-date">{new Date(log.date).toLocaleDateString()}</div>
+                        <div className="weight-item-value">{log.weight} kg</div>
+                        <div className={`weight-item-diff ${!diff || diff === "0.0" ? '' : parseFloat(diff) > 0 ? 'up' : 'down'}`}>
+                          {diff && diff !== "0.0" ? (parseFloat(diff) > 0 ? `+${diff}` : diff) : '-'}
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="empty-history">Seu histórico aparecerá aqui.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "conquistas" && (
+          <div className="badges-grid-v2 fade-in">
+            {badges.length > 0 ? (
+              badges.map((b) => (
+                <div key={b.id} className="badge-card-v2">
+                  <div className="badge-icon-v2"><TrophyIcon /></div>
+                  <h4>{(b.badge || b).name}</h4>
+                  <p>{(b.badge || b).description}</p>
+                </div>
+              ))
+            ) : (
+              <div className="empty-state-v2">
+                <p>Nenhuma conquista desbloqueada ainda.</p>
+                <span className="empty-subtext">Treine com frequência para ganhar badges exclusivos!</span>
+              </div>
+            )}
+          </div>
+        )}
+      </main>
 
       <CustomAlert config={alertConfig} />
     </div>

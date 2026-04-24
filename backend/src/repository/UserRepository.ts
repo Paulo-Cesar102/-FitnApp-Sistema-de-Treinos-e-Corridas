@@ -41,6 +41,8 @@ export class UserRepository implements IUserRepository {
         level: true,
         xp: true,
         streak: true,
+        maxStreak: true,
+        weightGoal: true,
         role: true,
         createdAt: true,
     
@@ -66,5 +68,24 @@ export class UserRepository implements IUserRepository {
     await prisma.user.delete({
       where: { id }
     });
+  }
+
+  async update(id: string, data: Partial<IUser>): Promise<IUser> {
+    const user = await prisma.user.update({
+      where: { id },
+      data: {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        sex: data.sex as any,
+        weightGoal: data.weightGoal,
+        level: data.level,
+        xp: data.xp,
+        streak: data.streak,
+        maxStreak: data.maxStreak
+      }
+    });
+
+    return user as unknown as IUser;
   }
 }

@@ -94,4 +94,17 @@ export class UserController {
       });
     }
   }
+
+  async update(req: Request, res: Response): Promise<Response> {
+    try {
+      const { id } = req.params;
+      const data = req.body;
+      const user = await this.userService.update(id, data);
+      return res.json(user);
+    } catch (error) {
+      return res.status(400).json({
+        error: (error as Error).message
+      });
+    }
+  }
 }

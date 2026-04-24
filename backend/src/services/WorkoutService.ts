@@ -111,35 +111,46 @@ export class WorkoutService {
       },
     });
 
-    if (alreadyCompletedToday) throw new Error("Você já concluiu esse treino hoje.");
+    let xpGained = 0;
+    if (!alreadyCompletedToday) {
+      xpGained = this.calculateWorkoutXp(workout);
+      await prisma.completedWorkout.create({
+        data: { userId, workoutId, xpEarned: xpGained },
+      });
 
-    const xpGained = this.calculateWorkoutXp(workout);
-    const currentXp = user.xp ?? 0;
-    const newXp = currentXp + xpGained;
-    const newLevel = this.calculateLevel(newXp);
+      const currentXp = user.xp ?? 0;
+      const newXp = currentXp + xpGained;
+      const newLevel = this.calculateLevel(newXp);
 
-    await prisma.completedWorkout.create({
-      data: { userId, workoutId, xpEarned: xpGained },
-    });
+      await prisma.user.update({
+        where: { id: userId },
+        data: { xp: newXp, level: newLevel },
+      });
+    }
 
-    await prisma.user.update({
-      where: { id: userId },
-      data: { xp: newXp, level: newLevel },
-    });
+    // Registrar volume para o gráfico (Sempre registra)
+    const today = new Date().toISOString().split("T")[0];
+    if (workout.exercises && workout.exercises.length > 0) {
+      for (const item of workout.exercises) {
+        await prisma.completedWorkoutExercise.create({
+          data: {
+            userId,
+            workoutId,
+            exerciseId: item.exerciseId,
+            xpEarned: 0, 
+            completionDate: `${today}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`
+          }
+        });
+      }
+    }
 
     const totalCompleted = await prisma.completedWorkout.count({ where: { userId } });
-    const newBadges = await this.badgeService.grantBadgesByLevel(userId, newLevel);
-    
-    // 🔥 Atualiza o foguinho ao completar o treino completo
+    const newBadges = await this.badgeService.grantBadgesByLevel(userId, user.level);
     const streakData = await this.streakService.updateUserStreak(userId);
 
     return {
-      message: "Treino concluído com sucesso",
+      message: alreadyCompletedToday ? "Treino registrado (sem XP adicional)" : "Treino concluído com sucesso",
       xpGained,
-      newXp,
-      newLevel,
-      totalCompleted,
-      newBadges,
       streak: streakData.streak,
     };
   }
@@ -191,5 +202,75 @@ export class WorkoutService {
       newBadges,
       streak: streakData.streak,
     };
+  }
+
+  // 🔥 NOVO: Distribuição de Foco (Categorias)
+  async getFocusDistribution(userId: string) {
+    const completedExercises = await prisma.completedWorkoutExercise.findMany({
+      where: { userId },
+      include: {
+        exercise: {
+          include: {
+            category: true,
+          },
+        },
+      },
+    });
+
+    const counts: Record<string, number> = {};
+    let total = 0;
+
+    completedExercises.forEach((item) => {
+      const categoryName = item.exercise.category.name;
+      counts[categoryName] = (counts[categoryName] || 0) + 1;
+      total++;
+    });
+
+    // Converter para o formato do gráfico { name, value }
+    const data = Object.keys(counts).map((name) => ({
+      name,
+      value: counts[name],
+      percentage: total > 0 ? Math.round((counts[name] / total) * 100) : 0,
+    }));
+
+    // Se não houver dados, retorna um padrão vazio para o gráfico não quebrar
+    if (data.length === 0) {
+      return [{ name: "Sem dados", value: 1, percentage: 0 }];
+    }
+
+    return data;
+  }
+
+  // 🔥 NOVO: Atividade Semanal (Treinos por dia)
+  async getWeeklyStats(userId: string) {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 (Dom) a 6 (Sáb)
+    
+    // Ajustar para considerar Segunda como o primeiro dia da semana (padrão Brasil)
+    const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+    const monday = new Date(today.setDate(diff));
+    monday.setHours(0, 0, 0, 0);
+
+    const completedWorkouts = await prisma.completedWorkout.findMany({
+      where: {
+        userId,
+        doneAt: { gte: monday }
+      }
+    });
+
+    const days = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+    const stats = days.map((day, index) => {
+      // Filtrar treinos que batem com o dia da semana (considerando 0=Seg, 1=Ter...)
+      const count = completedWorkouts.filter(w => {
+        const d = new Date(w.doneAt);
+        let dayIndex = d.getDay() - 1; 
+        if (dayIndex === -1) dayIndex = 6; // Domingo
+        return dayIndex === index;
+      }).length;
+
+      return { name: day, treinos: count };
+    });
+
+    return stats;
   }
 }

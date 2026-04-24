@@ -13,6 +13,10 @@ userRoutes.post("/register", validate(creatUserSchema), userController.create.bi
 // ROTAS PROTEGIDAS
 userRoutes.get("/users", authMiddleware, userController.findAll.bind(userController));
 userRoutes.get("/:id", authMiddleware, userController.findById.bind(userController));
+
+// ATUALIZAR PERFIL: Permite alterar nome, gênero e meta de peso
+userRoutes.put("/:id", authMiddleware, userController.update.bind(userController));
+
 userRoutes.delete("/:id", authMiddleware, userController.delete.bind(userController));
 
 export { userRoutes };

@@ -50,4 +50,8 @@ export class UserService {
 
     await this.userRepository.delete(id);
   }
+
+  async update(id: string, data: Partial<IUser>): Promise<IUser> {
+    return this.userRepository.update(id, data);
+  }
 }
