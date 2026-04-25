@@ -195,7 +195,7 @@ export default function Perfil() {
       <header className="perfil-header-v3">
         <div className="header-spacer-v3"></div>
         <div className="app-logo">
-          <span className="logo-white">Gym</span><span className="logo-orange">Club</span>
+          Gym<span>Club</span>
         </div>
         <button className="btn-logout-v3" onClick={() => navigate("/configuracoes")}>
           <SettingsIcon />

@@ -55,47 +55,69 @@
   background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
 }
 
+.app-logo {
+  font-size: 2.5rem;
+  font-weight: 950;
+  letter-spacing: -1.5px;
+  margin: 0;
+  color: #fff;
+  text-transform: uppercase;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: default;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  padding: 5px 15px 5px 5px;
+}
+
+.app-logo span { 
+  color: #ff4500;
+  text-shadow: 0 0 15px rgba(255, 69, 0, 0.4);
+  position: relative;
+}
+
+/* O brilho (Shine Sweep) - Apenas no Tema Claro */
+[data-theme='light'] .app-logo {
+  overflow: hidden;
+  isolation: isolate;
+}
+
+[data-theme='light'] .app-logo::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0) 30%, 
+    rgba(255, 255, 255, 0.8) 50%, 
+    rgba(255, 255, 255, 0) 70%, 
+    transparent 100%
+  );
+  transform: skewX(-20deg);
+  animation: shineSweep 4s infinite ease-in-out;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  z-index: 2;
+}
+
+.app-logo:hover {
+  transform: scale(1.05) skewX(-5deg);
+}
+
+@keyframes shineSweep {
+  0% { left: -150%; }
+  20%, 100% { left: 150%; }
+}
+
 .header {
   text-align: center;
   margin-bottom: 2.5rem;
-}
-
-.header h2 {
-  font-family: 'Oswald', sans-serif;
-  color: var(--color-white);
-  font-size: 2.5rem;
-  text-transform: uppercase;
-  font-weight: 700;
-  letter-spacing: -1px;
-  margin-bottom: 0.2rem;
-}
-
-.header p {
-  color: var(--color-text-dim);
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.logo-icon {
-  font-size: 3rem;
-  margin-bottom: 0.5rem;
-}
-
-.logo-icon svg {
-  transform-origin: bottom center;
-  animation: flamePulse 2s infinite ease-in-out;
-}
-
-@keyframes flamePulse {
-  0%, 100% {
-    transform: scale(1) rotate(0deg);
-    filter: drop-shadow(0 0 10px var(--color-primary));
-  }
-  50% {
-    transform: scale(1.08) translateY(-2px) rotate(2deg);
-    filter: drop-shadow(0 0 25px #ff6a00);
-  }
 }
 
 .form-group {

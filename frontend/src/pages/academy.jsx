@@ -65,9 +65,15 @@ export default function Academy() {
   // Visualização padrão para alunos
   return (
     <div className="academy-container">
+      <header className="academy-header-top">
+        <div className="app-logo">
+          Gym<span>Club</span>
+        </div>
+      </header>
+      
       <div className="academy-header">
-        <h1>🏢 Gestão da Academia</h1>
-        <p>Gerencie check-ins, ranking, avisos e personals</p>
+        <h1>{gymName}</h1>
+        <p>Ranking, avisos e personals da sua unidade</p>
       </div>
 
       <div className="tabs">

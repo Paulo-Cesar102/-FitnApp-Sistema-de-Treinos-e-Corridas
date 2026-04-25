@@ -20,6 +20,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [alertConfig, setAlertConfig] = useState({ isOpen: false });
 
+  const DEFAULT_WORKOUT_IMAGE = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=500&q=80";
+
   useEffect(() => {
     async function loadData() {
       try {
@@ -68,7 +70,6 @@ export default function Home() {
       {/* HEADER DE ALTO IMPACTO */}
       <header className="home-header-premium">
         <div className="header-left">
-          <p className="greeting-text">Olá, {userData?.name?.split(" ")[0] || "Atleta"}</p>
           <h1 className="app-logo">Gym<span>Club</span></h1>
         </div>
         <div className="header-right">
@@ -105,9 +106,10 @@ export default function Home() {
               <div key={treino.id} className="mini-card-premium" onClick={() => openWorkout(treino)}>
                 <div className="mini-media">
                   <img 
-                    src={treino.exercises?.[0]?.exercise?.image || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=300"} 
+                    src={treino.exercises?.[0]?.exercise?.image || DEFAULT_WORKOUT_IMAGE} 
                     alt="" 
-                    onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=300"; }}
+                    loading="lazy"
+                    onError={(e) => { e.currentTarget.src = DEFAULT_WORKOUT_IMAGE; }}
                   />
                   <div className="play-hint-premium">
                     <PlayIcon />
@@ -149,7 +151,7 @@ export default function Home() {
             treinosFiltrados.map(treino => {
               const name = typeof treino.name === "object" ? treino.name?.name : treino.name;
               const level = treino.exercises?.[0]?.exercise?.level || "BEGINNER";
-              const thumb = treino.exercises?.[0]?.exercise?.image || "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=400";
+              const thumb = treino.exercises?.[0]?.exercise?.image || DEFAULT_WORKOUT_IMAGE;
 
               return (
                 <div key={treino.id} className="catalog-card-premium" onClick={() => openWorkout(treino)}>
@@ -157,7 +159,8 @@ export default function Home() {
                     <img 
                       src={thumb} 
                       alt={name} 
-                      onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=400"; }}
+                      loading="lazy"
+                      onError={(e) => { e.currentTarget.src = DEFAULT_WORKOUT_IMAGE; }}
                     />
                     <div className={`catalog-level-tag ${level.toLowerCase()}`}>
                        {level === "ADVANCED" ? "ELITE" : level === "INTERMEDIATE" ? "MÉDIO" : "INICIANTE"}
