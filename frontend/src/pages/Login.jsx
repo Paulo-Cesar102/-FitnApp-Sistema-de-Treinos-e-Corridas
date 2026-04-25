@@ -89,8 +89,8 @@ export default function Login() {
     <div className="login-container">
       <div className="login-card">
         <header className="header">
-          <div className="logo-icon" style={{ color: "#ff4500" }}>
-            <FlameIcon />
+          <div className="app-logo" style={{ marginBottom: '20px' }}>
+            Gym<span>Club</span>
           </div>
           <h2>Acesse sua Força</h2>
           <p>Entre para esmagar as metas de hoje</p>

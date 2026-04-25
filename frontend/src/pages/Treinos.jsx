@@ -124,9 +124,8 @@ export default function Treinos({ isPersonalView = false }) {
     <div className="treinos-page-container">
       <header className="treinos-header-v3">
         <div className="header-top">
-          <div className="app-logo-v3">
-            <span className="logo-white">Gym</span><span className="logo-orange">Club</span>
-            <span className="page-title-tag">TREINOS</span>
+          <div className="app-logo">
+            Gym<span>Club</span>
           </div>
           {!isPersonalView && (
             <button className="btn-add-circle" onClick={() => navigate("/criar-treino")} title="Novo Treino">

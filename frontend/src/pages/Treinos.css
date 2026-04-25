@@ -1,44 +1,81 @@
 .treinos-page-container {
-  padding: 24px 20px;
+  padding: 10px 20px 120px; /* Reduzi de 24px para 10px */
   background: var(--bg-main);
   min-height: 100vh;
   color: var(--text-main);
-  padding-bottom: 120px;
   font-family: "Inter", sans-serif;
   transition: background 0.3s ease;
 }
 
 /* HEADER & LOGO */
 .treinos-header-v3 {
-  margin-bottom: 32px;
+  margin-bottom: 15px; /* Reduzi de 32px para 15px */
 }
 
 .header-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 28px;
+  margin-bottom: 15px; /* Reduzi de 28px para 15px */
 }
 
-.app-logo-v3 {
+.app-logo {
+  font-size: 2.2rem;
+  font-weight: 950;
+  letter-spacing: -1.5px;
+  margin: 0;
+  color: var(--text-main);
+  text-transform: uppercase;
+  font-style: italic;
   display: flex;
   align-items: center;
-  gap: 6px;
+  position: relative;
+  cursor: default;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  padding: 5px 15px 5px 5px;
 }
 
-.logo-white { font-size: 1.7rem; font-weight: 900; color: var(--text-main); letter-spacing: -1.2px; }
-.logo-orange { font-size: 1.7rem; font-weight: 900; color: var(--primary-color); letter-spacing: -1.2px; }
+.app-logo span { 
+  color: var(--primary-color);
+  text-shadow: 0 0 15px rgba(255, 69, 0, 0.4);
+  position: relative;
+}
 
-.page-title-tag {
-  margin-left: 12px;
-  font-size: 0.6rem;
-  font-weight: 900;
-  color: var(--text-muted);
-  border: 1px solid var(--border-color);
-  padding: 3px 10px;
-  border-radius: 20px;
-  letter-spacing: 1.5px;
-  background: var(--bg-card-alt);
+/* O brilho (Shine Sweep) - Apenas no Tema Claro */
+[data-theme='light'] .app-logo {
+  overflow: hidden;
+  isolation: isolate;
+}
+
+[data-theme='light'] .app-logo::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0) 30%, 
+    rgba(255, 255, 255, 0.8) 50%, 
+    rgba(255, 255, 255, 0) 70%, 
+    transparent 100%
+  );
+  transform: skewX(-20deg);
+  animation: shineSweep 4s infinite ease-in-out;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  z-index: 2;
+}
+
+.app-logo:hover {
+  transform: scale(1.05) skewX(-5deg);
+}
+
+@keyframes shineSweep {
+  0% { left: -150%; }
+  20%, 100% { left: 150%; }
 }
 
 .btn-add-circle {
@@ -103,7 +140,7 @@
   border-radius: 24px;
   padding: 16px;
   border: 1px solid var(--border-color);
-  margin-bottom: 35px;
+  margin-bottom: 15px; /* Reduzi de 35px para 15px */
   box-shadow: 0 10px 30px rgba(0,0,0,0.05);
 }
 

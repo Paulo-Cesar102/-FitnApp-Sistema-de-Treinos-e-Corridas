@@ -90,7 +90,9 @@ export default function Register() {
     <div className="register-container">
       <div className="register-card">
         <header className="header">
-          <div className="logo-icon" style={{ color: "#ff4500" }}><FlameIcon /></div>
+          <div className="app-logo" style={{ marginBottom: '20px' }}>
+            Gym<span>Club</span>
+          </div>
           <h2>Criar Conta</h2>
           <p>Acesse ao nosso portal de Treinos</p>
         </header>
