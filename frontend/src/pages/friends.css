@@ -1,12 +1,13 @@
-/* Friends.css - Estilo GymClub Final */
+/* Friends.css - Estilo GymClub Adaptativo */
 
 .friends-container {
-  background: radial-gradient(circle at top, #1a1a1a 0%, #000 100%);
+  background: var(--bg-main);
   min-height: 100vh;
-  color: #fff;
+  color: var(--text-main);
   padding: 16px;
   padding-bottom: 110px;
   box-sizing: border-box;
+  transition: background 0.3s ease;
 }
 
 .friends-header {
@@ -21,15 +22,15 @@
 }
 
 .friends-header span {
-  color: #ff4500;
-  background: linear-gradient(135deg, #ff4500, #ff8c00);
+  color: var(--primary-color);
+  background: linear-gradient(135deg, var(--primary-color), #ff8c00);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .subtitle {
   font-size: 0.7rem;
-  color: #888;
+  color: var(--text-secondary);
   letter-spacing: 1.2px;
   text-transform: uppercase;
 }
@@ -37,18 +38,19 @@
 /* TABS */
 .friends-tabs {
   display: flex;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-card-alt);
   padding: 4px;
   border-radius: 12px;
   margin-bottom: 20px;
   gap: 4px;
+  border: 1px solid var(--border-color);
 }
 
 .friends-tabs button {
   flex: 1;
   background: transparent;
   border: none;
-  color: #777;
+  color: var(--text-muted);
   padding: 12px 5px;
   font-weight: 700;
   font-size: 0.75rem;
@@ -60,13 +62,14 @@
 }
 
 .friends-tabs button.active {
-  background: #ff4500;
+  background: var(--primary-color);
   color: #fff;
+  box-shadow: 0 4px 10px var(--primary-glow);
 }
 
 /* BADGES DAS ABAS */
 .tab-badge, .tab-badge-orange {
-  background: #ff4500;
+  background: var(--primary-color);
   color: #fff;
   padding: 2px 6px;
   border-radius: 10px;
@@ -75,33 +78,41 @@
   font-weight: 800;
 }
 
-.active .tab-badge, .active .tab-badge-orange {
+.friends-tabs button.active .tab-badge, 
+.friends-tabs button.active .tab-badge-orange {
   background: #fff;
-  color: #ff4500;
+  color: var(--primary-color);
 }
 
 /* CARDS */
 .user-card-item {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 20px;
   padding: 14px;
   display: flex;
   align-items: center;
   gap: 12px;
   margin-bottom: 10px;
+  transition: transform 0.2s ease;
+}
+
+.user-card-item:active {
+  transform: scale(0.98);
 }
 
 .user-avatar-small {
   width: 50px;
   height: 50px;
-  background: linear-gradient(135deg, #333, #111);
+  background: linear-gradient(135deg, var(--bg-card-alt), var(--bg-main));
+  border: 1px solid var(--border-color);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  font-weight: bold;
+  font-weight: 900;
+  color: var(--primary-color);
 }
 
 /* NOTIFICAÇÃO NO CARD */
@@ -109,7 +120,7 @@
   position: absolute;
   top: -2px;
   right: -2px;
-  background: #ff4500;
+  background: var(--primary-color);
   color: white;
   font-size: 10px;
   min-width: 18px;
@@ -118,21 +129,32 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid #000;
+  border: 2px solid var(--bg-card);
   font-weight: 800;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.card-info {
+  flex: 1;
 }
 
 .card-header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 2px;
+}
+
+.user-name-text {
+  font-weight: 800;
+  font-size: 0.95rem;
 }
 
 .new-indicator {
-  color: #ff4500;
+  color: var(--primary-color);
   font-size: 9px;
   font-weight: 800;
-  background: rgba(255, 69, 0, 0.1);
+  background: var(--primary-glow);
   padding: 2px 5px;
   border-radius: 4px;
 }
@@ -140,46 +162,45 @@
 /* BOTÕES */
 .btn-create-group {
   width: 100%;
-  background: rgba(255, 69, 0, 0.1);
-  border: 1px dashed #ff4500;
-  color: #ff4500;
+  background: var(--primary-glow);
+  border: 1px dashed var(--primary-color);
+  color: var(--primary-color);
   padding: 12px;
   border-radius: 14px;
   font-weight: 800;
   margin-bottom: 15px;
+  cursor: pointer;
 }
 
 .btn-chat {
-  background: #141414;
-  color: #ff4500;
-  border: 1px solid rgba(255, 69, 0, 0.25);
-  width: 40px;
-  height: 40px;
+  background: var(--bg-card-alt);
+  color: var(--primary-color);
+  border: 1px solid var(--border-color);
+  width: 42px;
+  height: 42px;
   border-radius: 12px;
   font-size: 18px;
   display: grid;
   place-items: center;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .btn-chat:hover {
-  background: rgba(255, 69, 0, 0.08);
-}
-
-.btn-chat-theme {
-  color: #ff4500;
+  border-color: var(--primary-color);
+  background: var(--primary-glow);
 }
 
 .friend-unread {
   display: inline-flex;
   align-items: center;
   margin-top: 4px;
-  background: rgba(255, 69, 0, 0.12);
-  color: #ffb347;
-  padding: 3px 8px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
+  background: var(--primary-glow);
+  color: var(--primary-color);
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 800;
 }
 
 .action-pair {
@@ -188,53 +209,59 @@
 }
 
 .btn-accept {
-  background: linear-gradient(135deg, #ff4500, #ff8c00);
+  background: linear-gradient(135deg, var(--primary-color), #ff8c00);
   color: #fff;
   border: none;
   padding: 10px 14px;
   border-radius: 12px;
-  font-weight: 700;
+  font-weight: 800;
   transition: 0.2s ease;
-}
-
-.btn-accept:hover {
-  transform: translateY(-1px);
+  cursor: pointer;
 }
 
 .btn-reject {
-  background: rgba(255, 255, 255, 0.08);
-  color: #ff4500;
-  border: 1px solid rgba(255, 69, 0, 0.4);
+  background: var(--bg-card-alt);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
   padding: 10px 14px;
   border-radius: 12px;
   font-weight: 700;
   transition: 0.2s ease;
+  cursor: pointer;
 }
 
 .btn-reject:hover {
-  background: rgba(255, 69, 0, 0.12);
+  background: #ff450015;
+  color: #ff4500;
+  border-color: #ff450030;
 }
-
-.btn-add-friend { background: #ff4500; color: #fff; border: none; width: 40px; height: 40px; border-radius: 10px; }
 
 .empty-msg {
   text-align: center;
-  color: #555;
-  margin-top: 40px;
+  color: var(--text-muted);
+  margin-top: 60px;
   font-size: 0.9rem;
+  font-weight: 600;
 }
 
 .friends-search-bar {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 12px;
-  border-radius: 12px;
-  margin-bottom: 15px;
+  background: var(--bg-card-alt);
+  padding: 14px 18px;
+  border-radius: 14px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border-color);
 }
 
 .friends-search-bar input {
   background: transparent;
   border: none;
-  color: white;
+  color: var(--text-main);
   width: 100%;
   outline: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.friends-search-bar input::placeholder {
+  color: var(--text-muted);
 }
