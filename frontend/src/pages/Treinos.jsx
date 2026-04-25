@@ -24,6 +24,8 @@ export default function Treinos({ isPersonalView = false }) {
   const navigate = useNavigate();
   const [alertConfig, setAlertConfig] = useState({ isOpen: false });
 
+  const DEFAULT_WORKOUT_IMAGE = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=500&q=80";
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -185,18 +187,17 @@ export default function Treinos({ isPersonalView = false }) {
           filteredWorkouts.map((treino) => {
             const nameDisplay = typeof treino.name === "object" ? treino.name?.name : treino.name;
             const level = calculateWorkoutLevel(treino);
-            const thumb = treino.exercises?.[0]?.exercise?.image;
+            const thumb = treino.exercises?.[0]?.exercise?.image || DEFAULT_WORKOUT_IMAGE;
   
             return (
               <div key={treino.id} className="card-premium-v3" onClick={() => startTraining(treino)}>
                 <div className="card-media">
-                  {thumb ? (
-                    <img src={thumb} alt={nameDisplay} />
-                  ) : (
-                    <div className="placeholder-gradient">
-                       <DumbbellIcon />
-                    </div>
-                  )}
+                  <img 
+                    src={thumb} 
+                    alt={nameDisplay} 
+                    loading="lazy"
+                    onError={(e) => { e.currentTarget.src = DEFAULT_WORKOUT_IMAGE; }}
+                  />
                   
                   <div className={`level-tag-v3 ${level.toLowerCase()}`}>
                     {getDifficultyLabel(level)}
