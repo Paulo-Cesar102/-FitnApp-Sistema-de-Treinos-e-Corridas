@@ -7,8 +7,9 @@ import "./home.css";
 import CustomAlert from "../Componentes/CustomAlert";
 
 // Ícones Minimalistas
-const PlayIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="m7 3 14 9-14 9V3z"/></svg>;
-const SearchIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>;
+const PlayIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>;
+const SearchIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>;
+const DumbbellIcon = () => <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.4"><path d="M6 15H4a2 2 0 0 1-2-2V11a2 2 0 0 1 2-2h2m12 6h2a2 2 0 0 0 2-2V11a2 2 0 0 0-2-2h-2M9 7v10m6-10v10m-6-5h6"/></svg>;
 
 export default function Home() {
   const navigate = useNavigate();
@@ -16,7 +17,6 @@ export default function Home() {
   const [userWorkouts, setUserWorkouts] = useState([]);
   const [userData, setUserData] = useState(null);
   const [busca, setBusca] = useState("");
-  const [showSearch, setShowSearch] = useState(false);
   const [loading, setLoading] = useState(true);
   const [alertConfig, setAlertConfig] = useState({ isOpen: false });
 
@@ -33,10 +33,10 @@ export default function Home() {
           getCatalogWorkouts(),
           getUserWorkouts()
         ]);
-        setWorkouts(catalogData);
-        setUserWorkouts(personalData);
+        setWorkouts(catalogData || []);
+        setUserWorkouts(personalData || []);
       } catch (err) {
-        console.error(err);
+        console.error("Erro ao carregar dados da home:", err);
       } finally {
         setLoading(false);
       }
@@ -45,93 +45,127 @@ export default function Home() {
   }, []);
 
   const openWorkout = (workout) => {
-    if (!workout?.exercises?.length) return;
+    if (!workout?.exercises?.length) {
+       setAlertConfig({
+         isOpen: true,
+         title: "Aviso",
+         message: "Este treino ainda não possui exercícios.",
+         type: "error",
+         onConfirm: () => setAlertConfig({ isOpen: false })
+       });
+       return;
+    }
     navigate("/executar-treino", { state: { workout: JSON.parse(JSON.stringify(workout)) } });
   };
 
-  const treinosFiltrados = workouts.filter(t => 
-    (typeof t.name === "object" ? t.name?.name : t.name)?.toLowerCase().includes(busca.toLowerCase())
-  );
+  const treinosFiltrados = workouts.filter(t => {
+    const nome = (typeof t.name === "object" ? t.name?.name : t.name) || "";
+    return nome.toLowerCase().includes(busca.toLowerCase());
+  });
 
   return (
-    <div className="home-zen-container">
-      <header className="zen-header">
-        <div className="zen-logo">Gym<span>Club</span></div>
-        <div className="zen-header-right">
-          <div className="zen-streak-pill">
+    <div className="home-premium-container">
+      {/* HEADER DE ALTO IMPACTO */}
+      <header className="home-header-premium">
+        <div className="header-left">
+          <p className="greeting-text">Olá, {userData?.name?.split(" ")[0] || "Atleta"}</p>
+          <h1 className="app-logo">Gym<span>Club</span></h1>
+        </div>
+        <div className="header-right">
+          <div className="streak-pill-premium">
             <StreakIcon streak={userData?.streak || 0} />
             <span>{userData?.streak || 0}</span>
           </div>
-          <div className="zen-avatar" onClick={() => navigate("/perfil")}>
-            {userData?.name?.charAt(0)}
+          <div className="avatar-premium" onClick={() => navigate("/perfil")}>
+            {userData?.name ? userData.name.charAt(0) : "U"}
           </div>
         </div>
       </header>
 
-      <section className="zen-xp-section">
-        <div className="zen-xp-info">
-          <span>Nível {userData?.level || 1}</span>
-          <span className="zen-xp-total">{userData?.xp || 0} XP</span>
+      {/* WIDGET DE XP ESTILO PREMIUM */}
+      <section className="xp-widget-premium">
+        <div className="xp-header">
+          <span className="xp-level">Nível {userData?.level || 1}</span>
+          <span className="xp-points">{userData?.xp || 0} XP</span>
         </div>
-        <div className="zen-xp-bar-bg">
-          <div className="zen-xp-bar-fill" style={{ width: `${(userData?.xp || 0) % 100}%` }}></div>
+        <div className="xp-bar-container">
+          <div className="xp-bar-fill" style={{ width: `${(userData?.xp || 0) % 100}%` }}></div>
         </div>
       </section>
 
+      {/* MEUS TREINOS (SCROLL HORIZONTAL PREMIUM) */}
       {!loading && userWorkouts.length > 0 && (
-        <section className="zen-section">
-          <h3 className="zen-section-title">Meus Treinos</h3>
-          <div className="zen-horizontal-scroll">
+        <section className="home-section">
+          <div className="section-header">
+            <h3>Meus <span>Planos</span></h3>
+            <button className="btn-see-all" onClick={() => navigate("/exercicio")}>Ver todos</button>
+          </div>
+          <div className="horizontal-scroll-premium">
             {userWorkouts.map(treino => (
-              <div key={treino.id} className="zen-mini-card" onClick={() => openWorkout(treino)}>
-                <div className="zen-mini-img">
-                  <img src={treino.exercises?.[0]?.exercise?.image || "https://placehold.co/100"} alt="" />
-                  <div className="zen-play-hint"><PlayIcon /></div>
+              <div key={treino.id} className="mini-card-premium" onClick={() => openWorkout(treino)}>
+                <div className="mini-media">
+                  <img 
+                    src={treino.exercises?.[0]?.exercise?.image || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=300"} 
+                    alt="" 
+                    onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=300"; }}
+                  />
+                  <div className="play-hint-premium">
+                    <PlayIcon />
+                  </div>
                 </div>
-                <h4>{treino.name}</h4>
+                <h4>{typeof treino.name === "object" ? treino.name?.name : treino.name}</h4>
+                <p>{treino.exercises?.length || 0} ex</p>
               </div>
             ))}
           </div>
         </section>
       )}
 
-      <section className="zen-section main-catalog">
-        <div className="zen-section-header-inline">
-          <h3 className="zen-section-title">Biblioteca <span>Oficial</span></h3>
-          <div className="zen-search-wrapper-inline">
-            <div className={`zen-search-input-field ${showSearch ? 'active' : ''}`}>
-              <input 
-                type="text" 
-                placeholder="Buscar treino..." 
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-                autoFocus={showSearch}
-              />
-            </div>
-            <button className="zen-search-toggle" onClick={() => setShowSearch(!showSearch)}>
-               <SearchIcon />
-            </button>
-          </div>
+      {/* CATÁLOGO (MESMO PADRÃO DA PÁGINA DE TREINOS) */}
+      <section className="home-section">
+        <div className="section-header">
+          <h3>Biblioteca <span>Oficial</span></h3>
+        </div>
+        
+        <div className="search-wrapper-premium">
+          <SearchIcon />
+          <input 
+            type="text" 
+            placeholder="O que vamos treinar hoje?" 
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+          />
         </div>
 
-        <div className="zen-grid">
+        <div className="catalog-grid-premium">
           {loading ? (
-            [1,2,3,4].map(n => <div key={n} className="zen-skeleton" />)
+            [1,2,3,4].map(n => <div key={n} className="skeleton-card" />)
+          ) : treinosFiltrados.length === 0 ? (
+            <div className="empty-catalog-premium">
+              <DumbbellIcon />
+              <p>Nenhum treino encontrado</p>
+            </div>
           ) : (
             treinosFiltrados.map(treino => {
               const name = typeof treino.name === "object" ? treino.name?.name : treino.name;
               const level = treino.exercises?.[0]?.exercise?.level || "BEGINNER";
+              const thumb = treino.exercises?.[0]?.exercise?.image || "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=400";
+
               return (
-                <div key={treino.id} className="zen-catalog-card" onClick={() => openWorkout(treino)}>
-                  <div className="zen-card-media">
-                    <img src={treino.exercises?.[0]?.exercise?.image || "https://placehold.co/300x200"} alt="" />
-                    <div className={`zen-badge ${level.toLowerCase()}`}>
+                <div key={treino.id} className="catalog-card-premium" onClick={() => openWorkout(treino)}>
+                  <div className="catalog-media">
+                    <img 
+                      src={thumb} 
+                      alt={name} 
+                      onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=400"; }}
+                    />
+                    <div className={`catalog-level-tag ${level.toLowerCase()}`}>
                        {level === "ADVANCED" ? "ELITE" : level === "INTERMEDIATE" ? "MÉDIO" : "INICIANTE"}
                     </div>
                   </div>
-                  <div className="zen-card-info">
+                  <div className="catalog-info">
                     <h4>{name}</h4>
-                    <p>{treino.exercises?.length || 0} exercícios</p>
+                    <p><span>{treino.exercises?.length || 0}</span> exercícios</p>
                   </div>
                 </div>
               );

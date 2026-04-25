@@ -6,7 +6,7 @@
   
   /* DARK THEME (Default) */
   --bg-main: #000000;
-  --bg-card: #111111;
+  --bg-card: #121212; /* Cinza profundo em vez de preto total */
   --bg-card-alt: #1a1a1a;
   --text-main: #ffffff;
   --text-secondary: #888888;
