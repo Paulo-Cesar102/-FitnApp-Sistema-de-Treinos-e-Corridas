@@ -20,7 +20,12 @@ export class WorkoutRepository {
       include: {
         exercises: {
           include: {
-            exercise: true,
+            exercise: {
+              include: {
+                category: true,
+                primaryMuscle: true
+              }
+            },
           },
         },
       },
@@ -37,7 +42,12 @@ export class WorkoutRepository {
       include: {
         exercises: {
           include: {
-            exercise: true,
+            exercise: {
+              include: {
+                category: true,
+                primaryMuscle: true
+              }
+            },
           },
         },
       },
@@ -54,7 +64,12 @@ export class WorkoutRepository {
       include: {
         exercises: {
           include: {
-            exercise: true,
+            exercise: {
+              include: {
+                category: true,
+                primaryMuscle: true
+              }
+            },
           },
         },
       },

@@ -57,7 +57,16 @@ export class WorkoutService {
     return prisma.userWorkout.findMany({
       where: { userId },
       include: {
-        exercises: { include: { exercise: true } },
+        exercises: { 
+          include: { 
+            exercise: {
+              include: {
+                category: true,
+                primaryMuscle: true
+              }
+            } 
+          } 
+        },
       },
     }) as unknown as IWorkout[];
   }
@@ -66,7 +75,16 @@ export class WorkoutService {
     return prisma.userWorkout.findMany({
       where: { userId: { equals: null } },
       include: {
-        exercises: { include: { exercise: true } },
+        exercises: { 
+          include: { 
+            exercise: {
+              include: {
+                category: true,
+                primaryMuscle: true
+              }
+            } 
+          } 
+        },
       },
     }) as unknown as IWorkout[];
   }

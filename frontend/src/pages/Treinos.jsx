@@ -1,43 +1,38 @@
 import React, { useState, useEffect } from "react";
-import { getUserWorkouts, deleteWorkout } from "../api/workoutService";
+import { getUserWorkouts, deleteWorkout, getCatalogWorkouts } from "../api/workoutService";
 import { useNavigate } from "react-router-dom";
 import "./Treinos.css";
 import CustomAlert from "../Componentes/CustomAlert";
 
-const PlusIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>;
-const TrashIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>;
-const PlayIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>;
+// Premium Minimalist Icons
+const PlusIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>;
+const TrashIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>;
+const PlayIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="m7 3 14 9-14 9V3z"/></svg>;
+const SearchIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>;
+const DumbbellIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 15H4a2 2 0 0 1-2-2V11a2 2 0 0 1 2-2h2m12 6h2a2 2 0 0 0 2-2V11a2 2 0 0 0-2-2h-2M9 7v10m6-10v10m-6-5h6"/></svg>;
+const ChevronRight = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>;
 
 export default function Treinos({ isPersonalView = false }) {
   const [myWorkouts, setMyWorkouts] = useState([]);
+  const [catalogWorkouts, setCatalogWorkouts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("my"); 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDifficulty, setSelectedDifficulty] = useState("ALL");
+  const [selectedCategory, setSelectedCategory] = useState("ALL");
+  
   const navigate = useNavigate();
   const [alertConfig, setAlertConfig] = useState({ isOpen: false });
 
-  const showAlert = (title, message, type) => {
-    setAlertConfig({
-      isOpen: true, title, message, type,
-      onConfirm: () => setAlertConfig({ isOpen: false })
-    });
-  };
-
-  const showConfirm = (title, message, onConfirm) => {
-    setAlertConfig({
-      isOpen: true, 
-      title, 
-      message, 
-      type: "error", 
-      confirmText: "Apagar", 
-      cancelText: "Cancelar",
-      onConfirm, 
-      onCancel: () => setAlertConfig({ isOpen: false })
-    });
-  };
-
-  const fetchMyData = async () => {
+  const fetchData = async () => {
+    setLoading(true);
     try {
-      const data = await getUserWorkouts();
-      setMyWorkouts(data);
+      const [userData, catalogData] = await Promise.all([
+        getUserWorkouts(),
+        getCatalogWorkouts()
+      ]);
+      setMyWorkouts(userData || []);
+      setCatalogWorkouts(catalogData || []);
     } catch (err) {
       console.error("Erro ao carregar treinos:", err);
     } finally {
@@ -46,120 +41,204 @@ export default function Treinos({ isPersonalView = false }) {
   };
 
   useEffect(() => {
-    fetchMyData();
+    fetchData();
   }, []);
 
   const startTraining = (workout) => {
-    if (isPersonalView) return; // Personals apenas visualizam/gerenciam
-
+    if (isPersonalView) return;
     if (workout?.exercises?.length > 0) {
       const workoutSeguro = JSON.parse(JSON.stringify(workout));
       navigate("/executar-treino", { state: { workout: workoutSeguro } });
     } else {
-      showAlert("Atenção", "Adicione exercícios a este treino para poder iniciar a rotina.", "error");
+      setAlertConfig({
+        isOpen: true,
+        title: "Atenção",
+        message: "Adicione exercícios a este treino para poder iniciar a rotina.",
+        type: "error",
+        onConfirm: () => setAlertConfig({ isOpen: false })
+      });
     }
   };
 
   const handleDelete = async (e, id) => {
     e.stopPropagation();
-    
-    showConfirm("Apagar Treino", "Tem certeza que deseja apagar este treino permanentemente?", async () => {
-      setAlertConfig({ isOpen: false });
-      try {
-        await deleteWorkout(id);
-        setMyWorkouts((prev) => prev.filter((w) => w.id !== id));
-      } catch (err) {
-        showAlert("Erro", "Erro ao excluir o treino. Tente novamente.", "error");
-      }
+    setAlertConfig({
+      isOpen: true,
+      title: "Apagar Treino",
+      message: "Tem certeza que deseja apagar este treino permanentemente?",
+      type: "error",
+      confirmText: "Apagar",
+      cancelText: "Cancelar",
+      onConfirm: async () => {
+        setAlertConfig({ isOpen: false });
+        try {
+          await deleteWorkout(id);
+          setMyWorkouts((prev) => prev.filter((w) => w.id !== id));
+        } catch (err) {
+          console.error(err);
+        }
+      },
+      onCancel: () => setAlertConfig({ isOpen: false })
     });
   };
 
+  const calculateWorkoutLevel = (workout) => {
+    if (!workout.exercises || workout.exercises.length === 0) return "BEGINNER";
+    const levels = workout.exercises.map(ex => ex.exercise?.level || "BEGINNER");
+    if (levels.includes("ADVANCED")) return "ADVANCED";
+    if (levels.includes("INTERMEDIATE")) return "INTERMEDIATE";
+    return "BEGINNER";
+  };
+
+  const getDifficultyLabel = (level) => {
+    switch(level) {
+      case "BEGINNER": return "Iniciante";
+      case "INTERMEDIATE": return "Intermediário";
+      case "ADVANCED": return "Avançado";
+      default: return "Iniciante";
+    }
+  };
+
+  const currentList = activeTab === "my" ? myWorkouts : catalogWorkouts;
+
+  // Extract unique categories from ALL workouts to keep filters stable across tabs
+  const allAvailableWorkouts = [...myWorkouts, ...catalogWorkouts];
+  const categories = ["ALL", ...new Set(allAvailableWorkouts.flatMap(w => 
+    w.exercises?.map(ex => ex.exercise?.category?.name).filter(Boolean) || []
+  ))];
+
+  const filteredWorkouts = currentList.filter(workout => {
+    const name = (typeof workout.name === "object" ? workout.name?.name : workout.name) || "";
+    const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const level = calculateWorkoutLevel(workout);
+    const matchesDifficulty = selectedDifficulty === "ALL" || level === selectedDifficulty;
+    
+    const workoutCategories = workout.exercises?.map(ex => ex.exercise?.category?.name) || [];
+    const matchesCategory = selectedCategory === "ALL" || workoutCategories.includes(selectedCategory);
+    
+    return matchesSearch && matchesDifficulty && matchesCategory;
+  });
+
   return (
-    <div className={`user-workouts-container ${isPersonalView ? 'personal-view' : ''}`}>
+    <div className="treinos-page-container">
+      <header className="treinos-header-v3">
+        <div className="header-top">
+          <div className="app-logo-v3">
+            <span className="logo-white">Gym</span><span className="logo-orange">Club</span>
+            <span className="page-title-tag">TREINOS</span>
+          </div>
+          {!isPersonalView && (
+            <button className="btn-add-circle" onClick={() => navigate("/criar-treino")} title="Novo Treino">
+              <PlusIcon />
+            </button>
+          )}
+        </div>
 
-      <header className="user-header">
-        <h1>
-          {isPersonalView ? 'GERENCIAR' : 'MEUS'} <span>TREINOS</span>
-        </h1>
-
-        {!isPersonalView && (
-          <button
-            className="add-btn"
-            onClick={() => navigate("/criar-treino")}
+        <nav className="tab-navigation-premium">
+          <button 
+            className={activeTab === "my" ? "active" : ""} 
+            onClick={() => { setActiveTab("my"); setSelectedCategory("ALL"); }}
           >
-            <PlusIcon />
-            <span>NOVO</span>
+            Meus Planos
           </button>
-        )}
+          <button 
+            className={activeTab === "explore" ? "active" : ""} 
+            onClick={() => { setActiveTab("explore"); setSelectedCategory("ALL"); }}
+          >
+            Biblioteca
+          </button>
+        </nav>
       </header>
 
-      {loading ? (
-        <div className="user-grid">
-          {[1, 2, 3, 4].map((n) => (
-            <div key={n} className="user-card skeleton-card" style={{ height: "280px" }}></div>
-          ))}
+      <div className="filters-glass-container">
+        <div className="search-input-wrapper">
+          <SearchIcon />
+          <input 
+            type="text" 
+            placeholder="Pesquisar nos meus planos..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
-      ) : myWorkouts.length === 0 ? (
-        <div className="empty-state">
-          <p>{isPersonalView ? 'Você ainda não criou nenhum treino.' : 'Você ainda não criou nenhum treino personalizado.'}</p>
-        </div>
-      ) : (
-        <div className="user-grid">
-          {myWorkouts.map((treino) => {
-            const nameDisplay =
-              typeof treino.name === "object"
-                ? treino.name?.name
-                : treino.name;
-  
-            const thumb =
-              treino.exercises?.[0]?.exercise?.image ||
-              "https://placehold.co/300";
+      </div>
+
+      <main className="treinos-grid-v3">
+        {loading ? (
+          Array(6).fill(0).map((_, i) => (
+            <div key={i} className="skeleton-premium-card" />
+          ))
+        ) : filteredWorkouts.length === 0 ? (
+          <div className="empty-state-premium">
+            <div className="empty-visual">
+              <div className="circle-bg"></div>
+              <DumbbellIcon />
+            </div>
+            <h3>Nada por aqui</h3>
+            <p>Ajuste os filtros ou crie um plano exclusivo agora mesmo.</p>
+            {(searchTerm || selectedDifficulty !== "ALL" || selectedCategory !== "ALL") && (
+              <button className="btn-reset-filters" onClick={() => { setSearchTerm(""); setSelectedDifficulty("ALL"); setSelectedCategory("ALL"); }}>
+                Limpar Busca
+              </button>
+            )}
+          </div>
+        ) : (
+          filteredWorkouts.map((treino) => {
+            const nameDisplay = typeof treino.name === "object" ? treino.name?.name : treino.name;
+            const level = calculateWorkoutLevel(treino);
+            const thumb = treino.exercises?.[0]?.exercise?.image;
   
             return (
-              <div
-                key={treino.id}
-                className={`user-card ${isPersonalView ? 'no-click' : ''}`}
-                onClick={() => startTraining(treino)}
-              >
-                <div className="user-card-top">
-                  <img
-                    src={thumb}
-                    onError={(e) => {
-                      e.currentTarget.src = "https://placehold.co/300";
-                    }}
-                    alt="Treino"
-                  />
-  
-                  <button
-                    className="delete-btn"
-                    onClick={(e) => handleDelete(e, treino.id)}
-                  >
-                    <TrashIcon />
-                  </button>
-                </div>
-  
-                <div className="user-card-body">
-                  <h3>{nameDisplay || "Treino Sem Nome"}</h3>
-                  <p>{treino.exercises?.length || 0} EXERCÍCIOS</p>
-  
-                  {!isPersonalView && (
-                    <button
-                      className="start-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        startTraining(treino);
-                      }}
-                    >
-                      <PlayIcon />
-                      <span>INICIAR</span>
+              <div key={treino.id} className="card-premium-v3" onClick={() => startTraining(treino)}>
+                <div className="card-media">
+                  {thumb ? (
+                    <img src={thumb} alt={nameDisplay} />
+                  ) : (
+                    <div className="placeholder-gradient">
+                       <DumbbellIcon />
+                    </div>
+                  )}
+                  
+                  <div className={`level-tag-v3 ${level.toLowerCase()}`}>
+                    {getDifficultyLabel(level)}
+                  </div>
+                  
+                  {activeTab === 'my' && (
+                    <button className="action-btn-trash" onClick={(e) => handleDelete(e, treino.id)}>
+                      <TrashIcon />
                     </button>
                   )}
+                  <div className="media-overlay"></div>
+                </div>
+
+                <div className="card-info-premium">
+                  <div className="card-header-main">
+                    <h4>{nameDisplay || "Treino Personalizado"}</h4>
+                    <div className="exercise-count-badge">
+                      <span>{treino.exercises?.length || 0}</span> EXERCÍCIOS
+                    </div>
+                  </div>
+                  
+                  <div className="card-footer-tags">
+                    <div className="tags-row">
+                      {Array.from(new Set(treino.exercises?.map(ex => ex.exercise?.category?.name).filter(Boolean))).slice(0, 2).map((cat, index) => (
+                        <span key={`${treino.id}-${cat}-${index}`} className="minimal-tag">{cat}</span>
+                      ))}
+                    </div>
+                    
+                    {!isPersonalView && (
+                       <div className="btn-start-mini">
+                          <span>INICIAR</span>
+                          <ChevronRight />
+                       </div>
+                    )}
+                  </div>
                 </div>
               </div>
             );
-          })}
-        </div>
-      )}
+          })
+        )}
+      </main>
 
       <CustomAlert config={alertConfig} />
     </div>
