@@ -7,6 +7,7 @@ import { getUserBadges } from "../api/badgeService";
 import { weightService } from "../api/weightService";
 const { getWeightLogs } = weightService;
 import { getFocusStats, getWeeklyStats } from "../api/workoutService";
+import { StreakIcon } from "../Componentes/StreakIcon";
 import {
   ResponsiveContainer,
   BarChart,
@@ -25,8 +26,8 @@ import {
 
 const TrophyIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>;
 const BarbellIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12h20"/><path d="M6 7v10"/><path d="M4 9v6"/><path d="M18 7v10"/><path d="M20 9v6"/></svg>;
-const FlameIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>;
 const LogoutIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>;
+const SettingsIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>;
 const TargetIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>;
 const EditIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>;
 
@@ -192,99 +193,55 @@ export default function Perfil() {
   return (
     <div className="perfil-container">
       <header className="perfil-header-v3">
-        <div className="header-spacer"></div>
+        <div className="header-spacer-v3"></div>
         <div className="app-logo">
           <span className="logo-white">Gym</span><span className="logo-orange">Club</span>
         </div>
-        <button className="btn-logout-v3" onClick={handleLogout}>
-          <LogoutIcon />
+        <button className="btn-logout-v3" onClick={() => navigate("/configuracoes")}>
+          <SettingsIcon />
         </button>
       </header>
 
       <section className="profile-card-premium">
-        {isEditingProfile ? (
-          <div className="profile-edit-form fade-in">
-             <input 
-                type="text" 
-                value={editData.name} 
-                onChange={(e) => setEditProfileData({...editData, name: e.target.value})}
-                placeholder="Seu nome"
-              />
-              <select 
-                value={editData.sex} 
-                onChange={(e) => setEditProfileData({...editData, sex: e.target.value})}
-              >
-                <option value="M">Masculino</option>
-                <option value="F">Feminino</option>
-              </select>
-              <div className="goal-edit-buttons">
-                <button onClick={handleUpdateProfile} className="btn-save-goal">Salvar</button>
-                <button onClick={() => setIsEditingProfile(false)} className="btn-cancel-goal">Cancelar</button>
-              </div>
+        <div className="profile-main-info">
+          <div className="avatar-container">
+            <div className="profile-avatar-large">
+              {userData.name.charAt(0)}
+            </div>
+            <div className="level-badge-float">NÍVEL {userData.level}</div>
           </div>
-        ) : (
-          <>
-            <div className="profile-main-info">
-              <div className="avatar-container">
-                <div className="profile-avatar-large">
-                  {userData.name.charAt(0)}
-                </div>
-                <div className="level-badge-float">NÍVEL {userData.level}</div>
+          <div className="profile-meta-full">
+            <h3 className="user-display-name">{userData.name}</h3>
+            <div className="xp-container-full">
+              <div className="xp-label-full">
+                <span>Progresso</span>
+                <span>{Math.round(progressPercentage)}%</span>
               </div>
-              <div className="profile-meta-full">
-                <div className="name-edit-row">
-                  <h3>{userData.name}</h3>
-                  <button className="btn-edit-inline" onClick={() => setIsEditingProfile(true)}>
-                    <EditIcon />
-                  </button>
-                </div>
-                <div className="xp-container-full">
-                  <div className="xp-label-full">
-                    <span>Progresso de nível</span>
-                    <span>{Math.round(progressPercentage)}%</span>
-                  </div>
-                  <div className="xp-bar-bg-full">
-                    <div className="xp-bar-fill-full" style={{ width: `${progressPercentage}%` }}></div>
-                  </div>
-                  <p className="xp-tip">Ganhe XP completando treinos hoje!</p>
-                </div>
+              <div className="xp-bar-bg-full">
+                <div className="xp-bar-fill-full" style={{ width: `${progressPercentage}%` }}></div>
               </div>
             </div>
+          </div>
+        </div>
 
-            <div className="goal-status-card" onClick={() => !isEditingGoal && setIsEditingGoal(true)}>
-              <div className="goal-info">
-                <div className="goal-icon"><TargetIcon /></div>
-                <div style={{ flex: 1 }}>
-                  <p>Meta de Peso</p>
-                  {isEditingGoal ? (
-                    <div className="goal-edit-container" onClick={(e) => e.stopPropagation()}>
-                      <input 
-                        type="number" 
-                        value={newGoal} 
-                        onChange={(e) => setNewGoal(e.target.value)}
-                        placeholder="kg"
-                        autoFocus
-                      />
-                      <div className="goal-edit-buttons">
-                        <button onClick={handleUpdateGoal} className="btn-save-goal">Salvar</button>
-                        <button onClick={() => setIsEditingGoal(false)} className="btn-cancel-goal">Voltar</button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="goal-display-row">
-                      <h4>{userData.weightGoal || 0} kg <span>/ {currentWeight} kg atual</span></h4>
-                      {motivationalMessage && (
-                        <div className={`weight-diff-badge ${parseFloat(currentWeight) > parseFloat(userData.weightGoal) ? 'above' : 'below'}`}>
-                          {motivationalMessage}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+        <div className="goal-status-card">
+          <div className="goal-info">
+            <div className="goal-icon"><TargetIcon /></div>
+            <div className="goal-header-text">
+              <p>Meta de Peso</p>
+              <div className="goal-values-row">
+                <span className="current-v">{currentWeight}kg</span>
+                <span className="separator">atualmente / meta</span>
+                <span className="target-v">{userData.weightGoal || 0}kg</span>
               </div>
             </div>
-          </>
-        )}
+          </div>
+          {motivationalMessage && (
+            <div className={`weight-diff-badge ${parseFloat(currentWeight) > parseFloat(userData.weightGoal) ? 'above' : 'below'}`}>
+              {motivationalMessage}
+            </div>
+          )}
+        </div>
       </section>
 
       <div className="stats-mini-grid">
@@ -293,7 +250,7 @@ export default function Perfil() {
           <span>{userData.totalWorkouts} Treinos</span>
         </div>
         <div className="stat-item">
-          <FlameIcon />
+          <StreakIcon streak={userData.streak} />
           <span>{userData.maxStreak} Dias</span>
         </div>
       </div>
@@ -376,8 +333,8 @@ export default function Perfil() {
               </ResponsiveContainer>
             </div>
 
-            <div className="history-section">
-              <h4 className="section-subtitle">Histórico Recente</h4>
+            <div className="chart-card-v2">
+              <h4 className="section-subtitle-inside">Histórico Recente</h4>
               <div className="weight-list">
                 {weightLogs.length > 0 ? (
                   weightLogs.slice().reverse().map((log, index) => {

@@ -1,8 +1,33 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oswald:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&display=swap');
 
 :root {
   --font-primary: 'Inter', sans-serif;
   --font-secondary: 'Oswald', sans-serif;
+  
+  /* DARK THEME (Default) */
+  --bg-main: #000000;
+  --bg-card: #111111;
+  --bg-card-alt: #1a1a1a;
+  --text-main: #ffffff;
+  --text-secondary: #888888;
+  --text-muted: #444444;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --primary-color: #ff4500;
+  --primary-glow: rgba(255, 69, 0, 0.3);
+  --glass-bg: rgba(30, 30, 30, 0.5);
+}
+
+[data-theme='light'] {
+  --bg-main: #f5f5f7;
+  --bg-card: #ffffff;
+  --bg-card-alt: #f0f0f2;
+  --text-main: #1d1d1f;
+  --text-secondary: #6e6e73;
+  --text-muted: #86868b;
+  --border-color: rgba(0, 0, 0, 0.08);
+  --primary-color: #ff4500;
+  --primary-glow: rgba(255, 69, 0, 0.15);
+  --glass-bg: rgba(255, 255, 255, 0.7);
 }
 
 * {
@@ -13,10 +38,11 @@
 
 body {
   font-family: var(--font-primary);
-  background-color: #000;
-  color: #fff;
+  background-color: var(--bg-main);
+  color: var(--text-main);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 button, input, select, textarea {
