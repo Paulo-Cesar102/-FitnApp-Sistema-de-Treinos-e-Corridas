@@ -102,6 +102,7 @@ export class UserController {
       const user = await this.userService.update(id, data);
       return res.json(user);
     } catch (error) {
+      console.error("🔥 Erro ao atualizar usuário:", error);
       return res.status(400).json({
         error: (error as Error).message
       });

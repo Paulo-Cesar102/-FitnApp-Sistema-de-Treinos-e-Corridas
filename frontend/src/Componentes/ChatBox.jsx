@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { sendMessage, getMessages, markAsRead, getGroupInfo, deleteMessage } from "../api/chatService";
+import { socket } from "../service/socket"; // 🔥 Importação do Socket
 import MessageList from "./MessageList";
 import GroupDetailsModal from "./GroupDetailsModal";
 import "./ChatBox.css";
@@ -11,7 +12,6 @@ export default function ChatBox({ chatId, friend, onClose }) {
   const [isGroupInfoOpen, setIsGroupInfoOpen] = useState(false);
   const [clearedTimestamp, setClearedTimestamp] = useState(null);
   const bottomRef = useRef(null);
-  const intervalRef = useRef(null);
 
   // --- RECUPERA USUÁRIO LOGADO ---
   const user = useMemo(() => {
@@ -26,8 +26,6 @@ export default function ChatBox({ chatId, friend, onClose }) {
     if (!chatId) return;
     try {
       const data = await getGroupInfo(chatId);
-      // Este log confirmará que o pai recebeu os dados
-      console.log("✅ ChatBox: groupDetails carregado", data);
       setGroupDetails(data);
     } catch (err) {
       console.error("❌ ChatBox: Erro ao carregar nomes:", err);
@@ -53,23 +51,71 @@ export default function ChatBox({ chatId, friend, onClose }) {
         : msgs;
 
       setMessages(visibleMessages);
+      
+      // Marcar como lido se houver mensagens novas de outros
       if (visibleMessages.some((m) => m.senderId !== user.id && !m.read)) {
         await markAsRead(chatId);
+        socket.emit("chat:read", { chatId, userId: user.id });
       }
     } catch (err) { console.error(err); }
   }, [chatId, user?.id]);
 
-  // --- CICLO DE VIDA ---
+  // --- CICLO DE VIDA E SOCKETS ---
   useEffect(() => {
-    if (!chatId) return;
+    if (!chatId || !user?.id) return;
+
     loadGroupData();
     loadMessages();
-    
-    intervalRef.current = setInterval(loadMessages, 3000);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+
+    // 🔗 Entrar na sala do Chat
+    socket.emit("join_chat", chatId);
+
+    // 👂 Ouvir novos eventos
+    const handleNewMessage = (newMessage) => {
+      if (newMessage.chatId === chatId) {
+        setMessages((prev) => {
+          // Evita duplicatas caso o remetente também receba o próprio evento
+          if (prev.find(m => m.id === newMessage.id)) return prev;
+          return [...prev, newMessage];
+        });
+
+        // Se a mensagem for de outro, marcar como lido automaticamente
+        if (newMessage.senderId !== user.id) {
+          markAsRead(chatId).catch(console.error);
+          socket.emit("chat:read", { chatId, userId: user.id });
+        }
+      }
     };
-  }, [chatId, loadMessages, loadGroupData]);
+
+    const handleDeleteMessage = (messageId) => {
+      setMessages((prev) => prev.filter(m => m.id !== messageId));
+    };
+
+    const handleChatCleared = (clearedChatId) => {
+      if (clearedChatId === chatId) {
+        setMessages([]);
+      }
+    };
+
+    const handleMessagesRead = ({ chatId: readChatId, userId: readerId }) => {
+      if (readChatId === chatId && readerId !== user.id) {
+        setMessages((prev) => prev.map(m => ({ ...m, read: true })));
+      }
+    };
+
+    socket.on("chat:new_message", handleNewMessage);
+    socket.on("chat:delete_message", handleDeleteMessage);
+    socket.on("chat:cleared", handleChatCleared);
+    socket.on("chat:read", handleMessagesRead);
+
+    return () => {
+      socket.off("chat:new_message", handleNewMessage);
+      socket.off("chat:delete_message", handleDeleteMessage);
+      socket.off("chat:cleared", handleChatCleared);
+      socket.off("chat:read", handleMessagesRead);
+      socket.emit("leave_chat", chatId);
+    };
+  }, [chatId, user?.id, loadGroupData, loadMessages]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -81,7 +127,7 @@ export default function ChatBox({ chatId, friend, onClose }) {
 
     try {
       await deleteMessage(messageId);
-      loadMessages();
+      // O socket "chat:delete_message" cuidará de atualizar o estado para todos
     } catch (err) {
       console.error("Erro ao apagar mensagem:", err);
     }
@@ -93,15 +139,16 @@ export default function ChatBox({ chatId, friend, onClose }) {
     localStorage.setItem(`cleared-chat-${chatId}`, timestamp.toString());
     setClearedTimestamp(timestamp);
     setMessages([]);
-    alert("Mensagens anteriores foram limpas para você. As novas aparecerão normalmente.");
+    alert("Mensagens anteriores foram limpas para você.");
   };
 
   const handleSend = async () => {
     if (!text.trim() || !chatId) return;
     try {
       await sendMessage(chatId, text);
+      // Não precisamos de loadMessages() aqui, pois o socket "chat:new_message" 
+      // vai disparar e atualizar a lista para nós e para o outro.
       setText("");
-      loadMessages();
     } catch (err) { console.error(err); }
   };
 

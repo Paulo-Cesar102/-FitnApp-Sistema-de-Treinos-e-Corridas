@@ -1,4 +1,5 @@
 import { prisma } from "../database/prisma";
+import { io } from "../../server";
 
 export class BadgeService {
   async grantBadgesByLevel(userId: string, userLevel: number) {
@@ -34,6 +35,13 @@ export class BadgeService {
           include: {
             badge: true,
           },
+        });
+
+        // 🔥 Emitir evento de badge conquistada em tempo real
+        io.to(userId).emit("badge:earned", {
+          name: badge.name,
+          icon: badge.icon,
+          description: badge.description
         });
 
         newBadges.push(userBadge);

@@ -4,6 +4,7 @@ import { ICreateWorkoutDTO } from "../dtos/ICreateWorkoutDTO";
 import { WorkoutRepository } from "../repository/WorkoutRepository";
 import { BadgeService } from "./BadgeService";
 import { StreakService } from "./StreakService";
+import { io } from "../../server";
 
 export class WorkoutService {
   private workoutRepository = new WorkoutRepository();
@@ -193,6 +194,14 @@ export class WorkoutService {
     const newBadges = await this.badgeService.grantBadgesByLevel(userId, user.level);
     const streakData = await this.streakService.updateUserStreak(userId);
 
+    // 🔥 Notificar frontend em tempo real
+    io.to(userId).emit("workout:completed", {
+      workoutId,
+      xpGained,
+      streak: streakData.streak,
+      message: alreadyCompletedToday ? "Treino registrado!" : "Treino concluído! +XP"
+    });
+
     return {
       message: alreadyCompletedToday ? "Treino registrado (sem XP adicional)" : "Treino concluído com sucesso",
       xpGained,
@@ -238,6 +247,13 @@ export class WorkoutService {
 
     // 🔥 Atualiza o foguinho ao completar um exercício individual
     const streakData = await this.streakService.updateUserStreak(userId);
+
+    // 🔥 Notificar via Socket
+    io.to(userId).emit("exercise:completed", {
+      exerciseName: workoutExercise.exercise.name,
+      xpGained,
+      streak: streakData.streak
+    });
 
     return {
       message: "Exercício concluído com sucesso",

@@ -94,23 +94,25 @@ export class UserRepository implements IUserRepository {
   }
 
   async update(id: string, data: Partial<IUser>): Promise<IUser> {
+    // 🔥 Filtra apenas os campos que foram enviados (diferentes de undefined)
+    // Isso evita que campos obrigatórios recebam 'undefined' por engano.
+    const updateData: any = {};
+    
+    const fields = [
+      "name", "email", "password", "sex", "weightGoal", "height", 
+      "goalType", "experienceLevel", "onboardingCompleted", 
+      "level", "xp", "streak", "maxStreak", "lastActivityDate", "gymId"
+    ];
+
+    fields.forEach(field => {
+      if ((data as any)[field] !== undefined) {
+        updateData[field] = (data as any)[field];
+      }
+    });
+
     const user = await prisma.user.update({
       where: { id },
-      data: {
-        name: data.name,
-        email: data.email,
-        password: data.password,
-        sex: data.sex as any,
-        weightGoal: data.weightGoal,
-        height: (data as any).height,
-        goalType: (data as any).goalType,
-        experienceLevel: (data as any).experienceLevel,
-        onboardingCompleted: (data as any).onboardingCompleted,
-        level: data.level,
-        xp: data.xp,
-        streak: data.streak,
-        maxStreak: data.maxStreak
-      }
+      data: updateData
     });
 
     return user as unknown as IUser;

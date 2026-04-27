@@ -1,4 +1,5 @@
 import { GymAnnouncementRepository } from "../repository/GymAnnouncementRepository";
+import { io } from "../../server";
 
 interface CreateAnnouncementRequest {
   title: string;
@@ -31,7 +32,7 @@ export class GymAnnouncementService {
       );
     }
 
-    return this.announcementRepository.create({
+    const announcement = await this.announcementRepository.create({
       title: data.title,
       content: data.content,
       gymId: data.gymId,
@@ -39,6 +40,11 @@ export class GymAnnouncementService {
       imageUrl: data.imageUrl,
       priority: data.priority || 0,
     });
+
+    // 🔥 Notificar via Socket
+    io.to(`gym_${data.gymId}`).emit("announcement_updated", { gymId: data.gymId });
+
+    return announcement;
   }
 
   async getAnnouncementById(id: string) {
@@ -83,11 +89,26 @@ export class GymAnnouncementService {
       );
     }
 
-    return this.announcementRepository.update(id, data);
+    const announcement = await this.announcementRepository.update(id, data);
+    
+    // 🔥 Notificar via Socket
+    if (announcement.gymId) {
+      io.to(`gym_${announcement.gymId}`).emit("announcement_updated", { gymId: announcement.gymId });
+    }
+
+    return announcement;
   }
 
   async deleteAnnouncement(id: string) {
-    return this.announcementRepository.delete(id);
+    const announcement = await this.announcementRepository.findById(id);
+    const result = await this.announcementRepository.delete(id);
+
+    // 🔥 Notificar via Socket
+    if (announcement?.gymId) {
+      io.to(`gym_${announcement.gymId}`).emit("announcement_updated", { gymId: announcement.gymId });
+    }
+
+    return result;
   }
 
   async getUrgentAnnouncements(gymId: string) {

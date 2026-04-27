@@ -15,6 +15,10 @@ export interface IUser {
   streak: number;
   maxStreak: number;
   weightGoal?: number;
+  height?: number; // Adicionado
+  goalType?: string; // Adicionado
+  experienceLevel?: string; // Adicionado
+  onboardingCompleted?: boolean; // Adicionado
   lastActivityDate?: Date;
   gymId?: string;
   role?: Role;    

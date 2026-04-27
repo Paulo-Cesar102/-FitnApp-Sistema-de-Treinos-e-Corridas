@@ -44,16 +44,20 @@ export default function CompleteProfile({ user, onComplete }) {
     setError("");
 
     try {
+      if (!user?.id) {
+        throw new Error("ID do usuário não encontrado. Tente fazer login novamente.");
+      }
+
       // 1. Registrar o peso inicial no log
       await weightService.addWeightLog(weight);
 
       // 2. Atualizar o perfil do usuário no backend com os novos campos
       const updatedUser = await updateUser(user.id, {
-        weightGoal: weightGoal,
-        height: height,
+        weightGoal: weightGoal, // Já é número (parseFloat)
+        height: height,         // Já é número (parseFloat)
         goalType: formData.goalType,
         experienceLevel: formData.experience,
-        onboardingCompleted: true, // Persiste no banco de dados
+        onboardingCompleted: true, 
         name: user.name
       });
 

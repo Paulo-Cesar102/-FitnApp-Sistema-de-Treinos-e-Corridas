@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { connectSocket } from "./service/socket"; 
+import { socket, connectSocket } from "./service/socket"; 
 
 // Páginas e Componentes
 import Register from "./pages/Register";
@@ -16,6 +16,7 @@ import Configuracoes from "./pages/Configuracoes";
 import Friends from "./pages/friends";
 import Academy from "./pages/academy";
 import CompleteProfile from "./Componentes/CompleteProfile";
+import CustomAlert from "./Componentes/CustomAlert"; // 🔥 Importação do Alerta
 import { getUser } from "./api/userService";
 
 function Layout({ children }) {
@@ -23,6 +24,7 @@ function Layout({ children }) {
   const role = localStorage.getItem("role");
   const [showCompleteProfile, setShowCompleteProfile] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [alertConfig, setAlertConfig] = useState({ isOpen: false });
   
   // Função para sincronizar dados com a API
   const syncUserData = async () => {
@@ -80,6 +82,66 @@ function Layout({ children }) {
     };
   }, [location.pathname]); // Sincroniza ao mudar de página
 
+  // --- ESCUTADORES GLOBAIS DE SOCKET ---
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleBadgeEarned = (badge) => {
+      setAlertConfig({
+        isOpen: true,
+        title: "🏆 Nova Conquista!",
+        message: `Parabéns! Você desbloqueou a medalha: ${badge.name}`,
+        type: "success",
+        confirmText: "Uhul!",
+        onConfirm: () => setAlertConfig({ isOpen: false })
+      });
+    };
+
+    const handleFriendRequest = (data) => {
+      setAlertConfig({
+        isOpen: true,
+        title: "🤝 Nova Solicitação",
+        message: `${data.senderName} quer ser seu amigo no FitnApp!`,
+        type: "info",
+        confirmText: "Ver Pedidos",
+        onConfirm: () => {
+          setAlertConfig({ isOpen: false });
+          // Opcional: redirecionar para amigos
+        },
+        cancelText: "Fechar",
+        onCancel: () => setAlertConfig({ isOpen: false })
+      });
+    };
+
+    const handleWorkoutCompleted = (data) => {
+      setAlertConfig({
+        isOpen: true,
+        title: "🔥 Treino Finalizado!",
+        message: `${data.message} XP Ganhos: ${data.xpGained}. Streak: ${data.streak} dias!`,
+        type: "success",
+        confirmText: "Continuar",
+        onConfirm: () => setAlertConfig({ isOpen: false })
+      });
+    };
+
+    const handleExerciseCompleted = (data) => {
+      // Notificação mais discreta se possível, mas aqui usaremos o Alert por enquanto
+      console.log("Exercício concluído:", data);
+    };
+
+    socket.on("badge:earned", handleBadgeEarned);
+    socket.on("friend:new_request", handleFriendRequest);
+    socket.on("workout:completed", handleWorkoutCompleted);
+    socket.on("exercise:completed", handleExerciseCompleted);
+
+    return () => {
+      socket.off("badge:earned", handleBadgeEarned);
+      socket.off("friend:new_request", handleFriendRequest);
+      socket.off("workout:completed", handleWorkoutCompleted);
+      socket.off("exercise:completed", handleExerciseCompleted);
+    };
+  }, []);
+
   // Rotas onde o MenuBar inferior deve aparecer
   const rotasComMenu = ["/home", "/exercicio", "/perfil", "/amigos", "/academy"];
   let mostrarMenu = rotasComMenu.includes(location.pathname);
@@ -105,6 +167,8 @@ function Layout({ children }) {
         transition: "background 0.3s ease, color 0.3s ease"
       }}
     >
+      <CustomAlert config={alertConfig} />
+      
       {showCompleteProfile && currentUser && (
         <CompleteProfile user={currentUser} onComplete={handleProfileComplete} />
       )}

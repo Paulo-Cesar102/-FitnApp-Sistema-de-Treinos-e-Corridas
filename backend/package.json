@@ -1,19 +1,24 @@
 {
   "name": "backend",
+  "version": "1.0.0",
+  "description": "API do FitnApp",
+  "main": "dist/server.js",
+  "type": "commonjs",
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
   },
-  "version": "1.0.0",
-  "description": "",
-  "main": "server.ts",
-  "type": "commonjs",
   "scripts": {
     "dev": "cross-env NODE_ENV=development ts-node-dev --respawn --transpile-only server.ts",
     "build": "tsc",
     "start": "node ./dist/server.js"
   },
+  "engines": {
+    "node": "20.x"
+  },
   "dependencies": {
     "@prisma/client": "^4.16.2",
+    "prisma": "^4.16.2",
+    "typescript": "^5.0.0",
     "@types/config": "^3.3.5",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
@@ -30,11 +35,9 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^25.2.1",
+    "@types/node": "^20.0.0",
     "cross-env": "^10.1.0",
-    "prisma": "^4.16.2",
     "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^5.9.3"
+    "ts-node-dev": "^2.0.0"
   }
 }
