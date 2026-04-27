@@ -312,20 +312,55 @@ export default function Perfil() {
                 <h4>Evolução de Peso</h4>
                 <span className="weight-trend">Últimos 7 registros</span>
               </div>
-              <ResponsiveContainer width="100%" height={200}>
+              <ResponsiveContainer width="100%" height={220}>
                 {weightData.length > 0 ? (
-                  <AreaChart data={weightData}>
+                  <AreaChart data={weightData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorWeight" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#ff4500" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#ff4500" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="var(--primary-color)" stopOpacity={0.4}/>
+                        <stop offset="95%" stopColor="var(--primary-color)" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
-                    <CartesianGrid stroke="#222" vertical={false} />
-                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: '#666', fontSize: 12}} />
-                    <YAxis hide domain={['dataMin - 2', 'dataMax + 2']} />
-                    <Tooltip contentStyle={{background: '#111', border: 'none', borderRadius: '8px'}} />
-                    <Area type="monotone" dataKey="weight" stroke="#ff4500" strokeWidth={3} fill="url(#colorWeight)" />
+                    <CartesianGrid stroke="var(--border-color)" vertical={false} strokeDasharray="3 3" opacity={0.5} />
+                    <XAxis 
+                      dataKey="date" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{fill: 'var(--text-muted)', fontSize: 11, fontWeight: 700}}
+                      dy={10}
+                    />
+                    <YAxis 
+                      hide 
+                      domain={['dataMin - 1', 'dataMax + 1']} 
+                    />
+                    <Tooltip 
+                      contentStyle={{
+                        background: 'rgba(20, 20, 20, 0.9)', 
+                        border: '1px solid var(--primary-color)', 
+                        borderRadius: '12px',
+                        fontSize: '12px',
+                        fontWeight: '800',
+                        boxShadow: '0 10px 20px rgba(0,0,0,0.4)'
+                      }}
+                      itemStyle={{ color: '#fff' }}
+                      cursor={{ stroke: 'var(--primary-color)', strokeWidth: 1, strokeDasharray: '5 5' }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="weight" 
+                      stroke="var(--primary-color)" 
+                      strokeWidth={4} 
+                      fillOpacity={1} 
+                      fill="url(#colorWeight)" 
+                      activeDot={{ 
+                        r: 6, 
+                        fill: 'var(--primary-color)', 
+                        stroke: '#fff', 
+                        strokeWidth: 2,
+                        shadowBlur: 10,
+                        shadowColor: 'var(--primary-glow)'
+                      }}
+                    />
                   </AreaChart>
                 ) : (
                   <div className="empty-state-v2">Nenhum dado de peso registrado.</div>

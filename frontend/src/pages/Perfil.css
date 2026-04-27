@@ -290,7 +290,38 @@
   box-shadow: var(--shadow-main);
 }
 
-.chart-card-v2 h4 {
+.chart-header-inline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.weight-trend {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--primary-color);
+  background: var(--primary-glow);
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Customizações Recharts */
+.recharts-cartesian-grid-horizontal line {
+  stroke: var(--border-color);
+}
+
+.recharts-tooltip-cursor {
+  stroke: var(--primary-color);
+}
+
+.recharts-active-dot {
+  filter: drop-shadow(0 0 5px var(--primary-color));
+}
+
+.section-subtitle-inside {
   font-size: 0.85rem;
   font-weight: 900;
   margin-bottom: 16px;
@@ -298,6 +329,7 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
+
 
 /* HISTÓRICO */
 .weight-list {
