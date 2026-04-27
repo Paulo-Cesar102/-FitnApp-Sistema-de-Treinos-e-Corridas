@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { connectSocket } from "./service/socket"; 
 
@@ -15,15 +15,48 @@ import Perfil from "./pages/Perfil";
 import Configuracoes from "./pages/Configuracoes";
 import Friends from "./pages/friends";
 import Academy from "./pages/academy";
+import CompleteProfile from "./Componentes/CompleteProfile";
 
 function Layout({ children }) {
   const location = useLocation();
   const role = localStorage.getItem("role");
+  const [showCompleteProfile, setShowCompleteProfile] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") || "dark";
     document.body.setAttribute("data-theme", savedTheme);
-  }, []);
+
+    const checkUserProfile = () => {
+      const userJson = localStorage.getItem("user");
+      const userRole = localStorage.getItem("role");
+
+      if (userJson && userRole === "USER") {
+        const user = JSON.parse(userJson);
+        setCurrentUser(user);
+        
+        // Só mostra se NÃO tiver completado o onboarding
+        if (!user.onboardingCompleted) {
+          setShowCompleteProfile(true);
+        } else {
+          setShowCompleteProfile(false);
+        }
+      } else {
+        setShowCompleteProfile(false);
+      }
+    };
+
+    checkUserProfile();
+    
+    // Escuta mudanças no usuário (login/logout)
+    window.addEventListener('storage', checkUserProfile);
+    window.addEventListener('userDataUpdated', checkUserProfile);
+
+    return () => {
+      window.removeEventListener('storage', checkUserProfile);
+      window.removeEventListener('userDataUpdated', checkUserProfile);
+    };
+  }, [location.pathname]);
 
   // Rotas onde o MenuBar inferior deve aparecer
   const rotasComMenu = ["/home", "/exercicio", "/perfil", "/amigos", "/academy"];
@@ -35,6 +68,11 @@ function Layout({ children }) {
      }
   }
 
+  const handleProfileComplete = (updatedUser) => {
+    setCurrentUser(updatedUser);
+    setShowCompleteProfile(false);
+  };
+
   return (
     <div
       style={{
@@ -45,6 +83,9 @@ function Layout({ children }) {
         transition: "background 0.3s ease, color 0.3s ease"
       }}
     >
+      {showCompleteProfile && currentUser && (
+        <CompleteProfile user={currentUser} onComplete={handleProfileComplete} />
+      )}
       {children}
       {mostrarMenu && <MenuBar />}
     </div>

@@ -74,6 +74,10 @@ model User {
   streak            Int       @default(0)
   maxStreak         Int       @default(0)
   weightGoal        Float?    @default(0)
+  height            Float?    @default(0)
+  goalType          String?   @default("SAUDE")
+  experienceLevel   Difficulty @default(BEGINNER)
+  onboardingCompleted Boolean  @default(false)
   lastActivityDate  DateTime?
   role              Role      @default(USER)
   lastUnsubscribedAt DateTime?

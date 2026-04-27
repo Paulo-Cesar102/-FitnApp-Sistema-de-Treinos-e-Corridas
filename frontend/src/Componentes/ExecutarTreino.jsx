@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import "./ExecutarTreino.css";
 import CustomAlert from "./CustomAlert";
 import { completeWorkout } from "../api/workoutService";
-import { weightService } from "../api/weightService";
 import { socket } from "../service/socket";
 
 // Ícones Vetorizados
@@ -18,7 +17,6 @@ export default function ExecutarTreino({ workout }) {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Tenta pegar o treino do location.state (navegação), depois das props, e por fim o mock
   const treinoAtual = location.state?.workout || workout || {
     name: "Treino do Dia",
     exercises: [
@@ -33,12 +31,9 @@ export default function ExecutarTreino({ workout }) {
   const [isFinished, setIsFinished] = useState(false);
   const [isSetRunning, setIsSetRunning] = useState(false);
   
-  const [activeTime, setActiveTime] = useState(0); // Cronômetro da série
-  const [restTime, setRestTime] = useState(0);     // Timer de descanso
+  const [activeTime, setActiveTime] = useState(0);
+  const [restTime, setRestTime] = useState(0);
   const [alertConfig, setAlertConfig] = useState({ isOpen: false });
-  const [showWeightModal, setShowWeightModal] = useState(false);
-  const [weightInput, setWeightInput] = useState("");
-  const [weightLoading, setWeightLoading] = useState(false);
 
   const showAlert = (title, message, type, onConfirm) => {
     setAlertConfig({
@@ -48,70 +43,53 @@ export default function ExecutarTreino({ workout }) {
   };
 
   const currentItem = treinoAtual?.exercises?.[currentExerciseIdx];
-  const exerciseData = currentItem?.exercise || currentItem; // Para lidar com DB e Mocks
+  const exerciseData = currentItem?.exercise || currentItem;
 
-  // Adicionado suporte para 'title' caso o treino venha de arquivos JSON
   const workoutName = typeof treinoAtual?.name === "object" ? treinoAtual?.name?.name : (treinoAtual?.name || treinoAtual?.title || "Treino sem Nome");
   const exerciseName = typeof exerciseData?.name === "object" ? exerciseData?.name?.name : (exerciseData?.name || "Exercício");
-
-  // Tenta pegar a imagem do banco, se não tiver, usa um placeholder escuro com laranja
   const exerciseImage = exerciseData?.tutorial || "https://placehold.co/600x400/1a1a1a/ff4500?text=Sem+Foto";
 
   const totalSets = parseInt(currentItem?.sets) || 3;
   const reps = currentItem?.reps || 10;
 
-  // Função para emitir um "beep" usando a Web Audio API nativa do navegador
   const playBeep = () => {
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       const oscillator = audioCtx.createOscillator();
       const gainNode = audioCtx.createGain();
-      
-      oscillator.type = "sine"; // Tipo de onda sonora
-      oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // Frequência (800Hz é um bom tom de beep)
-      
-      // Suaviza o som no final para não dar "estalos"
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
       gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
       gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
-      
       oscillator.connect(gainNode);
       gainNode.connect(audioCtx.destination);
-      
       oscillator.start();
-      oscillator.stop(audioCtx.currentTime + 0.5); // O beep dura meio segundo
+      oscillator.stop(audioCtx.currentTime + 0.5);
     } catch (error) {
-      console.error("Áudio não suportado no navegador", error);
+      console.error("Áudio não suportado", error);
     }
   };
 
-  // Efeito principal que controla os cronômetros
   useEffect(() => {
-    if (isFinished) return; // Trava o relógio se o treino já terminou
-
+    if (isFinished) return;
     let interval;
-    
     if (isResting) {
-      // Regressiva do descanso
       if (restTime > 0) {
         interval = setInterval(() => setRestTime((prev) => prev - 1), 1000);
       } else {
-        // Acabou o descanso, vai para a próxima série ou exercício
         playBeep();
         avancarSerie();
       }
     } else if (isSetRunning) {
-      // Progressiva do tempo de execução da série
       interval = setInterval(() => setActiveTime((prev) => prev + 1), 1000);
     }
-
     return () => clearInterval(interval);
   }, [isResting, restTime, isFinished, isSetRunning]);
 
   const avancarSerie = () => {
     setIsResting(false);
-    setIsSetRunning(false); // Aguarda o usuário iniciar a nova série manualmente
+    setIsSetRunning(false);
     setActiveTime(0);
-
     if (currentSet < totalSets) {
       setCurrentSet((prev) => prev + 1);
     } else {
@@ -119,28 +97,26 @@ export default function ExecutarTreino({ workout }) {
         setCurrentExerciseIdx((prev) => prev + 1);
         setCurrentSet(1);
       } else {
-        // Finalizar treino e atualizar XP
         finalizarTreino();
       }
     }
   };
 
   const handleFinalizarSerie = () => {
-    // Usamos parseInt para transformar "60 segundos" em apenas 60
-    const tempoDescanso = parseInt(currentItem?.rest) || 60; 
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const defaultRest = user.defaultRest || 60;
+    const tempoDescanso = parseInt(currentItem?.rest) || defaultRest; 
     setRestTime(tempoDescanso);
     setIsResting(true);
     setIsSetRunning(false);
   };
 
-  // Verifica se a mensagem de aviso já foi mostrada hoje para este treino
   const hasShownMessageToday = () => {
     const messages = JSON.parse(localStorage.getItem("shownMessages") || "{}");
     const today = new Date().toDateString();
     return messages[treinoAtual.id]?.date === today;
   };
 
-  // Marca que a mensagem foi mostrada para este treino hoje
   const markMessageAsShown = () => {
     const messages = JSON.parse(localStorage.getItem("shownMessages") || "{}");
     const today = new Date().toDateString();
@@ -151,11 +127,7 @@ export default function ExecutarTreino({ workout }) {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   useEffect(() => {
-    // Ao iniciar o treino, avisa ao personal (se houver)
-    // O aluno pode estar inscrito em vários personals (um de cada academia ou especialidade)
-    // Buscamos o personal vinculado que pertence a esta academia
     const personalId = user.personalSubscriptions?.[0] || localStorage.getItem("personalId");
-    
     if (treinoAtual?.id && socket && user.id && personalId) {
       socket.emit("student_activity", {
         personalId,
@@ -168,59 +140,35 @@ export default function ExecutarTreino({ workout }) {
 
   const finalizarTreino = async () => {
     if (!treinoAtual?.id) {
-      showAlert("Erro", "Não foi possível identificar o treino para concluir.", "error");
+      showAlert("Erro", "Não foi possível identificar o treino.", "error");
       return;
     }
-
     try {
       const result = await completeWorkout(treinoAtual.id);
-      console.log("Treino completado:", result);
-
-      // Atualizar localStorage com novo XP, level e total de treinos completados
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       user.xp = result.newXp;
       user.level = result.newLevel;
       user.streak = result.streak;
       user.totalCompleted = result.totalCompleted;
       localStorage.setItem("user", JSON.stringify(user));
-
-      // Emitir evento para atualizar outros componentes
       window.dispatchEvent(new Event('userDataUpdated'));
-
       setIsFinished(true);
-      showAlert("Treino Concluído", `Parabéns! Você ganhou ${result.xpGained} XP. Novo nível: ${result.newLevel}`, "success", () => {
+      showAlert("Treino Concluído", `Parabéns! Você ganhou ${result.xpGained} XP.`, "success", () => {
         setAlertConfig({ isOpen: false });
-        setShowWeightModal(true); // Mostrar modal de peso em vez de navegar
+        navigate("/home");
       });
     } catch (error) {
       const errorMessage = error?.response?.data?.message || error?.message || "Erro ao completar treino.";
-      console.error("Erro ao completar treino:", errorMessage, error);
-
       if (errorMessage.includes("já concluiu esse treino hoje")) {
         if (!hasShownMessageToday()) {
           markMessageAsShown();
-          showAlert("Treino Já Realizado", "Você já completou este treino hoje! Volta amanhã para ganhar mais XP.", "warning", () => {
+          showAlert("Treino Já Realizado", "Você já completou este treino hoje!", "warning", () => {
             setAlertConfig({ isOpen: false });
             navigate("/home");
           });
         } else {
           navigate("/home");
         }
-      } else if (errorMessage.includes("Treino não encontrado") || errorMessage.includes("Usuário não encontrado") || errorMessage.includes("workoutId é obrigatório")) {
-        showAlert("Erro", errorMessage, "error", () => {
-          setAlertConfig({ isOpen: false });
-          navigate("/home");
-        });
-      } else if (error?.response && error.response.status >= 500) {
-        const user = JSON.parse(localStorage.getItem("user") || "{}");
-        user.totalCompleted = (user.totalCompleted || 0) + 1;
-        localStorage.setItem("user", JSON.stringify(user));
-        window.dispatchEvent(new Event('userDataUpdated'));
-
-        showAlert("Treino Simulado", "Treino completado localmente (backend indisponível).", "info", () => {
-          setAlertConfig({ isOpen: false });
-          navigate("/home");
-        });
       } else {
         showAlert("Erro", errorMessage, "error");
       }
@@ -233,127 +181,104 @@ export default function ExecutarTreino({ workout }) {
     return `${m}:${s}`;
   };
 
-  const handleWeightSubmit = async () => {
-    if (!weightInput || isNaN(parseFloat(weightInput))) {
-      showAlert("Erro", "Por favor, insira um peso válido.", "error");
-      return;
-    }
+  if (!currentItem) return <div className="workout-execution-container">Carregando...</div>;
 
-    setWeightLoading(true);
-    try {
-      await weightService.addWeightLog(parseFloat(weightInput));
-      showAlert("Peso Registrado", "Seu peso foi registrado com sucesso!", "success", () => {
-        setAlertConfig({ isOpen: false });
-        navigate("/home");
-      });
-    } catch (error) {
-      console.error("Erro ao registrar peso:", error);
-      showAlert("Erro", "Não foi possível registrar o peso. Tente novamente.", "error");
-    } finally {
-      setWeightLoading(false);
-    }
+  const totalExercises = treinoAtual?.exercises?.length || 0;
+  const totalSteps = treinoAtual?.exercises?.reduce((acc, ex) => acc + (parseInt(ex.sets) || 3), 0) || 1;
+  const currentStep = treinoAtual?.exercises?.slice(0, currentExerciseIdx).reduce((acc, ex) => acc + (parseInt(ex.sets) || 3), 0) + currentSet;
+  const progress = (currentStep / totalSteps) * 100;
+  const nextExercise = treinoAtual.exercises[currentExerciseIdx + 1]?.exercise?.name || treinoAtual.exercises[currentExerciseIdx + 1]?.name;
+
+  const mudarExercicio = (direcao) => {
+    setIsResting(false);
+    setIsSetRunning(false);
+    setActiveTime(0);
+    setRestTime(0);
+    setCurrentSet(1);
+    setCurrentExerciseIdx(prev => direcao === "proximo" ? prev + 1 : prev - 1);
   };
 
-  const skipWeightRegistration = () => {
-    navigate("/home");
-  };
-
-  if (!currentItem) return <div className="execucao-container">Carregando...</div>;
+  const strokeDasharray = 283;
+  const tempoTotalDescanso = parseInt(currentItem?.rest) || 60;
+  const strokeDashoffset = isResting ? (strokeDasharray - (strokeDasharray * restTime) / tempoTotalDescanso) : 0;
 
   return (
-    <div className="execucao-container">
-      <header className="execucao-header">
-        <button className="btn-exit" onClick={() => navigate(-1)} title="Sair do Treino">
-          ✕
-        </button>
-        <h2>{workoutName}</h2>
+    <div className="workout-execution-container">
+      <header className="execution-header">
+        <button className="back-button" onClick={() => navigate(-1)}>✕</button>
+        <div className="header-nav">
+          <button className="nav-arrow" onClick={() => mudarExercicio("anterior")} disabled={currentExerciseIdx === 0}>←</button>
+          <div className="header-info">
+            <span className="workout-label">{workoutName}</span>
+            <h3 className="exercise-name">{exerciseName}</h3>
+          </div>
+          <button className="nav-arrow" onClick={() => mudarExercicio("proximo")} disabled={currentExerciseIdx === totalExercises - 1}>→</button>
+        </div>
+        <button className="info-button" onClick={() => showAlert("Dica", exerciseData?.description || "Mantenha a postura.", "info")}>i</button>
       </header>
 
-      <div className="exercise-card">
-        <div className="exercise-image-wrapper">
-          <img src={exerciseImage} alt={exerciseName} className="exercise-image" />
-          <div className="exercise-info-overlay">
-            <h3 className="exercise-title">{exerciseName}</h3>
-            <div className="exercise-stats-pills">
-              <span className="stat-pill">Série {currentSet}/{totalSets}</span>
-              <span className="stat-pill">{reps} Reps</span>
+      <main className="execution-main">
+        <section className="exercise-demonstration">
+          <div className="media-container">
+            <div className="gif-placeholder"><img src={exerciseImage} alt={exerciseName} /></div>
+          </div>
+        </section>
+
+        <section className="sets-tracker">
+          {[...Array(totalSets)].map((_, i) => (
+            <div key={i} className={`set-dot ${i + 1 < currentSet ? "completed" : i + 1 === currentSet ? "active" : ""}`}>{i + 1}</div>
+          ))}
+        </section>
+
+        <section className="timer-section">
+          <div className={`timer-container ${isResting ? "resting" : ""} ${isSetRunning ? "running" : ""}`} onClick={() => !isResting && setIsSetRunning(!isSetRunning)}>
+            <svg className="timer-svg" viewBox="0 0 100 100">
+              <circle className="timer-bg" cx="50" cy="50" r="45" />
+              <circle className="timer-progress" cx="50" cy="50" r="45" style={{ strokeDashoffset, stroke: isResting ? "#00ff88" : "var(--primary-color)", transition: isResting ? "stroke-dashoffset 1s linear" : "0.3s" }} />
+            </svg>
+            <div className="timer-content">
+              <span className="timer-value">{formatTime(isResting ? restTime : activeTime)}</span>
+              <span className="timer-status">{isResting ? <><TimerIcon /> Descanso</> : isSetRunning ? <><ActivityIcon /> Treinando</> : activeTime > 0 ? <><PauseIcon /> Pausado</> : <><PlayIcon /> Iniciar</>}</span>
             </div>
           </div>
-        </div>
-      </div>
+        </section>
 
-      <div className="timer-display">
-        {isResting ? (
-          <div className="timer-box rest">
-            <h4 style={{ display: "flex", alignItems: "center", gap: "8px" }}><TimerIcon /> Descanso</h4>
-            <h2 className="time-text glow-green">{formatTime(restTime)}</h2>
-            <button className="btn-skip" onClick={() => setRestTime(0)}><SkipIcon /> Pular</button>
+        <section className="exercise-details">
+          <div className="detail-card">
+            <span className="detail-label">Série</span>
+            <span className="detail-value">{currentSet}/{totalSets}</span>
           </div>
-        ) : (
-          <div className={`timer-box ${isSetRunning ? "running" : ""}`}>
-            <h4 style={{ display: "flex", alignItems: "center", gap: "8px" }}><ActivityIcon /> Tempo da Série</h4>
-            <h2 className={`time-text ${isSetRunning ? "glow-orange" : ""}`}>{formatTime(activeTime)}</h2>
-            {!isSetRunning && activeTime === 0 ? (
-              <button className="btn-start" onClick={() => setIsSetRunning(true)}><PlayIcon /> Iniciar</button>
-            ) : !isSetRunning && activeTime > 0 ? (
-              <div style={{ display: "flex", gap: "10px", width: "100%" }}>
-                <button className="btn-start" style={{ flex: 1 }} onClick={() => setIsSetRunning(true)}><PlayIcon /> Retomar</button>
-                <button className="btn-finish" style={{ flex: 1 }} onClick={handleFinalizarSerie}><CheckIcon /> Concluir</button>
-              </div>
-            ) : (
-              <div style={{ display: "flex", gap: "10px", width: "100%" }}>
-                <button className="btn-skip" style={{ flex: 1 }} onClick={() => setIsSetRunning(false)}><PauseIcon /> Pausar</button>
-                <button className="btn-finish" style={{ flex: 2 }} onClick={handleFinalizarSerie}><CheckIcon /> Concluir</button>
-              </div>
-            )}
+          <div className="detail-divider"></div>
+          <div className="detail-card">
+            <span className="detail-label">Repetições</span>
+            <span className="detail-value">{reps}</span>
           </div>
-        )}
-      </div>
+          <div className="detail-divider"></div>
+          <div className="detail-card">
+            <span className="detail-label">Descanso</span>
+            <span className="detail-value">{tempoTotalDescanso}s</span>
+          </div>
+        </section>
+
+        <div className="action-zone">
+          {isResting ? (
+            <button className="main-action-btn skip-rest-mode" onClick={() => setRestTime(0)}><SkipIcon /> Pular Descanso ({restTime}s)</button>
+          ) : isSetRunning ? (
+            <button className="main-action-btn" onClick={handleFinalizarSerie}><CheckIcon /> Concluir Série {currentSet}</button>
+          ) : (
+            <button className="main-action-btn" onClick={() => setIsSetRunning(true)}><PlayIcon /> {activeTime > 0 ? "Retomar" : "Iniciar"} Série {currentSet}</button>
+          )}
+        </div>
+      </main>
+
+      <footer className="execution-footer">
+        <div className="progress-bar-container"><div className="progress-bar-fill" style={{ width: `${progress}%` }}></div></div>
+        <div className="next-info">
+          {nextExercise ? <><span className="next-label">Próximo:</span><span className="next-name">{nextExercise}</span></> : <span className="next-label">Último exercício!</span>}
+        </div>
+      </footer>
 
       <CustomAlert config={alertConfig} />
-
-      {/* Modal de Registro de Peso */}
-      {showWeightModal && (
-        <div className="weight-modal-overlay" onClick={skipWeightRegistration}>
-          <div className="weight-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="weight-modal-header">
-              <h3>Registrar Peso</h3>
-              <p>Acompanhe sua evolução registrando seu peso atual</p>
-            </div>
-
-            <div className="weight-input-section">
-              <label htmlFor="weight-input">Peso Atual (kg)</label>
-              <input
-                id="weight-input"
-                type="number"
-                step="0.1"
-                placeholder="Ex: 75.5"
-                value={weightInput}
-                onChange={(e) => setWeightInput(e.target.value)}
-                className="weight-input"
-                autoFocus
-              />
-            </div>
-
-            <div className="weight-modal-actions">
-              <button
-                className="btn-skip-weight"
-                onClick={skipWeightRegistration}
-                disabled={weightLoading}
-              >
-                Pular
-              </button>
-              <button
-                className="btn-submit-weight"
-                onClick={handleWeightSubmit}
-                disabled={weightLoading || !weightInput}
-              >
-                {weightLoading ? "Registrando..." : "Registrar Peso"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -4,101 +4,56 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(to bottom, #020617, #0f172a);
+  background: var(--bg-main);
 }
 
 .message {
-  max-width: 70%; /* Aumentei um pouco para caber nomes longos */
-  padding: 10px 14px;
-  border-radius: 12px;
-  margin-bottom: 10px;
+  max-width: 80%;
+  padding: 12px 16px;
+  border-radius: 18px;
+  margin-bottom: 12px;
   position: relative;
-  animation: pop 0.2s ease-out;
 }
 
 .message.sent {
-  background: #2563eb;
+  background: var(--primary-color);
   align-self: flex-end;
-  border-bottom-right-radius: 2px;
+  border-bottom-right-radius: 4px;
+  color: #ffffff;
+  box-shadow: var(--shadow-sm);
 }
 
 .message.received {
-  background: #1e293b;
+  background: var(--bg-card);
   align-self: flex-start;
-  border-bottom-left-radius: 2px;
-}
-
-.message-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4px;
-  gap: 12px; /* Espaço entre nome e o ícone de lixeira */
+  border-bottom-left-radius: 4px;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
 }
 
 .sender-name {
-  color: #fbbf24; /* O amarelo que você escolheu */
+  color: var(--primary-color);
   font-size: 11px;
-  font-weight: 700;
-  text-transform: capitalize;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  display: block;
 }
 
-/* Deixa o seu nome numa cor diferente (opcional) */
 .message.sent .sender-name {
-  color: #fef3c7;
-  opacity: 0.9;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .message-content {
   margin: 0;
-  color: white;
   font-size: 14px;
-  line-height: 1.4;
-  word-wrap: break-word;
-}
-
-.btn-delete-message {
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  font-size: 12px;
-  cursor: pointer;
-  padding: 2px 5px;
-  border-radius: 50%;
-  transition: 0.2s;
-}
-
-.btn-delete-message {
-  background: rgba(248, 113, 113, 0.16);
-  border: 1px solid rgba(244, 63, 94, 0.25);
-  color: #fee2e2;
-  border-radius: 999px;
-  padding: 4px 10px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  transition: 0.2s ease;
-}
-
-.btn-delete-message span.delete-icon {
-  font-size: 14px;
-}
-
-.btn-delete-message:hover {
-  background-color: #dc2626;
-  color: #fff;
+  line-height: 1.5;
 }
 
 .workout-card {
-  margin-top: 8px;
-  background: #020617;
-  border: 1px solid #2563eb;
-  border-radius: 10px;
-  padding: 8px;
-  font-size: 12px;
-}
-
-@keyframes pop {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  margin-top: 10px;
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 12px;
 }

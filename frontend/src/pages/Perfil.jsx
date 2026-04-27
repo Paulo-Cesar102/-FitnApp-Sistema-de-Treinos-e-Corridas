@@ -87,7 +87,7 @@ export default function Perfil() {
         xp: totalXp,
         currentXP,
         nextLevelXP: 100,
-        totalWorkouts: userFromStorage.totalCompleted || 0,
+        totalWorkouts: user.totalWorkoutsDone || 0,
         streak: user.streak,
         maxStreak: user.maxStreak || 0,
         weightGoal: user.weightGoal || 0,

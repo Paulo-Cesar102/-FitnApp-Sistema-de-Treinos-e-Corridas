@@ -175,7 +175,12 @@ export class GymAuthService {
     try {
       const user = await prisma.user.findUnique({
         where: { email: data.email },
-        include: { gym: true },
+        include: { 
+          gym: true,
+          _count: {
+            select: { completedWorkouts: true }
+          }
+        },
       });
 
       if (!user) {
@@ -211,6 +216,15 @@ export class GymAuthService {
           name: user.name,
           email: user.email,
           role: user.role,
+          level: user.level,
+          xp: user.xp,
+          streak: user.streak,
+          onboardingCompleted: user.onboardingCompleted,
+          totalWorkoutsDone: user._count.completedWorkouts,
+          weightGoal: user.weightGoal,
+          height: user.height,
+          goalType: user.goalType,
+          experienceLevel: user.experienceLevel,
           gymId: user.gymId,
           gym: user.gym
             ? {

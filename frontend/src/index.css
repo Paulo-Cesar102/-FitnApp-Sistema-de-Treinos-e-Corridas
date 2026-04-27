@@ -15,6 +15,8 @@
   --primary-color: #ff4500;
   --primary-glow: rgba(255, 69, 0, 0.3);
   --glass-bg: rgba(30, 30, 30, 0.5);
+  --shadow-main: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 [data-theme='light'] {
@@ -28,6 +30,17 @@
   --primary-color: #ff4500;
   --primary-glow: rgba(255, 69, 0, 0.15);
   --glass-bg: rgba(255, 255, 255, 0.7);
+  --shadow-main: 0 10px 30px rgba(0, 0, 0, 0.08);
+  --shadow-sm: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+@keyframes neonPulse {
+  from {
+    text-shadow: 0 0 10px rgba(255, 69, 0, 0.8), 0 0 20px rgba(255, 69, 0, 0.5);
+  }
+  to {
+    text-shadow: 0 0 15px rgba(255, 69, 0, 1), 0 0 30px rgba(255, 69, 0, 0.7), 0 0 45px rgba(255, 69, 0, 0.4);
+  }
 }
 
 * {

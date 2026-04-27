@@ -1,79 +1,130 @@
 .custom-alert-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 99999;
-  animation: alertFadeIn 0.2s ease;
+  z-index: 100000;
+  padding: 24px;
+  animation: alertOverlayFade 0.25s ease-out;
 }
 
 .custom-alert-box {
-  background: #1a1a1a;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  padding: 30px 24px;
-  width: 90%;
-  max-width: 340px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  padding: 32px 24px;
+  width: 100%;
+  max-width: 380px;
   text-align: center;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
-  animation: alertScaleUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  animation: alertBoxPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden;
 }
 
-.custom-alert-icon {
-  margin-bottom: 16px;
+/* Faixa de cor sutil no topo para indicar o tipo */
+.custom-alert-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: var(--primary-color);
+}
+
+.custom-alert-box.success::before { background: #00c853; }
+.custom-alert-box.error::before { background: #ff2d55; }
+.custom-alert-box.warning::before { background: #ffaa00; }
+
+.custom-alert-icon-container {
   display: flex;
   justify-content: center;
+  margin-bottom: 20px;
 }
 
 .custom-alert-title {
-  font-size: 1.3rem;
+  font-family: var(--font-secondary);
+  font-size: 1.5rem;
   font-weight: 800;
-  color: #fff;
-  margin-bottom: 8px;
+  color: var(--text-main);
+  margin-bottom: 10px;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
 }
 
 .custom-alert-message {
+  font-family: var(--font-primary);
   font-size: 0.95rem;
-  color: #aaa;
-  margin-bottom: 24px;
+  color: var(--text-secondary);
+  margin-bottom: 28px;
   line-height: 1.5;
 }
 
 .custom-alert-actions {
   display: flex;
-  gap: 12px;
-  justify-content: center;
+  gap: 14px;
 }
 
 .custom-alert-btn {
   flex: 1;
-  padding: 12px;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 0.95rem;
+  padding: 16px 20px;
+  border-radius: 16px;
+  font-weight: 800;
+  font-size: 0.9rem;
   text-transform: uppercase;
   cursor: pointer;
   border: none;
-  transition: 0.2s;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: var(--font-primary);
+  letter-spacing: 0.05em;
 }
 
 .custom-alert-btn.confirm {
-  background: #ff4500;
-  color: #fff;
-  box-shadow: 0 4px 15px rgba(255, 69, 0, 0.3);
+  background: var(--primary-color);
+  color: #ffffff;
+  box-shadow: 0 8px 20px -6px var(--primary-glow);
 }
-.custom-alert-btn.confirm:active { transform: scale(0.96); }
+
+.custom-alert-btn.confirm:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.1);
+  box-shadow: 0 12px 24px -6px var(--primary-glow);
+}
 
 .custom-alert-btn.cancel {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #ccc;
+  background: var(--bg-card-alt);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
 }
-.custom-alert-btn.cancel:active { background: rgba(255, 255, 255, 0.1); transform: scale(0.96); }
 
-@keyframes alertFadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes alertScaleUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.custom-alert-btn.cancel:hover {
+  background: rgba(128, 128, 128, 0.15);
+  color: var(--text-main);
+  border-color: var(--text-muted);
+}
+
+.custom-alert-btn:active {
+  transform: scale(0.95);
+}
+
+@keyframes alertOverlayFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes alertBoxPop {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Cores específicas de título baseadas no tipo */
+.custom-alert-title.success { color: #00c853; }
+.custom-alert-title.error { color: #ff2d55; }
+.custom-alert-title.warning { color: #ffaa00; }
+.custom-alert-title.info { color: var(--primary-color); }

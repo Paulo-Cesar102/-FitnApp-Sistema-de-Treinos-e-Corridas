@@ -20,13 +20,28 @@ export class UserRepository implements IUserRepository {
   }
 
   async findById(id: string): Promise<IUser | null> {
-    return prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id },
       include: {
         ownedGym: true,
-        gym: true
+        gym: true,
+        _count: {
+          select: {
+            completedWorkouts: true,
+            completedWorkoutExercises: true
+          }
+        }
       }
-    }) as unknown as IUser | null;
+    });
+
+    if (!user) return null;
+
+    return {
+      ...user,
+      totalWorkoutsDone: user._count.completedWorkouts,
+      totalExercisesDone: user._count.completedWorkoutExercises,
+      _count: undefined
+    } as unknown as IUser;
   }
 
   async findByEmail(email: string): Promise<IUser | null> {
@@ -87,6 +102,10 @@ export class UserRepository implements IUserRepository {
         password: data.password,
         sex: data.sex as any,
         weightGoal: data.weightGoal,
+        height: (data as any).height,
+        goalType: (data as any).goalType,
+        experienceLevel: (data as any).experienceLevel,
+        onboardingCompleted: (data as any).onboardingCompleted,
         level: data.level,
         xp: data.xp,
         streak: data.streak,

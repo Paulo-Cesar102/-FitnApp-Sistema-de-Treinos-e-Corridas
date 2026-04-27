@@ -52,6 +52,12 @@ export class AuthService {
         level: user.level,
         xp: user.xp,
         streak: user.streak,
+        onboardingCompleted: user.onboardingCompleted,
+        totalWorkoutsDone: (user as any).totalWorkoutsDone || 0,
+        height: user.height,
+        weightGoal: user.weightGoal,
+        goalType: user.goalType,
+        experienceLevel: user.experienceLevel,
         gymId,
         gymName,
         personalSubscriptions: personalSubscriptions.map(s => s.personalId)
