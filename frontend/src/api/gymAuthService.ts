@@ -33,6 +33,13 @@ export const gymAuthService = {
     return response.data;
   },
 
+  listMembers: async (gymId: string, search?: string) => {
+    const response = await api.get(`/auth-gym/owner/${gymId}/members`, {
+      params: { search }
+    });
+    return response.data;
+  },
+
   deletePersonal: async (gymId: string, personalId: string) => {
     const response = await api.delete(`/auth-gym/owner/${gymId}/personals/${personalId}`);
     return response.data;

@@ -54,6 +54,8 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
   const [personals, setPersonals] = useState<Personal[]>([]);
   const [stats, setStats] = useState<GymStats | null>(null);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [members, setMembers] = useState<any[]>([]);
+  const [memberSearch, setMemberSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [showCreatePersonal, setShowCreatePersonal] = useState(false);
   const [showCreateAnnouncement, setShowCreateAnnouncement] = useState(false);
@@ -79,6 +81,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
     loadStats();
     loadPersonals();
     if (activeTab === "announcements") loadAnnouncements();
+    if (activeTab === "members") loadMembers();
 
     if (socket && gymId) {
       socket.emit("join_gym_room", gymId);
@@ -131,6 +134,20 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
     } catch (err) {
       setError("Erro ao carregar anúncios");
     }
+  };
+
+  const loadMembers = async (search?: string) => {
+    try {
+      const data = await gymAuthService.listMembers(gymId, search);
+      setMembers(data.members || []);
+    } catch (err) {
+      setError("Erro ao carregar membros");
+    }
+  };
+
+  const handleMemberSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    loadMembers(memberSearch);
   };
 
   const handleCreatePersonal = async (e: React.FormEvent) => {
@@ -562,11 +579,60 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
         )}
 
         {activeTab === "members" && (
-            <div className="coming-soon-container glass fade-in">
-                <div className="rocket">🚀</div>
-                <h2>Em breve</h2>
-                <p>A gestão de membros está sendo preparada.</p>
+          <div className="fade-in">
+            <div className="content-header">
+              <h1>Gestão de Membros</h1>
+              <p>Visualize e busque por alunos ativos</p>
             </div>
+
+            <div className="search-bar-container glass">
+              <form onSubmit={handleMemberSearch} className="search-form">
+                <input
+                  type="text"
+                  placeholder="Buscar por nome ou e-mail..."
+                  value={memberSearch}
+                  onChange={(e) => setMemberSearch(e.target.value)}
+                  className="search-input"
+                />
+                <button type="submit" className="search-btn">🔍 Buscar</button>
+              </form>
+            </div>
+
+            <div className="members-list glass">
+              {members.length === 0 ? (
+                <div className="empty-panel-msg">Nenhum membro encontrado.</div>
+              ) : (
+                <table className="members-table">
+                  <thead>
+                    <tr>
+                      <th>Atleta</th>
+                      <th>E-mail</th>
+                      <th>Nível / XP</th>
+                      <th>Streak</th>
+                      <th>Último Treino</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {members.map((member) => (
+                      <tr key={member.id}>
+                        <td className="member-name-cell">
+                          <div className="mini-avatar">{member.name.charAt(0)}</div>
+                          {member.name}
+                        </td>
+                        <td>{member.email}</td>
+                        <td>
+                          <span className="level-tag">Lvl {member.level}</span>
+                          <span className="xp-text">{member.xp} XP</span>
+                        </td>
+                        <td>🔥 {member.streak} dias</td>
+                        <td>{member.lastActivityDate ? new Date(member.lastActivityDate).toLocaleDateString() : "---"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
         )}
       </main>
     </div>

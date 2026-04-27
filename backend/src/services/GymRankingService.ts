@@ -7,8 +7,8 @@ export class GymRankingService {
     this.gymRankingRepository = new GymRankingRepository();
   }
 
-  async getGymRanking(gymId: string) {
-    return this.gymRankingRepository.findByGym(gymId);
+  async getGymRanking(gymId: string, limit: number = 50, offset: number = 0) {
+    return this.gymRankingRepository.findByGym(gymId, limit, offset);
   }
 
   async getTop10Ranking(gymId: string) {

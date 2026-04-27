@@ -7,13 +7,15 @@ export default function GymRanking() {
   const [userRank, setUserRank] = useState(null);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [offset, setOffset] = useState(0);
+  const limit = 50;
 
   const userId = localStorage.getItem("userId");
   const gymId = localStorage.getItem("gymId");
 
   useEffect(() => {
     if (gymId && gymId !== "null" && gymId !== "undefined") {
-      loadRanking(gymId);
+      loadRanking(gymId, offset);
     } else {
       setLoading(false);
     }
@@ -23,7 +25,7 @@ export default function GymRanking() {
 
       const handleRankingUpdate = (data) => {
         if (data.gymId === gymId) {
-          loadRanking(gymId);
+          loadRanking(gymId, offset);
         }
       };
 
@@ -34,17 +36,19 @@ export default function GymRanking() {
         socket.emit("leave_gym_room", gymId);
       };
     }
-  }, [gymId]);
+  }, [gymId, offset]);
 
-  const loadRanking = async (gId) => {
+  const loadRanking = async (gId, currentOffset) => {
     setLoading(true);
     try {
-      const rankData = await gymService.getGymRanking(gId);
+      const rankData = await gymService.getGymRanking(gId, limit, currentOffset);
       setRanking(rankData);
 
       if (userId) {
         const userRankData = await gymService.getUserRank(userId, gId);
-        setUserRank(userRankData);
+        // Buscar posição real se não estiver no rankData
+        const positionData = await gymService.getUserRankPosition(userId, gId);
+        setUserRank({ ...userRankData, position: positionData.position });
       }
 
       const statsData = await gymService.getRankingStats(gId);
@@ -53,6 +57,18 @@ export default function GymRanking() {
       console.error("Erro ao carregar ranking:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (stats && offset + limit < stats.totalMembers) {
+      setOffset(offset + limit);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (offset - limit >= 0) {
+      setOffset(offset - limit);
     }
   };
 
@@ -113,29 +129,50 @@ export default function GymRanking() {
       )}
 
       <div className="ranking-panel glass">
-        <div className="panel-header">
-          <h3>🥇 Top Atletas</h3>
+        <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3>🥇 Atletas ({offset + 1} - {Math.min(offset + limit, stats?.totalMembers || 0)})</h3>
+          <div className="pagination-controls" style={{ display: 'flex', gap: '10px' }}>
+            <button 
+              className="btn-small glass" 
+              onClick={handlePrevPage} 
+              disabled={offset === 0}
+              style={{ opacity: offset === 0 ? 0.5 : 1, cursor: offset === 0 ? 'not-allowed' : 'pointer' }}
+            >
+              ⬅️ Anterior
+            </button>
+            <button 
+              className="btn-small glass" 
+              onClick={handleNextPage} 
+              disabled={!stats || offset + limit >= stats.totalMembers}
+              style={{ opacity: !stats || offset + limit >= stats.totalMembers ? 0.5 : 1, cursor: !stats || offset + limit >= stats.totalMembers ? 'not-allowed' : 'pointer' }}
+            >
+              Próximo ➡️
+            </button>
+          </div>
         </div>
         <div className="ranking-table">
-          {ranking.slice(0, 10).map((member, index) => (
-            <div key={member.id} className={`ranking-row ${member.userId === userId ? "is-current-user" : ""}`} style={{ backgroundColor: member.userId === userId ? "rgba(255, 69, 0, 0.1)" : "" }}>
-              <div className="user-pos" style={{ width: "50px", fontSize: index < 3 ? "1.5rem" : "1.2rem", color: index === 0 ? "#ffd700" : index === 1 ? "#c0c0c0" : index === 2 ? "#cd7f32" : "var(--accent-neon)" }}>
-                {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
+          {ranking.map((member, index) => {
+            const actualPosition = offset + index + 1;
+            return (
+              <div key={member.id} className={`ranking-row ${member.userId === userId ? "is-current-user" : ""}`} style={{ backgroundColor: member.userId === userId ? "rgba(255, 69, 0, 0.1)" : "" }}>
+                <div className="user-pos" style={{ width: "50px", fontSize: actualPosition <= 3 ? "1.5rem" : "1.2rem", color: actualPosition === 1 ? "#ffd700" : actualPosition === 2 ? "#c0c0c0" : actualPosition === 3 ? "#cd7f32" : "var(--accent-neon)" }}>
+                  {actualPosition === 1 ? "🥇" : actualPosition === 2 ? "🥈" : actualPosition === 3 ? "🥉" : `#${actualPosition}`}
+                </div>
+                <div className="user-avatar" style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", marginRight: "15px", fontWeight: "bold" }}>
+                  {member.user.name.charAt(0)}
+                </div>
+                <div className="user-name" style={{ flexGrow: 1 }}>
+                  <div style={{ fontWeight: "600", color: "var(--text-main)" }}>{member.user.name} {member.userId === userId ? "(Você)" : ""}</div>
+                  <div style={{ fontSize: "0.8rem", color: "var(--text-dim)" }}>Nível {member.user.level}</div>
+                </div>
+                <div className="user-score" style={{ textAlign: "right" }}>
+                  <div style={{ color: "#ffd700", fontWeight: "700", fontSize: "1rem" }}>{member.totalXpGained} XP</div>
+                  <div style={{ color: "#4ecdc4", fontSize: "0.8rem", fontWeight: "600" }}>{member.checkInCount} check-ins</div>
+                </div>
               </div>
-              <div className="user-avatar" style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", marginRight: "15px", fontWeight: "bold" }}>
-                {member.user.name.charAt(0)}
-              </div>
-              <div className="user-name" style={{ flexGrow: 1 }}>
-                <div style={{ fontWeight: "600", color: "var(--text-main)" }}>{member.user.name} {member.userId === userId ? "(Você)" : ""}</div>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-dim)" }}>Nível {member.user.level}</div>
-              </div>
-              <div className="user-score" style={{ textAlign: "right" }}>
-                <div style={{ color: "#ffd700", fontWeight: "700", fontSize: "1rem" }}>{member.totalXpGained} XP</div>
-                <div style={{ color: "#4ecdc4", fontSize: "0.8rem", fontWeight: "600" }}>{member.checkInCount} check-ins</div>
-              </div>
-            </div>
-          ))}
-          {ranking.length === 0 && <div className="empty-panel-msg">Nenhum dado de ranking disponível.</div>}
+            );
+          })}
+          {ranking.length === 0 && <div className="empty-panel-msg">Nenhum dado de ranking disponível nesta página.</div>}
         </div>
       </div>
     </div>

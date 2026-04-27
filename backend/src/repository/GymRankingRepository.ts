@@ -58,27 +58,27 @@ export class GymRankingRepository {
     });
   }
 
-  async findByGym(gymId: string) {
+  async findByGym(gymId: string, limit: number = 50, offset: number = 0) {
     return prisma.gymRanking.findMany({
       where: { gymId },
-      orderBy: { position: "asc" },
+      orderBy: { totalXpGained: "desc" },
+      take: limit,
+      skip: offset,
       include: {
-        user: true,
-        gym: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            level: true,
+            xp: true,
+          }
+        },
       },
     });
   }
 
   async findTop10ByGym(gymId: string) {
-    return prisma.gymRanking.findMany({
-      where: { gymId },
-      orderBy: { position: "asc" },
-      take: 10,
-      include: {
-        user: true,
-        gym: true,
-      },
-    });
+    return this.findByGym(gymId, 10, 0);
   }
 
   async update(id: string, data: UpdateGymRankingInput) {
@@ -87,7 +87,6 @@ export class GymRankingRepository {
       data,
       include: {
         user: true,
-        gym: true,
       },
     });
   }
@@ -100,17 +99,38 @@ export class GymRankingRepository {
 
   async getUserRank(userId: string, gymId: string) {
     const ranking = await this.findByUserAndGym(userId, gymId);
-    return ranking?.position || 0;
+    if (!ranking) return 0;
+
+    // Conta quantos usuários têm mais XP que o usuário atual para determinar a posição
+    const count = await prisma.gymRanking.count({
+      where: {
+        gymId,
+        totalXpGained: {
+          gt: ranking.totalXpGained
+        }
+      }
+    });
+
+    return count + 1;
   }
 
   async getGymRankingStats(gymId: string) {
-    const rankings = await this.findByGym(gymId);
+    const totalMembers = await prisma.gymRanking.count({ where: { gymId } });
+    const topRanked = await this.findTop10ByGym(gymId);
+    
+    const aggregates = await prisma.gymRanking.aggregate({
+      where: { gymId },
+      _sum: {
+        totalXpGained: true,
+        checkInCount: true
+      }
+    });
 
     return {
-      totalMembers: rankings.length,
-      topRanked: rankings.slice(0, 10),
-      totalXpEarned: rankings.reduce((sum, r) => sum + r.totalXpGained, 0),
-      totalCheckIns: rankings.reduce((sum, r) => sum + r.checkInCount, 0),
+      totalMembers,
+      topRanked,
+      totalXpEarned: aggregates._sum.totalXpGained || 0,
+      totalCheckIns: aggregates._sum.checkInCount || 0,
     };
   }
 }

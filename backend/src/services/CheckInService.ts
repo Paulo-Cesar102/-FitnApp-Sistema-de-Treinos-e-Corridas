@@ -91,25 +91,6 @@ export class CheckInService {
         lastCheckedIn: new Date(),
       });
     }
-
-    // Atualizar posições do ranking
-    await this.refreshGymRankingPositions(gymId);
-  }
-
-  private async refreshGymRankingPositions(gymId: string) {
-    const rankings = await this.gymRankingRepository.findByGym(gymId);
-
-    // Ordenar por totalXpGained em ordem decrescente
-    const sortedRankings = rankings.sort(
-      (a, b) => b.totalXpGained - a.totalXpGained
-    );
-
-    // Atualizar posições
-    for (let i = 0; i < sortedRankings.length; i++) {
-      await this.gymRankingRepository.update(sortedRankings[i].id, {
-        position: i + 1,
-      });
-    }
   }
 
   async getUserCheckIns(userId: string, gymId: string) {

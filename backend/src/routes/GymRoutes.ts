@@ -5,6 +5,7 @@ import { CheckInController } from "../controller/CheckInController";
 import { GymAnnouncementController } from "../controller/GymAnnouncementController";
 import { GymRankingController } from "../controller/GymRankingController";
 import { authMiddleware } from "../middlewares/auth";
+import { roleMiddleware } from "../middlewares/role";
 
 const gymRoutes = Router();
 const gymControllerRoutes = new GymController();
@@ -12,6 +13,8 @@ const gymPersonalController = new GymPersonalController();
 const checkInController = new CheckInController();
 const announcementController = new GymAnnouncementController();
 const rankingController = new GymRankingController();
+
+const adminOrOwner = roleMiddleware(["ADMIN", "GYM_OWNER"]);
 
 // ========================
 // GYM ROUTES
@@ -26,6 +29,7 @@ gymRoutes.get("/search", authMiddleware, gymControllerRoutes.search.bind(gymCont
 gymRoutes.post(
   "/personal/create",
   authMiddleware,
+  adminOrOwner,
   gymPersonalController.createPersonal.bind(gymPersonalController)
 );
 gymRoutes.get(
@@ -46,11 +50,13 @@ gymRoutes.get(
 gymRoutes.put(
   "/personal/:personalId",
   authMiddleware,
+  adminOrOwner,
   gymPersonalController.updatePersonal.bind(gymPersonalController)
 );
 gymRoutes.delete(
   "/personal/:personalId",
   authMiddleware,
+  adminOrOwner,
   gymPersonalController.deletePersonal.bind(gymPersonalController)
 );
 
@@ -58,11 +64,13 @@ gymRoutes.delete(
 gymRoutes.post(
   "/personal/student/assign",
   authMiddleware,
+  roleMiddleware(["ADMIN", "GYM_OWNER", "PERSONAL"]),
   gymPersonalController.assignStudent.bind(gymPersonalController)
 );
 gymRoutes.delete(
   "/personal/:personalId/student/:studentId",
   authMiddleware,
+  roleMiddleware(["ADMIN", "GYM_OWNER", "PERSONAL"]),
   gymPersonalController.removeStudent.bind(gymPersonalController)
 );
 gymRoutes.get(
@@ -123,6 +131,7 @@ gymRoutes.get(
 gymRoutes.post(
   "/announcement",
   authMiddleware,
+  adminOrOwner,
   announcementController.createAnnouncement.bind(announcementController)
 );
 gymRoutes.get(
@@ -138,11 +147,13 @@ gymRoutes.get(
 gymRoutes.put(
   "/announcement/:announcementId",
   authMiddleware,
+  adminOrOwner,
   announcementController.updateAnnouncement.bind(announcementController)
 );
 gymRoutes.delete(
   "/announcement/:announcementId",
   authMiddleware,
+  adminOrOwner,
   announcementController.deleteAnnouncement.bind(announcementController)
 );
 gymRoutes.get(

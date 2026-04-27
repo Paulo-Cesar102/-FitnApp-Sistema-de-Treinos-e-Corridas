@@ -11,8 +11,10 @@ export class GymRankingController {
   async getGymRanking(req: Request, res: Response) {
     try {
       const { gymId } = req.params as { gymId: string };
+      const limit = parseInt(req.query.limit as string) || 50;
+      const offset = parseInt(req.query.offset as string) || 0;
 
-      const ranking = await this.gymRankingService.getGymRanking(gymId);
+      const ranking = await this.gymRankingService.getGymRanking(gymId, limit, offset);
 
       return res.json(ranking);
     } catch (error: any) {

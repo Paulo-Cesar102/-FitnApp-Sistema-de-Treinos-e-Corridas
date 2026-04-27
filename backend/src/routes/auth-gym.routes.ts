@@ -68,6 +68,16 @@ authRoutes.get(
 );
 
 /**
+ * Lista membros (alunos) da academia
+ * GET /api/owner/:gymId/members
+ */
+authRoutes.get(
+  "/owner/:gymId/members",
+  authMiddleware,
+  (req, res) => gymOwnerController.listMembers(req, res)
+);
+
+/**
  * Deleta um personal
  * DELETE /api/owner/:gymId/personals/:personalId
  */

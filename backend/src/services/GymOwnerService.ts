@@ -239,6 +239,47 @@ export class GymOwnerService {
   }
 
   /**
+   * Lista todos os membros da academia (alunos)
+   */
+  async listGymMembers(gymId: string, ownerIdValidation: string, search?: string) {
+    try {
+      const gym = await prisma.gym.findUnique({
+        where: { id: gymId },
+      });
+
+      if (!gym || gym.ownerId !== ownerIdValidation) {
+        throw new Error("Sem permissão para ver membros desta academia");
+      }
+
+      const members = await prisma.user.findMany({
+        where: {
+          gymId,
+          role: Role.USER, // Apenas alunos, não personals/admin
+          OR: search ? [
+            { name: { contains: search, mode: 'insensitive' } },
+            { email: { contains: search, mode: 'insensitive' } }
+          ] : undefined
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          level: true,
+          xp: true,
+          streak: true,
+          lastActivityDate: true,
+          createdAt: true,
+        },
+        orderBy: { name: 'asc' }
+      });
+
+      return members;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
    * Obtém estatísticas da academia
    */
   async getGymStats(gymId: string, ownerIdValidation: string) {

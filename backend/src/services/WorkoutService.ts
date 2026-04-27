@@ -22,7 +22,25 @@ export class WorkoutService {
       throw new Error("O treino precisa ter pelo menos um exercício");
     }
 
-    return this.workoutRepository.create(data);
+    const workout = await this.workoutRepository.create(data);
+
+    // 🔥 Notificar o aluno se o treino foi criado por um personal
+    if (data.userId) {
+      await this.notificationService.create(
+        data.userId,
+        "📋 Novo Treino Prescrito!",
+        `Um novo plano de treino "${data.name}" foi adicionado ao seu perfil por um instrutor.`,
+        "WORKOUT_SHARED"
+      );
+
+      // Emitir via socket se possível
+      io.to(data.userId).emit("notification:new", {
+        title: "📋 Novo Treino!",
+        message: `Seu instrutor prescreveu o treino: ${data.name}`
+      });
+    }
+
+    return workout;
   }
 
   async update(id: string, data: any): Promise<IWorkout> {

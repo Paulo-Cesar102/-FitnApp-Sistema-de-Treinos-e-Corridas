@@ -116,8 +116,10 @@ export const gymService = {
   },
 
   // Gym Rankings
-  getGymRanking: async (gymId: string) => {
-    const response = await api.get(`/gym/ranking/${gymId}`);
+  getGymRanking: async (gymId: string, limit = 50, offset = 0) => {
+    const response = await api.get(`/gym/ranking/${gymId}`, {
+      params: { limit, offset }
+    });
     return response.data;
   },
 

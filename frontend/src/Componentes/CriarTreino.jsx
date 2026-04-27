@@ -22,8 +22,13 @@ export default function CriarTreino({ onCreated, students = [] }) {
   const [showNameModal, setShowNameModal] = useState(false);
   const [alertConfig, setAlertConfig] = useState({ isOpen: false });
   const [targetUserId, setTargetUserId] = useState(localStorage.getItem("userId"));
+  const [studentSearch, setStudentSearch] = useState("");
 
   const isPersonal = localStorage.getItem("role") === "PERSONAL";
+
+  const filteredStudents = students.filter(s => 
+    s.name.toLowerCase().includes(studentSearch.toLowerCase())
+  );
 
   const showAlert = (title, message, type, onConfirm) => {
     setAlertConfig({
@@ -122,12 +127,21 @@ export default function CriarTreino({ onCreated, students = [] }) {
         {isPersonal && students.length > 0 && (
           <div className="student-selector-premium">
             <span className="label-tiny">CRIAR PARA:</span>
-            <select value={targetUserId} onChange={(e) => setTargetUserId(e.target.value)}>
-              <option value={localStorage.getItem("userId")}>Meu Próprio Perfil</option>
-              {students.map(s => (
-                <option key={s.id} value={s.id}>{s.name} (Aluno)</option>
-              ))}
-            </select>
+            <div className="selector-with-search">
+              <input 
+                type="text" 
+                placeholder="🔍 Buscar aluno..." 
+                value={studentSearch}
+                onChange={(e) => setStudentSearch(e.target.value)}
+                className="student-search-input"
+              />
+              <select value={targetUserId} onChange={(e) => setTargetUserId(e.target.value)}>
+                <option value={localStorage.getItem("userId")}>Meu Próprio Perfil</option>
+                {filteredStudents.map(s => (
+                  <option key={s.id} value={s.id}>{s.name} (Aluno)</option>
+                ))}
+              </select>
+            </div>
           </div>
         )}
       </header>

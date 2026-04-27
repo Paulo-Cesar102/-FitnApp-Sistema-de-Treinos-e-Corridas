@@ -90,6 +90,34 @@ export class GymOwnerController {
   }
 
   /**
+   * Lista todos os membros (alunos) da academia
+   * GET /owner/:gymId/members
+   */
+  async listMembers(req: Request, res: Response) {
+    try {
+      const userId = (req as any).userId;
+      const { gymId } = req.params as { gymId: string };
+      const { search } = req.query;
+
+      const members = await this.gymOwnerService.listGymMembers(
+        gymId,
+        userId,
+        search as string
+      );
+
+      return res.json({
+        total: members.length,
+        members,
+      });
+    } catch (error: any) {
+      console.error("Erro no listMembers:", error);
+      return res.status(400).json({
+        error: error.message || "Erro ao listar membros",
+      });
+    }
+  }
+
+  /**
    * Deleta um personal
    * DELETE /owner/:gymId/personals/:personalId
    */
