@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import "./ExecutarTreino.css";
 import CustomAlert from "./CustomAlert";
 import { completeWorkout } from "../api/workoutService";
+import { getExerciseSuggestion } from "../api/exerciseService";
 import { socket } from "../service/socket";
 
 // Ícones Vetorizados
@@ -12,6 +13,7 @@ const PlayIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="cur
 const PauseIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>;
 const CheckIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
 const SkipIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>;
+const RobotIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>;
 
 export default function ExecutarTreino({ workout }) {
   const navigate = useNavigate();
@@ -34,6 +36,10 @@ export default function ExecutarTreino({ workout }) {
   const [activeTime, setActiveTime] = useState(0);
   const [restTime, setRestTime] = useState(0);
   const [alertConfig, setAlertConfig] = useState({ isOpen: false });
+  
+  const [coachSuggestion, setCoachSuggestion] = useState(null);
+  const [actualWeight, setActualWeight] = useState("");
+  const [actualRpe, setActualRpe] = useState(7);
 
   const showAlert = (title, message, type, onConfirm) => {
     setAlertConfig({
@@ -44,6 +50,25 @@ export default function ExecutarTreino({ workout }) {
 
   const currentItem = treinoAtual?.exercises?.[currentExerciseIdx];
   const exerciseData = currentItem?.exercise || currentItem;
+
+  // Carregar sugestão do Coach ao carregar exercício
+  useEffect(() => {
+    if (exerciseData?.id) {
+      loadSuggestion(exerciseData.id);
+    }
+  }, [currentExerciseIdx]);
+
+  const loadSuggestion = async (exId) => {
+    try {
+      const data = await getExerciseSuggestion(exId);
+      setCoachSuggestion(data);
+      if (data.recommendedWeight) {
+        setActualWeight(data.recommendedWeight.toString());
+      }
+    } catch (err) {
+      console.error("Erro ao carregar sugestão:", err);
+    }
+  };
 
   const workoutName = typeof treinoAtual?.name === "object" ? treinoAtual?.name?.name : (treinoAtual?.name || treinoAtual?.title || "Treino sem Nome");
   const exerciseName = typeof exerciseData?.name === "object" ? exerciseData?.name?.name : (exerciseData?.name || "Exercício");
@@ -241,6 +266,54 @@ export default function ExecutarTreino({ workout }) {
               <span className="timer-status">{isResting ? <><TimerIcon /> Descanso</> : isSetRunning ? <><ActivityIcon /> Treinando</> : activeTime > 0 ? <><PauseIcon /> Pausado</> : <><PlayIcon /> Iniciar</>}</span>
             </div>
           </div>
+        </section>
+
+        {coachSuggestion && (
+          <section className="smart-coach-panel fade-in">
+            <div className="coach-card glass neon-border-blue">
+              <div className="coach-header">
+                <RobotIcon />
+                <span>Coach IA Sugere:</span>
+              </div>
+              <div className="coach-body">
+                <p className="coach-tip">"{coachSuggestion.aiCoachTip || coachSuggestion.reason}"</p>
+                <div className="recommendation-badge">
+                  {coachSuggestion.recommendedWeight ? (
+                    <span>Meta: <strong>{coachSuggestion.recommendedWeight}kg</strong></span>
+                  ) : (
+                    <span>Meta: <strong>Adaptativa</strong></span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        <section className="exercise-input-zone glass">
+           <div className="input-row">
+             <div className="input-group">
+               <label>Peso (kg)</label>
+               <input 
+                type="number" 
+                value={actualWeight} 
+                onChange={(e) => setActualWeight(e.target.value)}
+                placeholder="0"
+               />
+             </div>
+             <div className="input-group">
+               <label>Esforço (1-10)</label>
+               <div className="rpe-selector">
+                 <input 
+                  type="range" 
+                  min="1" 
+                  max="10" 
+                  value={actualRpe} 
+                  onChange={(e) => setActualRpe(parseInt(e.target.value))}
+                 />
+                 <span className="rpe-value">{actualRpe}</span>
+               </div>
+             </div>
+           </div>
         </section>
 
         <section className="exercise-details">

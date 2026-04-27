@@ -42,7 +42,7 @@ async function main() {
   console.log("✅ Usuário Admin pronto.");
 
   // 3. Categorias (Requer @unique no campo 'name' no schema.prisma)
-  const categoriesData = ["Musculação", "Cardio", "Crossfit", "Yoga"];
+  const categoriesData = ["Musculação", "Cardio", "Crossfit", "Yoga", "Funcional", "Lutas", "Mobilidade", "Costas", "Pernas"];
   const categories: Record<string, any> = {};
 
   for (const name of categoriesData) {
@@ -56,7 +56,7 @@ async function main() {
   console.log("✅ Categorias sincronizadas.");
 
   // 4. Grupos Musculares
-  const gruposMusculares = ["Peito", "Costas", "Pernas", "Ombros", "Braços", "Core"];
+  const gruposMusculares = ["Peito", "Costas", "Pernas", "Ombros", "Braços", "Core", "Corpo Todo"];
   const mGroups: Record<string, any> = {};
 
   for (const nome of gruposMusculares) {
@@ -71,14 +71,41 @@ async function main() {
 
   // 5. Exercícios
   const exerciciosData = [
-    { id: "ex-supino-reto", name: "Supino Reto", mGroup: "Peito", img: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600" },
-    { id: "ex-supino-inc", name: "Supino Inclinado", mGroup: "Peito", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600" },
-    { id: "ex-puxada", name: "Puxada Pulley", mGroup: "Costas", img: "https://images.unsplash.com/photo-1603287611630-d6455054202e?w=600" },
-    { id: "ex-remada", name: "Remada Curvada", mGroup: "Costas", img: "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=600" },
-    { id: "ex-agachamento", name: "Agachamento Livre", mGroup: "Pernas", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2158?w=600" },
-    { id: "ex-legpress", name: "Leg Press 45º", mGroup: "Pernas", img: "https://images.unsplash.com/photo-1591076482161-42ce6da69f67?w=600" },
-    { id: "ex-rosca-direta", name: "Rosca Direta", mGroup: "Braços", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=600" },
-    { id: "ex-triceps-corda", name: "Tríceps Corda", mGroup: "Braços", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=600" },
+    // Peito
+    { id: "ex-supino-reto", name: "Supino Reto", mGroup: "Peito", img: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600", cat: "Musculação" },
+    { id: "ex-supino-inc", name: "Supino Inclinado", mGroup: "Peito", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600", cat: "Musculação" },
+    { id: "ex-crucifixo", name: "Crucifixo Máquina", mGroup: "Peito", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=600", cat: "Musculação" },
+    
+    // Costas
+    { id: "ex-puxada", name: "Puxada Pulley", mGroup: "Costas", img: "https://images.unsplash.com/photo-1603287611630-d6455054202e?w=600", cat: "Musculação" },
+    { id: "ex-remada", name: "Remada Curvada", mGroup: "Costas", img: "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=600", cat: "Musculação" },
+    { id: "ex-remada-unilat", name: "Remada Unilateral", mGroup: "Costas", img: "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=600", cat: "Musculação" },
+    { id: "ex-pull-down", name: "Pull Down", mGroup: "Costas", img: "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=600", cat: "Musculação" },
+    
+    // Pernas
+    { id: "ex-agachamento", name: "Agachamento Livre", mGroup: "Pernas", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2158?w=600", cat: "Musculação" },
+    { id: "ex-legpress", name: "Leg Press 45º", mGroup: "Pernas", img: "https://images.unsplash.com/photo-1591076482161-42ce6da69f67?w=600", cat: "Musculação" },
+    { id: "ex-extensora", name: "Cadeira Extensora", mGroup: "Pernas", img: "https://images.unsplash.com/photo-1591076482161-42ce6da69f67?w=600", cat: "Musculação" },
+    { id: "ex-flexora", name: "Mesa Flexora", mGroup: "Pernas", img: "https://images.unsplash.com/photo-1591076482161-42ce6da69f67?w=600", cat: "Musculação" },
+    { id: "ex-afundo", name: "Afundo com Halteres", mGroup: "Pernas", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2158?w=600", cat: "Musculação" },
+    
+    // Braços
+    { id: "ex-rosca-direta", name: "Rosca Direta", mGroup: "Braços", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=600", cat: "Musculação" },
+    { id: "ex-triceps-corda", name: "Tríceps Corda", mGroup: "Braços", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=600", cat: "Musculação" },
+    { id: "ex-rosca-martelo", name: "Rosca Martelo", mGroup: "Braços", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=600", cat: "Musculação" },
+    { id: "ex-triceps-frances", name: "Tríceps Francês", mGroup: "Braços", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=600", cat: "Musculação" },
+
+    // Ombros
+    { id: "ex-desenv-halteres", name: "Desenvolvimento Halteres", mGroup: "Ombros", img: "https://images.unsplash.com/photo-1532384748853-8f54a8f476e2?w=600", cat: "Musculação" },
+    { id: "ex-elev-lateral", name: "Elevação Lateral", mGroup: "Ombros", img: "https://images.unsplash.com/photo-1532384748853-8f54a8f476e2?w=600", cat: "Musculação" },
+
+    // Core
+    { id: "ex-abdominal-infra", name: "Abdominal Infra", mGroup: "Core", img: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600", cat: "Mobilidade" },
+    { id: "ex-plancha", name: "Prancha Abdominal", mGroup: "Core", img: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600", cat: "Funcional" },
+
+    // Cardio
+    { id: "ex-corrida", name: "Corrida Esteira", mGroup: "Pernas", img: "https://images.unsplash.com/photo-1538805060514-97d9cc17730c?w=600", cat: "Cardio" },
+    { id: "ex-bike", name: "Bike Ergométrica", mGroup: "Pernas", img: "https://images.unsplash.com/photo-1538805060514-97d9cc17730c?w=600", cat: "Cardio" },
   ];
 
   for (const ex of exerciciosData) {
@@ -88,6 +115,7 @@ async function main() {
         name: ex.name,
         image: ex.img,
         primaryMuscleId: mGroups[ex.mGroup].id,
+        categoryId: categories[ex.cat].id,
       },
       create: {
         id: ex.id,
@@ -96,7 +124,7 @@ async function main() {
         image: ex.img,
         level: Difficulty.INTERMEDIATE,
         duration: "10 min",
-        categoryId: categories["Musculação"].id,
+        categoryId: categories[ex.cat].id,
         primaryMuscleId: mGroups[ex.mGroup].id,
       },
     });

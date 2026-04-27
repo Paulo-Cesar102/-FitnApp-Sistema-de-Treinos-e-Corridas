@@ -5,6 +5,7 @@ export interface ICreateWorkoutDTO {
   exercises: {
     exerciseId: string;
     sets: number;
-    reps: number;
+    reps: number | string;
+    rest?: number | string;
   }[];
 }

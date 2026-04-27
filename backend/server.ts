@@ -20,6 +20,7 @@ import { router as chatRoutes } from "./src/routes/chat.routes";
 import { gymRoutes } from "./src/routes/GymRoutes";
 import { weightRoutes } from "./src/routes/weight.routes";
 import { notificationRoutes } from "./src/routes/notification.routes"; // 🔥 Adicionado
+import { smartCoachRoutes } from "./src/routes/smartcoach.routes";
 
 const app = express();
 
@@ -60,6 +61,7 @@ app.use("/chats", chatRoutes);
 app.use("/gym", gymRoutes);
 app.use("/weight", weightRoutes);
 app.use("/notifications", notificationRoutes); // 🔥 Adicionado
+app.use("/smart-coach", smartCoachRoutes);
 
 // Rota de Health Check
 app.get("/", (_req, res) => {

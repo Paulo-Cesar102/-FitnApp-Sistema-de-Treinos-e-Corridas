@@ -15,6 +15,7 @@ import Perfil from "./pages/Perfil";
 import Configuracoes from "./pages/Configuracoes";
 import Friends from "./pages/friends";
 import Academy from "./pages/academy";
+import SmartCoach from "./Componentes/SmartCoach";
 import CompleteProfile from "./Componentes/CompleteProfile";
 import CustomAlert from "./Componentes/CustomAlert"; // 🔥 Importação do Alerta
 import { getUser } from "./api/userService";
@@ -143,7 +144,7 @@ function Layout({ children }) {
   }, []);
 
   // Rotas onde o MenuBar inferior deve aparecer
-  const rotasComMenu = ["/home", "/exercicio", "/perfil", "/amigos", "/academy"];
+  const rotasComMenu = ["/home", "/exercicio", "/perfil", "/amigos", "/academy", "/smart-coach"];
   let mostrarMenu = rotasComMenu.includes(location.pathname);
   
   if (role === "GYM_OWNER" || role === "PERSONAL") {
@@ -210,6 +211,7 @@ function AppContent() {
         <Route path="/treinos" element={<Treinos />} />
         <Route path="/amigos" element={<Friends />} />
         <Route path="/academy" element={<Academy />} />
+        <Route path="/smart-coach" element={<SmartCoach />} />
         <Route path="/executar-treino" element={<ExecutarTreino />} />
         <Route path="*" element={<Navigate to="/home" />} />
       </Routes>

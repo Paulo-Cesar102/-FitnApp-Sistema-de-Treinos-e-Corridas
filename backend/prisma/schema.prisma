@@ -87,6 +87,10 @@ model User {
   isPublicProfile    Boolean   @default(true)
   notificationsEnabled Boolean @default(true)
 
+  // Controle de IA (Plano Gratuito)
+  aiUsageCount      Int       @default(0)
+  lastAiUsage       DateTime?
+
   // Notificações do sistema
   notifications     Notification[]
 

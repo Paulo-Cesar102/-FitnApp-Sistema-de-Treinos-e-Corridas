@@ -6,6 +6,12 @@ export const getExercises = async () => {
   return response.data;
 };
 
+// GET /exercises/:id/suggestion - Obtém sugestão de carga
+export const getExerciseSuggestion = async (id: string) => {
+  const response = await api.get(`/exercises/${id}/suggestion`);
+  return response.data;
+};
+
 // GET /workouts - Lista os treinos do usuário (Troféu)
 export const getWorkouts = async () => {
   const response = await api.get("/workouts");
