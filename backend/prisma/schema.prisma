@@ -67,7 +67,8 @@ model User {
   id                String    @id @default(uuid())
   name              String
   email             String    @unique
-  password          String
+  password          String?
+  googleId          String?   @unique
   sex               Sex       @default(M)
   level             Int       @default(1)
   xp                Int       @default(0)

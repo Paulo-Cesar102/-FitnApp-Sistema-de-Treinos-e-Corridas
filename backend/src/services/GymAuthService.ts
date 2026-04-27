@@ -2,18 +2,23 @@ import { prisma } from "../database/prisma";
 import { Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { OAuth2Client } from "google-auth-library";
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 interface CreateUserWithGymRequest {
   name: string;
   email: string;
-  password: string;
-  gymId: string; // ID ou nome da academia
+  password?: string;
+  googleId?: string;
+  gymId?: string; 
 }
 
 interface CreateGymOwnerRequest {
   name: string;
   email: string;
-  password: string;
+  password?: string;
+  googleId?: string;
   gymName: string;
   gymDescription?: string;
   gymAddress?: string;
@@ -27,6 +32,162 @@ interface LoginRequest {
 }
 
 export class GymAuthService {
+  /**
+   * Faz login com o Google
+   */
+  async googleLogin(idToken: string) {
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+
+      const payload = ticket.getPayload();
+      if (!payload || !payload.email) {
+        throw new Error("Token do Google inválido");
+      }
+
+      const { email, name, sub: googleId } = payload;
+
+      // Busca usuário pelo email ou googleId
+      let user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { email },
+            { googleId }
+          ]
+        },
+        include: { 
+          gym: true,
+          _count: {
+            select: { completedWorkouts: true }
+          }
+        },
+      });
+
+      // Se o usuário não existir, podemos criar um "fantasma" ou pedir pra ele se registrar
+      // Para facilitar, vamos permitir o login e ele depois completa o perfil se não tiver gymId
+      if (!user) {
+        user = await prisma.user.create({
+          data: {
+            email,
+            name: name || "Usuário Google",
+            googleId,
+            role: Role.USER,
+          },
+          include: { 
+            gym: true,
+            _count: {
+              select: { completedWorkouts: true }
+            }
+          },
+        }) as any;
+      } else if (!user.googleId) {
+        // Vincula a conta do Google a um usuário existente
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { googleId },
+          include: { 
+            gym: true,
+            _count: {
+              select: { completedWorkouts: true }
+            }
+          },
+        }) as any;
+      }
+
+      return this.generateAuthResponse(user);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Faz login de usuário e retorna token JWT
+   */
+  async login(data: LoginRequest) {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { email: data.email },
+        include: { 
+          gym: true,
+          _count: {
+            select: { completedWorkouts: true }
+          }
+        },
+      });
+
+      if (!user) {
+        throw new Error("Email ou senha incorretos");
+      }
+
+      // PROTEÇÃO: Se a conta for Google e não tiver senha
+      if (!user.password && user.googleId) {
+        throw new Error("Esta conta utiliza login pelo Google. Por favor, entre com sua conta Google.");
+      }
+
+      if (!user.password) {
+        throw new Error("Senha não configurada para este usuário.");
+      }
+
+      // Verifica senha
+      const isPasswordValid = await bcrypt.compare(
+        data.password,
+        user.password
+      );
+
+      if (!isPasswordValid) {
+        throw new Error("Email ou senha incorretos");
+      }
+
+      return this.generateAuthResponse(user);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Helper para gerar a resposta de autenticação (Token + UserData)
+   */
+  private generateAuthResponse(user: any) {
+    const token = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        gymId: user.gymId,
+      },
+      process.env.JWT_SECRET || "your-secret-key",
+      { expiresIn: "7d" }
+    );
+
+    return {
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        level: user.level,
+        xp: user.xp,
+        streak: user.streak,
+        onboardingCompleted: user.onboardingCompleted,
+        totalWorkoutsDone: user._count.completedWorkouts,
+        weightGoal: user.weightGoal,
+        height: user.height,
+        goalType: user.goalType,
+        experienceLevel: user.experienceLevel,
+        gymId: user.gymId,
+        gym: user.gym
+          ? {
+              id: user.gym.id,
+              name: user.gym.name,
+            }
+          : null,
+      },
+    };
+  }
+
   /**
    * Registra um novo usuário normal (USER) vinculado a uma academia existente
    * @param data Dados do usuário e ID/nome da academia
@@ -54,6 +215,10 @@ export class GymAuthService {
 
       if (existingUser) {
         throw new Error("Email já cadastrado");
+      }
+
+      if (!data.password) {
+        throw new Error("A senha é obrigatória para o registro comum.");
       }
 
       // Hash da senha
@@ -116,6 +281,10 @@ export class GymAuthService {
         throw new Error("Já existe uma academia com este nome");
       }
 
+      if (!data.password) {
+        throw new Error("A senha é obrigatória para o registro de proprietário.");
+      }
+
       // Hash da senha
       const hashedPassword = await bcrypt.hash(data.password, 10);
 
@@ -161,77 +330,6 @@ export class GymAuthService {
           id: gym.id,
           name: gym.name,
           inviteCode: gym.inviteCode,
-        },
-      };
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  /**
-   * Faz login de usuário e retorna token JWT
-   */
-  async login(data: LoginRequest) {
-    try {
-      const user = await prisma.user.findUnique({
-        where: { email: data.email },
-        include: { 
-          gym: true,
-          _count: {
-            select: { completedWorkouts: true }
-          }
-        },
-      });
-
-      if (!user) {
-        throw new Error("Email ou senha incorretos");
-      }
-
-      // Verifica senha
-      const isPasswordValid = await bcrypt.compare(
-        data.password,
-        user.password
-      );
-
-      if (!isPasswordValid) {
-        throw new Error("Email ou senha incorretos");
-      }
-
-      // Gera token JWT
-      const token = jwt.sign(
-        {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-          gymId: user.gymId,
-        },
-        process.env.JWT_SECRET || "your-secret-key",
-        { expiresIn: "7d" }
-      );
-
-      return {
-        token,
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          level: user.level,
-          xp: user.xp,
-          streak: user.streak,
-          onboardingCompleted: user.onboardingCompleted,
-          totalWorkoutsDone: user._count.completedWorkouts,
-          weightGoal: user.weightGoal,
-          height: user.height,
-          goalType: user.goalType,
-          experienceLevel: user.experienceLevel,
-          gymId: user.gymId,
-          gym: user.gym
-            ? {
-                id: user.gym.id,
-                name: user.gym.name,
-              }
-            : null,
         },
       };
     } catch (error) {

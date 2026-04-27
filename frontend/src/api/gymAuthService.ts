@@ -17,6 +17,11 @@ export const gymAuthService = {
     return response.data;
   },
 
+  googleLogin: async (idToken: string) => {
+    const response = await api.post("/auth-gym/google-login", { idToken });
+    return response.data;
+  },
+
   validateGym: async (gymId: string) => {
     const response = await api.get(`/auth-gym/gym/${gymId}`);
     return response.data;

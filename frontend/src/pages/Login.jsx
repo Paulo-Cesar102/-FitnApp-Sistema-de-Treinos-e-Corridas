@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
 import { gymAuthService } from "../api/gymAuthService";
 import "./Login.css"; 
 import CustomAlert from "../Componentes/CustomAlert";
@@ -15,6 +16,51 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [alertConfig, setAlertConfig] = useState({ isOpen: false });
+
+  const handleAuthSuccess = (response) => {
+    // 🔥 SALVA TOKEN
+    localStorage.setItem("token", response.token);
+
+    // 🔥 SALVA USUÁRIO E DADOS EXTRAS
+    const user = response.user;
+    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("role", user.role);
+
+    const gymId = user.gymId || user.gym?.id;
+    const gymName = user.gymName || user.gym?.name || "";
+
+    localStorage.setItem("gymId", gymId);
+    localStorage.setItem("gymName", gymName);
+    localStorage.setItem("userId", user.id);
+
+    showAlert(
+      "Acesso Liberado",
+      "Login realizado com sucesso!",
+      "success",
+      () => {
+        setAlertConfig({ isOpen: false });
+        if (user.role === "GYM_OWNER") {
+          navigate("/academy");
+        } else {
+          navigate("/home");
+        }
+      }
+    );
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setLoading(true);
+      const response = await gymAuthService.googleLogin(credentialResponse.credential);
+      handleAuthSuccess(response);
+    } catch (error) {
+      console.error("ERRO GOOGLE LOGIN:", error);
+      const msg = error.response?.data?.error || "Falha na autenticação com Google.";
+      showAlert("Erro Google", msg, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const showAlert = (title, message, type, onConfirm) => {
     setAlertConfig({
@@ -40,35 +86,7 @@ export default function Login() {
       const response = await gymAuthService.login(formData);
 
       console.log("RESPOSTA LOGIN:", response);
-
-      // 🔥 SALVA TOKEN
-      localStorage.setItem("token", response.token);
-
-      // 🔥 SALVA USUÁRIO E DADOS EXTRAS
-      const user = response.user;
-      localStorage.setItem("user", JSON.stringify(user));
-      localStorage.setItem("role", user.role);
-
-      const gymId = user.gymId || user.gym?.id;
-      const gymName = user.gymName || user.gym?.name || "";
-
-      localStorage.setItem("gymId", gymId);
-      localStorage.setItem("gymName", gymName);
-      localStorage.setItem("userId", user.id);
-
-      showAlert(
-        "Acesso Liberado",
-        "Login realizado com sucesso!",
-        "success",
-        () => {
-          setAlertConfig({ isOpen: false });
-          if (user.role === "GYM_OWNER") {
-            navigate("/academy");
-          } else {
-            navigate("/home");
-          }
-        }
-      );
+      handleAuthSuccess(response);
 
     } catch (error) {
       console.error("ERRO LOGIN:", error);
@@ -133,6 +151,21 @@ export default function Login() {
             )}
           </button>
         </form>
+
+        <div className="social-login-separator">
+          <span>OU ENTRE COM</span>
+        </div>
+
+        <div className="google-login-wrapper">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => showAlert("Erro", "Falha no Login com Google", "error")}
+            useOneTap
+            theme="filled_black"
+            shape="pill"
+            width="100%"
+          />
+        </div>
 
         <footer className="login-footer">
           Ainda não faz parte do time?

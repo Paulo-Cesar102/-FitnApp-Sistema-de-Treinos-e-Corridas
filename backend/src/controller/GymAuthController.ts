@@ -89,6 +89,34 @@ export class GymAuthController {
   }
 
   /**
+   * Login com Google
+   * POST /auth/google-login
+   * Body: { idToken }
+   */
+  async googleLogin(req: Request, res: Response) {
+    try {
+      const { idToken } = req.body;
+
+      if (!idToken) {
+        return res.status(400).json({
+          error: "ID Token do Google é obrigatório",
+        });
+      }
+
+      const result = await this.gymAuthService.googleLogin(idToken);
+
+      return res.json({
+        message: "Login com Google realizado com sucesso!",
+        ...result,
+      });
+    } catch (error: any) {
+      return res.status(401).json({
+        error: error.message || "Erro ao fazer login com Google",
+      });
+    }
+  }
+
+  /**
    * Login com email e senha
    * POST /auth/login
    * Body: { email, password }

@@ -36,6 +36,14 @@ authRoutes.post("/login", (req, res) =>
 );
 
 /**
+ * Login com Google
+ * POST /api/auth/google-login
+ */
+authRoutes.post("/google-login", (req, res) =>
+  gymAuthController.googleLogin(req, res)
+);
+
+/**
  * Valida se uma academia existe
  * GET /api/auth/gym/:gymId
  */
