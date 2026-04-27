@@ -24,6 +24,40 @@ export class SmartCoachService {
   }
 
   /**
+   * Fornece uma sugestão rápida para um exercício específico durante a execução
+   */
+  async getSuggestion(userId: string, exerciseId: string) {
+    const user = await this.repository.getUserFitnessData(userId);
+    const exercise = await this.repository.getExercises(user?.experienceLevel || "BEGINNER"); // Busca rápida para validar
+    
+    const goalType = (user?.goalType || "SAÚDE").toUpperCase();
+    
+    // Lógica de Sugestão baseada no objetivo
+    let sets = 3;
+    let reps = "10-12";
+    let rest = 60;
+    let effort = "RPE 7-8";
+    let tip = "Mantenha o controle na fase excêntrica (descida).";
+
+    if (goalType.includes("EMAGRECER")) {
+      sets = 3; reps = "15-20"; rest = 30; effort = "RPE 9";
+    } else if (goalType.includes("FORÇA")) {
+      sets = 5; reps = "5-8"; rest = 120; effort = "RPE 9-10";
+    } else if (goalType.includes("HIPERTROFIA")) {
+      sets = 4; reps = "8-12"; rest = 90; effort = "RPE 8-9";
+    }
+
+    return {
+      sets,
+      reps,
+      rest,
+      effort,
+      tip,
+      suggestedWeight: "Carga moderada para falha técnica no intervalo de reps."
+    };
+  }
+
+  /**
    * O "Cérebro" do sistema: Decide o que responder baseado em palavras-chave
    */
   private async processLocalLogic(userId: string, user: any, question: string) {

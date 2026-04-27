@@ -131,10 +131,11 @@ async function main() {
   }
   console.log("✅ Exercícios sincronizados.");
 
-  // 6. Treinos de Exemplo (Associados ao Admin e à Academia)
+  // 6. Treinos de Exemplo (Catalog e Admin)
   const treinos = [
     {
       name: "Peitoral de Ferro",
+      userId: admin.id,
       exercises: [
         { id: "ex-supino-reto", sets: 4, reps: 10 },
         { id: "ex-supino-inc", sets: 3, reps: 12 },
@@ -142,24 +143,34 @@ async function main() {
     },
     {
       name: "Leg Day Monstro",
+      userId: admin.id,
       exercises: [
         { id: "ex-agachamento", sets: 4, reps: 8 },
         { id: "ex-legpress", sets: 3, reps: 12 },
+      ],
+    },
+    {
+      name: "Full Body Iniciante",
+      userId: null, // 🔥 No Catalog
+      exercises: [
+        { id: "ex-supino-reto", sets: 3, reps: 10 },
+        { id: "ex-agachamento", sets: 3, reps: 10 },
+        { id: "ex-puxada", sets: 3, reps: 10 },
       ],
     },
   ];
 
   for (const t of treinos) {
     const existingWorkout = await prisma.userWorkout.findFirst({
-      where: { name: t.name, userId: admin.id }
+      where: { name: t.name, userId: t.userId }
     });
 
     if (!existingWorkout) {
       await prisma.userWorkout.create({
         data: {
           name: t.name,
-          userId: admin.id,
-          gymId: gym.id,
+          userId: t.userId,
+          gymId: t.userId ? gym.id : null,
           exercises: {
             create: t.exercises.map(e => ({
               exerciseId: e.id,
