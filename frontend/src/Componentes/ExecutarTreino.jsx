@@ -20,6 +20,7 @@ export default function ExecutarTreino({ workout }) {
   const location = useLocation();
   
   const treinoAtual = location.state?.workout || workout || {
+    id: "sample-workout",
     name: "Treino do Dia",
     exercises: [
       { name: "Supino Reto", sets: 3, reps: "10-12", rest: 60 },
@@ -164,21 +165,30 @@ export default function ExecutarTreino({ workout }) {
   }, [treinoAtual?.id]);
 
   const finalizarTreino = async () => {
-    if (!treinoAtual?.id) {
-      showAlert("Erro", "Não foi possível identificar o treino.", "error");
+    // Se for um treino de exemplo ou sem ID real, apenas sai com sucesso visual
+    if (!treinoAtual?.id || treinoAtual.id === "sample-workout") {
+      setIsFinished(true);
+      showAlert("Treino Concluído", "Parabéns! Treino de exemplo finalizado com sucesso. 🏋️‍♂️", "success", () => {
+        setAlertConfig({ isOpen: false });
+        navigate("/home");
+      });
       return;
     }
+
     try {
       const result = await completeWorkout(treinoAtual.id);
       const user = JSON.parse(localStorage.getItem("user") || "{}");
-      user.xp = result.newXp;
-      user.level = result.newLevel;
-      user.streak = result.streak;
-      user.totalCompleted = result.totalCompleted;
+      
+      // Atualiza dados do usuário localmente
+      if (result.newXp) user.xp = result.newXp;
+      if (result.newLevel) user.level = result.newLevel;
+      if (result.streak) user.streak = result.streak;
+      
       localStorage.setItem("user", JSON.stringify(user));
       window.dispatchEvent(new Event('userDataUpdated'));
+      
       setIsFinished(true);
-      showAlert("Treino Concluído", `Parabéns! Você ganhou ${result.xpGained} XP.`, "success", () => {
+      showAlert("Treino Concluído", `Parabéns! Você ganhou ${result.xpGained || 0} XP. 🔥`, "success", () => {
         setAlertConfig({ isOpen: false });
         navigate("/home");
       });
@@ -200,6 +210,22 @@ export default function ExecutarTreino({ workout }) {
     }
   };
 
+  const handleFinishEarly = () => {
+    setAlertConfig({
+      isOpen: true,
+      title: "Encerrar Treino",
+      message: "Deseja finalizar o treino agora mesmo? O progresso será salvo.",
+      type: "info",
+      confirmText: "Sim, finalizar",
+      cancelText: "Continuar",
+      onConfirm: () => {
+        setAlertConfig({ isOpen: false });
+        finalizarTreino();
+      },
+      onCancel: () => setAlertConfig({ isOpen: false })
+    });
+  };
+
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, "0");
     const s = (seconds % 60).toString().padStart(2, "0");
@@ -209,9 +235,12 @@ export default function ExecutarTreino({ workout }) {
   if (!currentItem) return <div className="workout-execution-container">Carregando...</div>;
 
   const totalExercises = treinoAtual?.exercises?.length || 0;
-  const totalSteps = treinoAtual?.exercises?.reduce((acc, ex) => acc + (parseInt(ex.sets) || 3), 0) || 1;
-  const currentStep = treinoAtual?.exercises?.slice(0, currentExerciseIdx).reduce((acc, ex) => acc + (parseInt(ex.sets) || 3), 0) + currentSet;
-  const progress = (currentStep / totalSteps) * 100;
+  
+  // Cálculo de progresso mais seguro
+  const totalSetsWorkout = treinoAtual?.exercises?.reduce((acc, ex) => acc + (parseInt(ex.sets) || 1), 0) || 1;
+  const currentStep = (treinoAtual?.exercises?.slice(0, currentExerciseIdx).reduce((acc, ex) => acc + (parseInt(ex.sets) || 1), 0) || 0) + currentSet;
+  const progress = Math.min(100, (currentStep / totalSetsWorkout) * 100);
+  
   const nextExercise = treinoAtual.exercises[currentExerciseIdx + 1]?.exercise?.name || treinoAtual.exercises[currentExerciseIdx + 1]?.name;
 
   const mudarExercicio = (direcao) => {
@@ -233,13 +262,13 @@ export default function ExecutarTreino({ workout }) {
         <button className="back-button" onClick={() => navigate(-1)}>✕</button>
         <div className="header-nav">
           <button className="nav-arrow" onClick={() => mudarExercicio("anterior")} disabled={currentExerciseIdx === 0}>←</button>
-          <div className="header-info">
-            <span className="workout-label">{workoutName}</span>
+          <div className="header-info" onClick={handleFinishEarly} style={{ cursor: 'pointer' }} title="Clique para finalizar mais cedo">
+            <span className="workout-label">{workoutName} (Sair)</span>
             <h3 className="exercise-name">{exerciseName}</h3>
           </div>
           <button className="nav-arrow" onClick={() => mudarExercicio("proximo")} disabled={currentExerciseIdx === totalExercises - 1}>→</button>
         </div>
-        <button className="info-button" onClick={() => showAlert("Dica", exerciseData?.description || "Mantenha a postura.", "info")}>i</button>
+        <button className="info-button" onClick={() => showAlert("Dica", exerciseData?.description || "Mantenha a postura e respiração constante.", "info")}>i</button>
       </header>
 
       <main className="execution-main">

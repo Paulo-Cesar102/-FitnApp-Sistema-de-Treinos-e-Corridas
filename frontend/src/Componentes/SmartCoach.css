@@ -88,10 +88,14 @@
   gap: 12px;
 }
 
-.save-workout-btn {
-  background: rgba(255, 255, 255, 0.1);
+.coach-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.save-workout-btn, .execute-workout-btn {
   border: 1px solid var(--primary-color);
-  color: var(--primary-color);
   padding: 8px 12px;
   border-radius: 8px;
   font-size: 0.85rem;
@@ -102,13 +106,27 @@
   justify-content: center;
   gap: 8px;
   transition: 0.3s;
-  align-self: flex-start;
   margin-top: 5px;
+}
+
+.save-workout-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--primary-color);
+}
+
+.execute-workout-btn {
+  background: var(--primary-color);
+  color: white;
 }
 
 .save-workout-btn:hover {
   background: var(--primary-color);
   color: white;
+}
+
+.execute-workout-btn:hover {
+  background: white;
+  color: var(--primary-color);
 }
 
 .message-wrapper.assistant .message-bubble {

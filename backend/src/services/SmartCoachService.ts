@@ -52,8 +52,9 @@ export class SmartCoachService {
       reps,
       rest,
       effort,
-      tip,
-      suggestedWeight: "Carga moderada para falha técnica no intervalo de reps."
+      aiCoachTip: tip,
+      recommendedWeight: 0, // Pode ser calculado baseado no histórico se houver
+      reason: "Sugestão baseada no seu nível e objetivo atual."
     };
   }
 

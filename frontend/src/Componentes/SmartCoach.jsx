@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { askSmartCoach } from "../api/smartCoachService";
 import { createPersonalWorkout } from "../api/exerciseService";
 import CustomAlert from "./CustomAlert";
@@ -22,7 +23,14 @@ const SaveIcon = () => (
   </svg>
 );
 
+const PlayIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="5 3 19 12 5 21 5 3"/>
+  </svg>
+);
+
 export default function SmartCoach() {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([
     {
       role: "assistant",
@@ -89,6 +97,36 @@ export default function SmartCoach() {
     }
   };
 
+  const handleExecuteWorkout = async (workoutData) => {
+    try {
+      setLoading(true);
+      // Salva o treino primeiro para ganhar um ID real
+      const savedWorkout = await createPersonalWorkout(workoutData);
+      
+      setAlertConfig({
+        isOpen: true,
+        title: "Tudo Pronto!",
+        message: "Treino salvo e pronto para começar. Vamos nessa?",
+        type: "success",
+        confirmText: "Bora!",
+        onConfirm: () => {
+          setAlertConfig({ isOpen: false });
+          navigate("/executar-treino", { state: { workout: savedWorkout } });
+        }
+      });
+    } catch (error) {
+      setAlertConfig({
+        isOpen: true,
+        title: "Erro",
+        message: "Não foi possível iniciar o treino. Tente salvá-lo primeiro.",
+        type: "error",
+        onConfirm: () => setAlertConfig({ isOpen: false })
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="smart-coach-container">
       <CustomAlert config={alertConfig} />
@@ -110,12 +148,20 @@ export default function SmartCoach() {
             <div className="message-bubble">
               <div className="message-text">{msg.content}</div>
               {msg.workoutData && (
-                <button 
-                  className="save-workout-btn"
-                  onClick={() => handleSaveWorkout(msg.workoutData)}
-                >
-                  <SaveIcon /> Salvar este Treino
-                </button>
+                <div className="coach-actions">
+                  <button 
+                    className="save-workout-btn"
+                    onClick={() => handleSaveWorkout(msg.workoutData)}
+                  >
+                    <SaveIcon /> Salvar
+                  </button>
+                  <button 
+                    className="execute-workout-btn"
+                    onClick={() => handleExecuteWorkout(msg.workoutData)}
+                  >
+                    <PlayIcon /> Iniciar Agora
+                  </button>
+                </div>
               )}
             </div>
           </div>
