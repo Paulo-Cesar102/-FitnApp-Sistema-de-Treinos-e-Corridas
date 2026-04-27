@@ -1,7 +1,10 @@
 import { prisma } from "../database/prisma";
 import { io } from "../../server";
+import { NotificationService } from "./NotificationService";
 
 export class BadgeService {
+  private notificationService = new NotificationService();
+
   async grantBadgesByLevel(userId: string, userLevel: number) {
     const eligibleBadges = await prisma.badge.findMany({
       where: {
@@ -43,6 +46,14 @@ export class BadgeService {
           icon: badge.icon,
           description: badge.description
         });
+
+        // 💾 Salvar no banco de dados
+        await this.notificationService.create(
+          userId,
+          "🏆 Nova Conquista!",
+          `Você desbloqueou a medalha: ${badge.name}`,
+          "BADGE_EARNED"
+        );
 
         newBadges.push(userBadge);
       }

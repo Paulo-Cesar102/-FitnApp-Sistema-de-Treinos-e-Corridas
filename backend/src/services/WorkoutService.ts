@@ -5,11 +5,13 @@ import { WorkoutRepository } from "../repository/WorkoutRepository";
 import { BadgeService } from "./BadgeService";
 import { StreakService } from "./StreakService";
 import { io } from "../../server";
+import { NotificationService } from "./NotificationService";
 
 export class WorkoutService {
   private workoutRepository = new WorkoutRepository();
   private badgeService = new BadgeService();
   private streakService = new StreakService();
+  private notificationService = new NotificationService();
 
   async create(data: ICreateWorkoutDTO): Promise<IWorkout> {
     if (!data.name) {
@@ -201,6 +203,14 @@ export class WorkoutService {
       streak: streakData.streak,
       message: alreadyCompletedToday ? "Treino registrado!" : "Treino concluído! +XP"
     });
+
+    // 💾 Salvar no banco
+    await this.notificationService.create(
+      userId,
+      "🔥 Treino Finalizado!",
+      alreadyCompletedToday ? "Seu treino foi registrado." : `Treino concluído! Você ganhou ${xpGained} XP. Streak: ${streakData.streak} dias!`,
+      "WORKOUT_COMPLETED"
+    );
 
     return {
       message: alreadyCompletedToday ? "Treino registrado (sem XP adicional)" : "Treino concluído com sucesso",

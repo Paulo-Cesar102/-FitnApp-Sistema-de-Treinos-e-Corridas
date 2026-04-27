@@ -1,9 +1,11 @@
 import { FriendRequestRepository } from "../repository/FriendRequestRepository";
 import { prisma } from "../database/prisma";
 import { io } from "../../server";
+import { NotificationService } from "./NotificationService";
 
 export class FriendRequestService {
   private repo = new FriendRequestRepository();
+  private notificationService = new NotificationService();
 
   // 📩 ENVIAR SOLICITAÇÃO
   async sendRequest(senderId: string, receiverId: string) {
@@ -32,6 +34,14 @@ export class FriendRequestService {
     if (fullRequest) {
       console.log(`📡 Notificando usuário ${receiverId} sobre novo pedido de ${fullRequest.sender.name}`);
       io.to(receiverId).emit("friend:new_request", fullRequest);
+
+      // 💾 Salvar no banco
+      await this.notificationService.create(
+        receiverId,
+        "🤝 Nova Solicitação",
+        `${fullRequest.sender.name} quer ser seu amigo!`,
+        "FRIEND_REQUEST"
+      );
     }
 
     return fullRequest;
@@ -77,11 +87,21 @@ export class FriendRequestService {
       select: { id: true, name: true, level: true }
     });
 
-    io.to(request.senderId).emit("friend:accepted", {
-      requestId,
-      friend: receiverInfo,
-      chat
-    });
+    if (receiverInfo) {
+      io.to(request.senderId).emit("friend:accepted", {
+        requestId,
+        friend: receiverInfo,
+        chat
+      });
+
+      // 💾 Salvar no banco para o remetente
+      await this.notificationService.create(
+        request.senderId,
+        "✅ Solicitação Aceita",
+        `${receiverInfo.name} aceitou seu pedido de amizade!`,
+        "FRIEND_ACCEPTED"
+      );
+    }
 
     return { message: "Amizade aceita com sucesso", chat };
   }

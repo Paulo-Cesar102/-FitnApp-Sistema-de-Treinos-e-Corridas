@@ -6,10 +6,12 @@ const WorkoutRepository_1 = require("../repository/WorkoutRepository");
 const BadgeService_1 = require("./BadgeService");
 const StreakService_1 = require("./StreakService");
 const server_1 = require("../../server");
+const NotificationService_1 = require("./NotificationService");
 class WorkoutService {
     workoutRepository = new WorkoutRepository_1.WorkoutRepository();
     badgeService = new BadgeService_1.BadgeService();
     streakService = new StreakService_1.StreakService();
+    notificationService = new NotificationService_1.NotificationService();
     async create(data) {
         if (!data.name) {
             throw new Error("Nome do treino é obrigatório");
@@ -175,6 +177,8 @@ class WorkoutService {
             streak: streakData.streak,
             message: alreadyCompletedToday ? "Treino registrado!" : "Treino concluído! +XP"
         });
+        // 💾 Salvar no banco
+        await this.notificationService.create(userId, "🔥 Treino Finalizado!", alreadyCompletedToday ? "Seu treino foi registrado." : `Treino concluído! Você ganhou ${xpGained} XP. Streak: ${streakData.streak} dias!`, "WORKOUT_COMPLETED");
         return {
             message: alreadyCompletedToday ? "Treino registrado (sem XP adicional)" : "Treino concluído com sucesso",
             xpGained,

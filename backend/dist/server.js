@@ -24,6 +24,7 @@ const friendRequest_1 = require("./src/routes/friendRequest");
 const chat_routes_1 = require("./src/routes/chat.routes");
 const GymRoutes_1 = require("./src/routes/GymRoutes");
 const weight_routes_1 = require("./src/routes/weight.routes");
+const notification_routes_1 = require("./src/routes/notification.routes"); // 🔥 Adicionado
 const app = (0, express_1.default)();
 // 🔥 Cria servidor HTTP (Essencial para o Socket.io)
 const server = http_1.default.createServer(app);
@@ -55,6 +56,7 @@ app.use("/badges", badge_routes_1.badgeRoutes);
 app.use("/chats", chat_routes_1.router);
 app.use("/gym", GymRoutes_1.gymRoutes);
 app.use("/weight", weight_routes_1.weightRoutes);
+app.use("/notifications", notification_routes_1.notificationRoutes); // 🔥 Adicionado
 // Rota de Health Check
 app.get("/", (_req, res) => {
     res.json({

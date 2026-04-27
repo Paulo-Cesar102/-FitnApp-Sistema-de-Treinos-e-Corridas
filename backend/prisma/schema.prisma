@@ -83,6 +83,13 @@ model User {
   lastUnsubscribedAt DateTime?
   createdAt         DateTime  @default(now())
 
+  // Configurações de Privacidade
+  isPublicProfile    Boolean   @default(true)
+  notificationsEnabled Boolean @default(true)
+
+  // Notificações do sistema
+  notifications     Notification[]
+
   // Relacionamentos Fitness
   workouts                  UserWorkout[]
   completedWorkouts         CompletedWorkout[]
@@ -628,4 +635,20 @@ model GymRanking {
   gym             Gym      @relation(fields: [gymId], references: [id], onDelete: Cascade)
 
   @@unique([userId, gymId])
+}
+
+// =========================
+// NOTIFICATIONS
+// =========================
+
+model Notification {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  type      String   // Ex: "FRIEND_REQUEST", "WORKOUT_COMPLETED", "BADGE_EARNED"
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

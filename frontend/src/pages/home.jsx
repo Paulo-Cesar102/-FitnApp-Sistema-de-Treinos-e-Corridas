@@ -2,14 +2,18 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCatalogWorkouts, getUserWorkouts } from "../api/workoutService";
 import { getUser } from "../api/userService";
+import { notificationService } from "../api/notificationService"; // 🔥 Adicionado
 import { StreakIcon } from "../Componentes/StreakIcon";
+import NotificationModal from "../Componentes/NotificationModal"; // 🔥 Adicionado
 import "./home.css";
+import "../Componentes/NotificationModal.css"; // 🔥 Para o estilo do botão do sino
 import CustomAlert from "../Componentes/CustomAlert";
 
 // Ícones Minimalistas
 const PlayIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>;
 const SearchIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>;
 const DumbbellIcon = () => <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.4"><path d="M6 15H4a2 2 0 0 1-2-2V11a2 2 0 0 1 2-2h2m12 6h2a2 2 0 0 0 2-2V11a2 2 0 0 0-2-2h-2M9 7v10m6-10v10m-6-5h6"/></svg>;
+const BellIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>;
 
 export default function Home() {
   const navigate = useNavigate();
@@ -19,6 +23,8 @@ export default function Home() {
   const [busca, setBusca] = useState("");
   const [loading, setLoading] = useState(true);
   const [alertConfig, setAlertConfig] = useState({ isOpen: false });
+  const [isNotifOpen, setIsNotifOpen] = useState(false); // 🔥 Estado do Modal
+  const [unreadCount, setUnreadCount] = useState(0); // 🔥 Contador de não lidas
 
   const DEFAULT_WORKOUT_IMAGE = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=500&q=80";
 
@@ -30,6 +36,10 @@ export default function Home() {
           const user = JSON.parse(userJson);
           const userDetails = await getUser(user.id);
           setUserData(userDetails);
+
+          // Buscar notificações para o contador
+          const notifs = await notificationService.getNotifications();
+          setUnreadCount(notifs.filter(n => !n.isRead).length);
         }
         const [catalogData, personalData] = await Promise.all([
           getCatalogWorkouts(),
@@ -73,6 +83,11 @@ export default function Home() {
           <h1 className="app-logo">Gym<span>Club</span></h1>
         </div>
         <div className="header-right">
+          <button className="bell-btn-premium" onClick={() => setIsNotifOpen(true)}>
+             <BellIcon />
+             {unreadCount > 0 && <span className="notification-badge-bell">{unreadCount}</span>}
+          </button>
+
           <div className="streak-pill-premium">
             <StreakIcon streak={userData?.streak || 0} />
             <span>{userData?.streak || 0}</span>
@@ -82,6 +97,17 @@ export default function Home() {
           </div>
         </div>
       </header>
+
+      <NotificationModal 
+        isOpen={isNotifOpen} 
+        onClose={() => {
+          setIsNotifOpen(false);
+          // Recarregar contador ao fechar
+          notificationService.getNotifications().then(data => {
+            setUnreadCount(data.filter(n => !n.isRead).length);
+          });
+        }} 
+      />
 
       {/* WIDGET DE XP ESTILO PREMIUM */}
       <section className="xp-widget-premium">

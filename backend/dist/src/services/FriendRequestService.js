@@ -4,8 +4,10 @@ exports.FriendRequestService = void 0;
 const FriendRequestRepository_1 = require("../repository/FriendRequestRepository");
 const prisma_1 = require("../database/prisma");
 const server_1 = require("../../server");
+const NotificationService_1 = require("./NotificationService");
 class FriendRequestService {
     repo = new FriendRequestRepository_1.FriendRequestRepository();
+    notificationService = new NotificationService_1.NotificationService();
     // 📩 ENVIAR SOLICITAÇÃO
     async sendRequest(senderId, receiverId) {
         const existing = await this.repo.findExisting(senderId, receiverId);
@@ -30,6 +32,8 @@ class FriendRequestService {
         if (fullRequest) {
             console.log(`📡 Notificando usuário ${receiverId} sobre novo pedido de ${fullRequest.sender.name}`);
             server_1.io.to(receiverId).emit("friend:new_request", fullRequest);
+            // 💾 Salvar no banco
+            await this.notificationService.create(receiverId, "🤝 Nova Solicitação", `${fullRequest.sender.name} quer ser seu amigo!`, "FRIEND_REQUEST");
         }
         return fullRequest;
     }
@@ -67,11 +71,15 @@ class FriendRequestService {
             where: { id: request.receiverId },
             select: { id: true, name: true, level: true }
         });
-        server_1.io.to(request.senderId).emit("friend:accepted", {
-            requestId,
-            friend: receiverInfo,
-            chat
-        });
+        if (receiverInfo) {
+            server_1.io.to(request.senderId).emit("friend:accepted", {
+                requestId,
+                friend: receiverInfo,
+                chat
+            });
+            // 💾 Salvar no banco para o remetente
+            await this.notificationService.create(request.senderId, "✅ Solicitação Aceita", `${receiverInfo.name} aceitou seu pedido de amizade!`, "FRIEND_ACCEPTED");
+        }
         return { message: "Amizade aceita com sucesso", chat };
     }
     // ❌ RECUSAR SOLICITAÇÃO

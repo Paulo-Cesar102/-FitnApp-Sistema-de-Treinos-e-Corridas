@@ -3,7 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BadgeService = void 0;
 const prisma_1 = require("../database/prisma");
 const server_1 = require("../../server");
+const NotificationService_1 = require("./NotificationService");
 class BadgeService {
+    notificationService = new NotificationService_1.NotificationService();
     async grantBadgesByLevel(userId, userLevel) {
         const eligibleBadges = await prisma_1.prisma.badge.findMany({
             where: {
@@ -41,6 +43,8 @@ class BadgeService {
                     icon: badge.icon,
                     description: badge.description
                 });
+                // 💾 Salvar no banco de dados
+                await this.notificationService.create(userId, "🏆 Nova Conquista!", `Você desbloqueou a medalha: ${badge.name}`, "BADGE_EARNED");
                 newBadges.push(userBadge);
             }
         }

@@ -16,13 +16,16 @@ const InfoIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="non
 export default function Configuracoes() {
   const navigate = useNavigate();
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "dark");
-  const [userData, setUserData] = useState({ name: "", sex: "M", weightGoal: 0, defaultRest: 60 });
+  const [userData, setUserData] = useState({ 
+    name: "", 
+    sex: "M", 
+    weightGoal: 0, 
+    defaultRest: 60,
+    isPublicProfile: true,
+    notificationsEnabled: true 
+  });
   const [loading, setLoading] = useState(false);
   const [alertConfig, setAlertConfig] = useState({ isOpen: false });
-
-  // Estados apenas para UI (Template)
-  const [notificacoes, setNotificacoes] = useState(true);
-  const [perfilPublico, setPerfilPublico] = useState(true);
 
   useEffect(() => {
     async function loadUser() {
@@ -34,7 +37,9 @@ export default function Configuracoes() {
             name: details.name,
             sex: details.sex || "M",
             weightGoal: details.weightGoal || 0,
-            defaultRest: user.defaultRest || 60 // Puxa do localStorage ou padrão 60
+            defaultRest: user.defaultRest || 60,
+            isPublicProfile: details.isPublicProfile !== false,
+            notificationsEnabled: details.notificationsEnabled !== false
           });
         } catch (err) {
           console.error(err);
@@ -59,7 +64,6 @@ export default function Configuracoes() {
         weightGoal: userData.weightGoal
       });
       
-      // Salva o descanso padrão localmente junto com os outros dados
       localStorage.setItem("user", JSON.stringify({ ...user, ...userData }));
       
       setAlertConfig({
@@ -73,6 +77,24 @@ export default function Configuracoes() {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggle = async (field, currentValue) => {
+    const newValue = !currentValue;
+    setUserData(prev => ({ ...prev, [field]: newValue }));
+    
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      await updateUser(user.id, { [field]: newValue });
+      
+      // Atualiza localmente também
+      const updatedLocal = { ...user, [field]: newValue };
+      localStorage.setItem("user", JSON.stringify(updatedLocal));
+    } catch (err) {
+      console.error(`Erro ao atualizar ${field}:`, err);
+      // Reverte em caso de erro
+      setUserData(prev => ({ ...prev, [field]: currentValue }));
     }
   };
 
@@ -163,7 +185,7 @@ export default function Configuracoes() {
         <section className="config-group">
           <h3 className="config-group-title">Notificações e Privacidade</h3>
           
-          <div className="config-item-row" style={{ marginBottom: '10px' }} onClick={() => setNotificacoes(!notificacoes)}>
+          <div className="config-item-row" style={{ marginBottom: '10px' }} onClick={() => handleToggle('notificationsEnabled', userData.notificationsEnabled)}>
             <div className="config-item-info">
               <div className="config-icon-box">
                 <BellIcon />
@@ -173,12 +195,12 @@ export default function Configuracoes() {
                 <p>Receber avisos diários</p>
               </div>
             </div>
-            <div className={`theme-switch-pill ${notificacoes ? 'light' : 'dark'}`}>
+            <div className={`theme-switch-pill ${userData.notificationsEnabled ? 'light' : 'dark'}`}>
                <div className="switch-dot"></div>
             </div>
           </div>
 
-          <div className="config-item-row" onClick={() => setPerfilPublico(!perfilPublico)}>
+          <div className="config-item-row" onClick={() => handleToggle('isPublicProfile', userData.isPublicProfile)}>
             <div className="config-item-info">
               <div className="config-icon-box">
                 <ShieldIcon />
@@ -188,7 +210,7 @@ export default function Configuracoes() {
                 <p>Permitir que amigos vejam seu progresso</p>
               </div>
             </div>
-            <div className={`theme-switch-pill ${perfilPublico ? 'light' : 'dark'}`}>
+            <div className={`theme-switch-pill ${userData.isPublicProfile ? 'light' : 'dark'}`}>
                <div className="switch-dot"></div>
             </div>
           </div>

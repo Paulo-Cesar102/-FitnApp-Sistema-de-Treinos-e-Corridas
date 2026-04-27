@@ -89,7 +89,8 @@ class UserRepository {
             "name", "email", "password", "sex", "weightGoal", "height",
             "goalType", "experienceLevel", "onboardingCompleted",
             "level", "xp", "streak", "maxStreak", "lastActivityDate", "gymId",
-            "lastUnsubscribedAt" // 🔥 Adicionado
+            "lastUnsubscribedAt",
+            "isPublicProfile", "notificationsEnabled" // 🔥 Adicionado
         ];
         fields.forEach(field => {
             if (data[field] !== undefined) {

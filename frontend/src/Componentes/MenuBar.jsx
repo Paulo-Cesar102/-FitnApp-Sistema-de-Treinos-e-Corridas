@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { socket } from "../service/socket";
 import { getPendingRequests } from "../api/friendRequestService";
 import { getChats } from "../api/chatService";
+import { notificationService } from "../api/notificationService"; // 🔥 Adicionado
 import "./MenuBar.css";
 
 // --- Ícones (Mantenha os SVGs originais aqui) ---
@@ -41,17 +42,21 @@ export default function MenuBar() {
   // Função que busca no banco o estado real das notificações
   const fetchCounts = useCallback(async () => {
     try {
-      const [requests, chats] = await Promise.all([
+      const [requests, chats, notifications] = await Promise.all([
         getPendingRequests(),
-        getChats()
+        getChats(),
+        notificationService.getNotifications() // 🔥 Adicionado
       ]);
 
       const requestsCount = Array.isArray(requests) ? requests.length : 0;
-      const unreadCount = Array.isArray(chats) 
+      const unreadChatsCount = Array.isArray(chats) 
         ? chats.reduce((acc, chat) => acc + (chat.unreadCount || 0), 0) 
         : 0;
+      const systemNotifCount = Array.isArray(notifications)
+        ? notifications.filter(n => !n.isRead).length
+        : 0;
 
-      setTotalNotifications(requestsCount + unreadCount);
+      setTotalNotifications(requestsCount + unreadChatsCount + systemNotifCount);
     } catch (e) {
       console.error("Erro ao carregar notificações na MenuBar:", e);
     }
