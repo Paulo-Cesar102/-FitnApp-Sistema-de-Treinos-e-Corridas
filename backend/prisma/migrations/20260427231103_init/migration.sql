@@ -45,6 +45,8 @@ CREATE TABLE "User" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "isPublicProfile" BOOLEAN NOT NULL DEFAULT true,
     "notificationsEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "aiUsageCount" INTEGER NOT NULL DEFAULT 0,
+    "lastAiUsage" TIMESTAMP(3),
     "gymId" TEXT,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")

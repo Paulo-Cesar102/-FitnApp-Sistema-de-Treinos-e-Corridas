@@ -147,6 +147,10 @@ function Layout({ children }) {
   const rotasComMenu = ["/home", "/exercicio", "/perfil", "/amigos", "/academy", "/smart-coach"];
   let mostrarMenu = rotasComMenu.includes(location.pathname);
   
+  // Rotas de autenticação onde o onboarding NÃO deve aparecer
+  const authRoutes = ["/login", "/register", "/register-owner", "/"];
+  const isAuthRoute = authRoutes.includes(location.pathname);
+  
   if (role === "GYM_OWNER" || role === "PERSONAL") {
      if (location.pathname === "/academy") {
          mostrarMenu = false;
@@ -170,7 +174,7 @@ function Layout({ children }) {
     >
       <CustomAlert config={alertConfig} />
       
-      {showCompleteProfile && currentUser && (
+      {!isAuthRoute && showCompleteProfile && currentUser && (
         <CompleteProfile user={currentUser} onComplete={handleProfileComplete} />
       )}
       {children}
