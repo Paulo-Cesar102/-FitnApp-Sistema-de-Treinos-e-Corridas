@@ -16,6 +16,7 @@ import Configuracoes from "./pages/Configuracoes";
 import Friends from "./pages/friends";
 import Academy from "./pages/academy";
 import CompleteProfile from "./Componentes/CompleteProfile";
+import { getUser } from "./api/userService";
 
 function Layout({ children }) {
   const location = useLocation();
@@ -23,40 +24,68 @@ function Layout({ children }) {
   const [showCompleteProfile, setShowCompleteProfile] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") || "dark";
-    document.body.setAttribute("data-theme", savedTheme);
+  // Função para sincronizar dados com a API
+  const syncUserData = async () => {
+    const userJson = localStorage.getItem("user");
+    const token = localStorage.getItem("token");
 
-    const checkUserProfile = () => {
-      const userJson = localStorage.getItem("user");
-      const userRole = localStorage.getItem("role");
+    if (!userJson || !token) {
+      setShowCompleteProfile(false);
+      return;
+    }
 
-      if (userJson && userRole === "USER") {
-        const user = JSON.parse(userJson);
-        setCurrentUser(user);
+    try {
+      const user = JSON.parse(userJson);
+      // Busca dados frescos da API
+      const freshUser = await getUser(user.id);
+      
+      if (freshUser) {
+        // Atualiza o localStorage com os dados mais recentes
+        localStorage.setItem("user", JSON.stringify(freshUser));
+        localStorage.setItem("role", freshUser.role);
+        localStorage.setItem("userId", freshUser.id);
+        setCurrentUser(freshUser);
         
-        // Só mostra se NÃO tiver completado o onboarding
-        if (!user.onboardingCompleted) {
+        // Verifica onboarding
+        if (freshUser.role === "USER" && !freshUser.onboardingCompleted) {
           setShowCompleteProfile(true);
         } else {
           setShowCompleteProfile(false);
         }
-      } else {
-        setShowCompleteProfile(false);
       }
-    };
+    } catch (error) {
+      console.error("Erro ao sincronizar dados do usuário:", error);
+      // Fallback para os dados locais se a API falhar
+      const user = JSON.parse(userJson);
+      setCurrentUser(user);
+      if (user.role === "USER" && !user.onboardingCompleted) {
+        setShowCompleteProfile(true);
+      }
+    }
+  };
 
-    checkUserProfile();
+  useEffect(() => {
+    const authPages = ["/register", "/register-owner"];
+    const isAuthPage = authPages.includes(location.pathname);
+
+    if (isAuthPage) {
+      document.body.setAttribute("data-theme", "dark");
+    } else {
+      const savedTheme = localStorage.getItem("theme") || "dark";
+      document.body.setAttribute("data-theme", savedTheme);
+    }
+
+    syncUserData();
     
-    // Escuta mudanças no usuário (login/logout)
-    window.addEventListener('storage', checkUserProfile);
-    window.addEventListener('userDataUpdated', checkUserProfile);
+    // Escuta mudanças externas no storage
+    window.addEventListener('storage', syncUserData);
+    window.addEventListener('userDataUpdated', syncUserData);
 
     return () => {
-      window.removeEventListener('storage', checkUserProfile);
-      window.removeEventListener('userDataUpdated', checkUserProfile);
+      window.removeEventListener('storage', syncUserData);
+      window.removeEventListener('userDataUpdated', syncUserData);
     };
-  }, [location.pathname]);
+  }, [location.pathname]); // Sincroniza ao mudar de página
 
   // Rotas onde o MenuBar inferior deve aparecer
   const rotasComMenu = ["/home", "/exercicio", "/perfil", "/amigos", "/academy"];

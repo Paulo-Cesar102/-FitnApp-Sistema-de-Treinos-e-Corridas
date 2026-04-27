@@ -30,7 +30,12 @@ export default function Academy() {
   };
 
   const handleLogout = () => {
-    localStorage.clear();
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("role");
+    localStorage.removeItem("gymId");
+    localStorage.removeItem("gymName");
+    localStorage.removeItem("userId");
     navigate("/login");
   };
 
