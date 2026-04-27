@@ -78,6 +78,27 @@
   20%, 100% { left: 150%; }
 }
 
+.btn-back-minimal {
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-back-minimal:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  transform: translateX(-3px);
+  background: var(--bg-card);
+}
+
 .btn-add-circle {
   width: 48px;
   height: 48px;

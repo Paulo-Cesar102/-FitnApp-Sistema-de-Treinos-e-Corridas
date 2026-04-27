@@ -5,6 +5,7 @@ import "./Treinos.css";
 import CustomAlert from "../Componentes/CustomAlert";
 
 // Premium Minimalist Icons
+const ArrowLeftIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>;
 const PlusIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>;
 const TrashIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>;
 const PlayIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="m7 3 14 9-14 9V3z"/></svg>;
@@ -126,6 +127,9 @@ export default function Treinos({ isPersonalView = false }) {
     <div className="treinos-page-container">
       <header className="treinos-header-v3">
         <div className="header-top">
+          <button className="btn-back-minimal" onClick={() => navigate(-1)} title="Voltar">
+            <ArrowLeftIcon />
+          </button>
           <div className="app-logo">
             Gym<span>Club</span>
           </div>
