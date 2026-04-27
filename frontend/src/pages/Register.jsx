@@ -169,9 +169,26 @@ export default function Register() {
 
         <footer className="register-footer">
           Já tem uma conta? <a href="/login" onClick={(e) => { e.preventDefault(); navigate("/login"); }}>Faça Login</a>
-          <br /><br />
-          Quer gerenciar sua academia? <a href="/register-owner" onClick={(e) => { e.preventDefault(); navigate("/register-owner"); }}>Cadastre-se aqui</a>
         </footer>
+      </div>
+
+      <div className="business-cta-container">
+        <div className="business-cta-card">
+          <div className="cta-info">
+            <div className="cta-icon-box">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+              </svg>
+            </div>
+            <div className="cta-text">
+              <h4>GymClub Business</h4>
+              <p>Soluções completas para gestão de academias e personais.</p>
+            </div>
+          </div>
+          <button className="btn-business-link" onClick={() => navigate("/register-owner")}>
+            SEJA UM PARCEIRO
+          </button>
+        </div>
       </div>
 
       <CustomAlert config={alertConfig} />

@@ -65,15 +65,8 @@ function Layout({ children }) {
   };
 
   useEffect(() => {
-    const authPages = ["/register", "/register-owner"];
-    const isAuthPage = authPages.includes(location.pathname);
-
-    if (isAuthPage) {
-      document.body.setAttribute("data-theme", "dark");
-    } else {
-      const savedTheme = localStorage.getItem("theme") || "dark";
-      document.body.setAttribute("data-theme", savedTheme);
-    }
+    const savedTheme = localStorage.getItem("theme") || "dark";
+    document.body.setAttribute("data-theme", savedTheme);
 
     syncUserData();
     

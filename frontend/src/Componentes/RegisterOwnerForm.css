@@ -5,6 +5,11 @@
   min-height: calc(100vh - 80px);
   background: radial-gradient(circle at top, #1a1a1a 0%, #000 100%);
   padding: 20px;
+  transition: background 0.3s ease;
+}
+
+[data-theme='light'] .register-owner-container {
+  background: radial-gradient(circle at top, #ffffff 0%, #f5f5f7 100%);
 }
 
 .register-owner-card {
@@ -19,6 +24,13 @@
   position: relative;
   overflow: hidden;
   animation: fadeIn 0.5s ease-out;
+  transition: all 0.3s ease;
+}
+
+[data-theme='light'] .register-owner-card {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
 .register-owner-card::before {
@@ -47,6 +59,11 @@
 .register-owner-header p {
   color: #aaa;
   font-size: 0.9rem;
+  transition: color 0.3s ease;
+}
+
+[data-theme='light'] .register-owner-header p {
+  color: #666;
 }
 
 .owner-form {
@@ -87,14 +104,22 @@
   transition: all 0.3s ease;
 }
 
+[data-theme='light'] .form-group input,
+[data-theme='light'] .form-group textarea,
+[data-theme='light'] .form-group select {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #000;
+}
+
 .form-group input:focus,
 .form-group textarea:focus,
 .form-group select:focus {
   outline: none;
   border-color: #ff4500;
   box-shadow: 0 0 20px rgba(255, 69, 0, 0.4);
-  background: #ffffff;
-  color: #000000;
+  background: #ffffff !important;
+  color: #000000 !important;
 }
 
 .error-msg {
@@ -151,9 +176,19 @@
   transition: all 0.3s;
 }
 
+[data-theme='light'] .btn-secondary {
+  color: #666;
+  border: 1px solid #ccc;
+}
+
 .btn-secondary:hover {
   background: rgba(255, 255, 255, 0.05);
   color: #fff;
+}
+
+[data-theme='light'] .btn-secondary:hover {
+  background: #f0f0f0;
+  color: #000;
 }
 
 .register-owner-footer {
@@ -163,7 +198,14 @@
   text-align: center;
   font-size: 0.9rem;
   color: #888;
+  transition: all 0.3s ease;
 }
+
+[data-theme='light'] .register-owner-footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  color: #666;
+}
+
 
 .btn-link {
   background: none;
