@@ -49,6 +49,7 @@ class GymOwnerController {
             });
         }
         catch (error) {
+            console.error("Erro no createPersonal:", error);
             return res.status(400).json({
                 error: error.message || "Erro ao cadastrar personal",
             });
@@ -69,6 +70,7 @@ class GymOwnerController {
             });
         }
         catch (error) {
+            console.error("Erro no listPersonals:", error);
             return res.status(400).json({
                 error: error.message || "Erro ao listar personals",
             });
@@ -86,6 +88,7 @@ class GymOwnerController {
             return res.json(result);
         }
         catch (error) {
+            console.error("Erro no deletePersonal:", error);
             return res.status(400).json({
                 error: error.message || "Erro ao deletar personal",
             });
@@ -103,6 +106,7 @@ class GymOwnerController {
             return res.json(stats);
         }
         catch (error) {
+            console.error("Erro no getStats:", error);
             return res.status(400).json({
                 error: error.message || "Erro ao obter estatísticas",
             });

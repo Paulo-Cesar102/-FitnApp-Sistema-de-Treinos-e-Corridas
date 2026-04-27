@@ -61,8 +61,8 @@ gymRoutes.get("/announcement/urgent/:gymId", auth_1.authMiddleware, announcement
 // ========================
 // GYM RANKING ROUTES
 // ========================
-gymRoutes.get("/ranking/:gymId", auth_1.authMiddleware, rankingController.getGymRanking.bind(rankingController));
 gymRoutes.get("/ranking/:gymId/top10", auth_1.authMiddleware, rankingController.getTop10Ranking.bind(rankingController));
-gymRoutes.get("/ranking/:userId/:gymId", auth_1.authMiddleware, rankingController.getUserRank.bind(rankingController));
-gymRoutes.get("/ranking/:userId/:gymId/position", auth_1.authMiddleware, rankingController.getUserRankPosition.bind(rankingController));
 gymRoutes.get("/ranking/:gymId/stats", auth_1.authMiddleware, rankingController.getRankingStats.bind(rankingController));
+gymRoutes.get("/ranking/:gymId", auth_1.authMiddleware, rankingController.getGymRanking.bind(rankingController));
+gymRoutes.get("/ranking/:userId/:gymId/position", auth_1.authMiddleware, rankingController.getUserRankPosition.bind(rankingController));
+gymRoutes.get("/ranking/:userId/:gymId", auth_1.authMiddleware, rankingController.getUserRank.bind(rankingController));

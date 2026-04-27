@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BadgeService = void 0;
 const prisma_1 = require("../database/prisma");
+const server_1 = require("../../server");
 class BadgeService {
     async grantBadgesByLevel(userId, userLevel) {
         const eligibleBadges = await prisma_1.prisma.badge.findMany({
@@ -33,6 +34,12 @@ class BadgeService {
                     include: {
                         badge: true,
                     },
+                });
+                // 🔥 Emitir evento de badge conquistada em tempo real
+                server_1.io.to(userId).emit("badge:earned", {
+                    name: badge.name,
+                    icon: badge.icon,
+                    description: badge.description
                 });
                 newBadges.push(userBadge);
             }

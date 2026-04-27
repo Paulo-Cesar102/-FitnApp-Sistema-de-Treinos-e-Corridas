@@ -9,11 +9,18 @@ class GymAnnouncementController {
     }
     async createAnnouncement(req, res) {
         try {
-            const { title, content, gymId, createdBy, imageUrl, priority } = req.body;
+            const { title, content, gymId, imageUrl, priority, isUrgent } = req.body;
+            const createdBy = req.userId || req.user?.id;
             if (!title || !content || !gymId || !createdBy) {
+                console.error("Faltando campos obrigatórios para aviso:", { title, content, gymId, createdBy });
                 return res.status(400).json({
                     error: "title, content, gymId e createdBy são obrigatórios",
                 });
+            }
+            // Mapeia isUrgent para priority se priority não for enviado
+            let finalPriority = priority;
+            if (finalPriority === undefined && isUrgent !== undefined) {
+                finalPriority = isUrgent ? 2 : 0;
             }
             const announcement = await this.announcementService.createAnnouncement({
                 title,
@@ -21,11 +28,12 @@ class GymAnnouncementController {
                 gymId,
                 createdBy,
                 imageUrl,
-                priority,
+                priority: finalPriority || 0,
             });
             return res.status(201).json(announcement);
         }
         catch (error) {
+            console.error("Erro ao criar aviso:", error);
             return res.status(400).json({ error: error.message });
         }
     }

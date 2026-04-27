@@ -101,7 +101,8 @@ export class UserRepository implements IUserRepository {
     const fields = [
       "name", "email", "password", "sex", "weightGoal", "height", 
       "goalType", "experienceLevel", "onboardingCompleted", 
-      "level", "xp", "streak", "maxStreak", "lastActivityDate", "gymId"
+      "level", "xp", "streak", "maxStreak", "lastActivityDate", "gymId",
+      "lastUnsubscribedAt" // 🔥 Adicionado
     ];
 
     fields.forEach(field => {

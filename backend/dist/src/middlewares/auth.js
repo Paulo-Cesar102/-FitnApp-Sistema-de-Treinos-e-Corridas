@@ -25,11 +25,18 @@ function authMiddleware(req, res, next) {
         });
     }
     try {
-        const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
+        const secret = process.env.JWT_SECRET || "segredo-super-secreto";
+        const decoded = jsonwebtoken_1.default.verify(token, secret);
         // 🔥 salva no request
         req.user = {
-            id: decoded.id
+            id: decoded.id,
+            role: decoded.role,
+            gymId: decoded.gymId
         };
+        // Para compatibilidade com controllers que usam req.userId ou req.role diretamente
+        req.userId = decoded.id;
+        req.role = decoded.role;
+        req.gymId = decoded.gymId;
         console.log("Usuário autenticado:", req.user);
         return next();
     }

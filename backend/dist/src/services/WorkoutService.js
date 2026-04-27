@@ -5,6 +5,7 @@ const prisma_1 = require("../database/prisma");
 const WorkoutRepository_1 = require("../repository/WorkoutRepository");
 const BadgeService_1 = require("./BadgeService");
 const StreakService_1 = require("./StreakService");
+const server_1 = require("../../server");
 class WorkoutService {
     workoutRepository = new WorkoutRepository_1.WorkoutRepository();
     badgeService = new BadgeService_1.BadgeService();
@@ -48,7 +49,16 @@ class WorkoutService {
         return prisma_1.prisma.userWorkout.findMany({
             where: { userId },
             include: {
-                exercises: { include: { exercise: true } },
+                exercises: {
+                    include: {
+                        exercise: {
+                            include: {
+                                category: true,
+                                primaryMuscle: true
+                            }
+                        }
+                    }
+                },
             },
         });
     }
@@ -56,7 +66,16 @@ class WorkoutService {
         return prisma_1.prisma.userWorkout.findMany({
             where: { userId: { equals: null } },
             include: {
-                exercises: { include: { exercise: true } },
+                exercises: {
+                    include: {
+                        exercise: {
+                            include: {
+                                category: true,
+                                primaryMuscle: true
+                            }
+                        }
+                    }
+                },
             },
         });
     }
@@ -149,6 +168,13 @@ class WorkoutService {
         const totalCompleted = await prisma_1.prisma.completedWorkout.count({ where: { userId } });
         const newBadges = await this.badgeService.grantBadgesByLevel(userId, user.level);
         const streakData = await this.streakService.updateUserStreak(userId);
+        // 🔥 Notificar frontend em tempo real
+        server_1.io.to(userId).emit("workout:completed", {
+            workoutId,
+            xpGained,
+            streak: streakData.streak,
+            message: alreadyCompletedToday ? "Treino registrado!" : "Treino concluído! +XP"
+        });
         return {
             message: alreadyCompletedToday ? "Treino registrado (sem XP adicional)" : "Treino concluído com sucesso",
             xpGained,
@@ -188,6 +214,12 @@ class WorkoutService {
         const newBadges = await this.badgeService.grantBadgesByLevel(userId, newLevel);
         // 🔥 Atualiza o foguinho ao completar um exercício individual
         const streakData = await this.streakService.updateUserStreak(userId);
+        // 🔥 Notificar via Socket
+        server_1.io.to(userId).emit("exercise:completed", {
+            exerciseName: workoutExercise.exercise.name,
+            xpGained,
+            streak: streakData.streak
+        });
         return {
             message: "Exercício concluído com sucesso",
             xpGained,

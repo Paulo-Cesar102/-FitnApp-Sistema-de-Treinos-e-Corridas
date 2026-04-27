@@ -65,14 +65,35 @@ class GymPersonalService {
         if (!student) {
             throw new Error("Aluno não encontrado");
         }
-        // Verificar se o aluno pertence à mesma academia
+        // 🔥 VERIFICAÇÃO DE 24 HORAS
+        if (student.lastUnsubscribedAt) {
+            const now = new Date();
+            const lastUnsub = new Date(student.lastUnsubscribedAt);
+            const diffTime = Math.abs(now.getTime() - lastUnsub.getTime());
+            const diffHours = diffTime / (1000 * 60 * 60);
+            if (diffHours < 24) {
+                const remainingHours = Math.ceil(24 - diffHours);
+                throw new Error(`Você só poderá se inscrever em um novo personal em ${remainingHours} horas.`);
+            }
+        }
+        // Verificar se o aluno pertence à mesma academia do personal
         if (student.gymId !== personal.gymId) {
             throw new Error("O aluno deve pertencer à mesma academia do personal");
+        }
+        // Verificar se já está inscrito
+        const existingStudents = await this.gymPersonalRepository.getStudents(data.personalId);
+        if (existingStudents.some(s => s.studentId === data.studentId)) {
+            throw new Error("Você já está inscrito com este personal");
         }
         return this.gymPersonalRepository.assignStudent(data.personalId, data.studentId);
     }
     async removeStudent(personalId, studentId) {
-        return this.gymPersonalRepository.removeStudent(personalId, studentId);
+        const result = await this.gymPersonalRepository.removeStudent(personalId, studentId);
+        // 🔥 ATUALIZA DATA DE DESINSCRIÇÃO DO ALUNO
+        await this.userRepository.update(studentId, {
+            lastUnsubscribedAt: new Date()
+        });
+        return result;
     }
     async getStudents(personalId) {
         return this.gymPersonalRepository.getStudents(personalId);

@@ -92,6 +92,40 @@ exports.io.on("connection", (socket) => {
         socket.leave(chatId);
         console.log(`🚪 Socket ${socket.id} saiu do chat ${chatId}`);
     });
+    // --- LÓGICA DE SALAS DA ACADEMIA ---
+    socket.on("join_gym_room", (gymId) => {
+        if (gymId) {
+            socket.join(`gym_${gymId}`);
+            console.log(`🏢 Socket ${socket.id} entrou na sala da academia gym_${gymId}`);
+        }
+    });
+    socket.on("leave_gym_room", (gymId) => {
+        if (gymId) {
+            socket.leave(`gym_${gymId}`);
+            console.log(`🚪 Socket ${socket.id} saiu da sala da academia gym_${gymId}`);
+        }
+    });
+    socket.on("new_checkin", (data) => {
+        console.log(`📍 Novo checkin na academia ${data.gymId} pelo usuário ${data.userId}`);
+        // Repassa o evento para todos na sala da academia para atualizarem o ranking
+        exports.io.to(`gym_${data.gymId}`).emit("ranking_updated", { gymId: data.gymId });
+    });
+    // --- MONITORAMENTO PERSONAL/ALUNO ---
+    socket.on("join_personal_room", (personalId) => {
+        if (personalId) {
+            socket.join(`personal_${personalId}`);
+            console.log(`👨‍🏫 Personal ${personalId} ouvindo atualizações de seus alunos`);
+        }
+    });
+    socket.on("student_activity", (data) => {
+        console.log(`🏋️ Atividade do Aluno: ${data.studentName} em ${data.workoutName} (${data.status})`);
+        // Notifica apenas o personal deste aluno
+        exports.io.to(`personal_${data.personalId}`).emit("live_activity", data);
+    });
+    socket.on("student_enrolled", (data) => {
+        console.log(`👥 Novo aluno inscrito para o personal ${data.personalId}`);
+        exports.io.to(`personal_${data.personalId}`).emit("new_student_joined");
+    });
     socket.on("disconnect", () => {
         console.log("❌ Socket desconectado:", socket.id);
     });

@@ -19,6 +19,7 @@ class WorkoutController {
             const workout = await this.workoutService.create({
                 name,
                 userId,
+                gymId: req.user?.gymId,
                 exercises,
             });
             return res.status(201).json(workout);

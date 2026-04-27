@@ -4,10 +4,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GymAuthService = void 0;
+const prisma_1 = require("../database/prisma");
 const client_1 = require("@prisma/client");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const prisma = new client_1.PrismaClient();
 class GymAuthService {
     /**
      * Registra um novo usuário normal (USER) vinculado a uma academia existente
@@ -16,7 +16,7 @@ class GymAuthService {
     async registerUserInGym(data) {
         try {
             // Valida se a academia existe pelo ID ou nome
-            const gym = await prisma.gym.findFirst({
+            const gym = await prisma_1.prisma.gym.findFirst({
                 where: {
                     OR: [
                         { id: data.gymId },
@@ -28,7 +28,7 @@ class GymAuthService {
                 throw new Error("Academia não encontrada. Verifique o ID ou nome.");
             }
             // Verifica se o email já existe
-            const existingUser = await prisma.user.findUnique({
+            const existingUser = await prisma_1.prisma.user.findUnique({
                 where: { email: data.email },
             });
             if (existingUser) {
@@ -37,7 +37,7 @@ class GymAuthService {
             // Hash da senha
             const hashedPassword = await bcryptjs_1.default.hash(data.password, 10);
             // Cria o usuário vinculado à academia
-            const user = await prisma.user.create({
+            const user = await prisma_1.prisma.user.create({
                 data: {
                     name: data.name,
                     email: data.email,
@@ -47,7 +47,7 @@ class GymAuthService {
                 },
             });
             // Cria ranking do usuário na academia
-            await prisma.gymRanking.create({
+            await prisma_1.prisma.gymRanking.create({
                 data: {
                     position: 0, // Será atualizado depois
                     userId: user.id,
@@ -74,14 +74,14 @@ class GymAuthService {
     async registerGymOwner(data) {
         try {
             // Verifica se o email já existe
-            const existingUser = await prisma.user.findUnique({
+            const existingUser = await prisma_1.prisma.user.findUnique({
                 where: { email: data.email },
             });
             if (existingUser) {
                 throw new Error("Email já cadastrado");
             }
             // Verifica se o nome da academia já existe
-            const existingGym = await prisma.gym.findFirst({
+            const existingGym = await prisma_1.prisma.gym.findFirst({
                 where: { name: data.gymName },
             });
             if (existingGym) {
@@ -90,7 +90,7 @@ class GymAuthService {
             // Hash da senha
             const hashedPassword = await bcryptjs_1.default.hash(data.password, 10);
             // Cria o usuário como proprietário
-            const user = await prisma.user.create({
+            const user = await prisma_1.prisma.user.create({
                 data: {
                     name: data.name,
                     email: data.email,
@@ -101,7 +101,7 @@ class GymAuthService {
             // Gera código de convite único
             const inviteCode = this.generateInviteCode();
             // Cria a academia
-            const gym = await prisma.gym.create({
+            const gym = await prisma_1.prisma.gym.create({
                 data: {
                     name: data.gymName,
                     description: data.gymDescription,
@@ -114,7 +114,7 @@ class GymAuthService {
                 },
             });
             // Vincula o proprietário à sua academia
-            const updatedUser = await prisma.user.update({
+            const updatedUser = await prisma_1.prisma.user.update({
                 where: { id: user.id },
                 data: { gymId: gym.id },
             });
@@ -139,9 +139,14 @@ class GymAuthService {
      */
     async login(data) {
         try {
-            const user = await prisma.user.findUnique({
+            const user = await prisma_1.prisma.user.findUnique({
                 where: { email: data.email },
-                include: { gym: true },
+                include: {
+                    gym: true,
+                    _count: {
+                        select: { completedWorkouts: true }
+                    }
+                },
             });
             if (!user) {
                 throw new Error("Email ou senha incorretos");
@@ -165,6 +170,15 @@ class GymAuthService {
                     name: user.name,
                     email: user.email,
                     role: user.role,
+                    level: user.level,
+                    xp: user.xp,
+                    streak: user.streak,
+                    onboardingCompleted: user.onboardingCompleted,
+                    totalWorkoutsDone: user._count.completedWorkouts,
+                    weightGoal: user.weightGoal,
+                    height: user.height,
+                    goalType: user.goalType,
+                    experienceLevel: user.experienceLevel,
                     gymId: user.gymId,
                     gym: user.gym
                         ? {
@@ -184,7 +198,7 @@ class GymAuthService {
      */
     async validateGym(gymId) {
         try {
-            const gym = await prisma.gym.findFirst({
+            const gym = await prisma_1.prisma.gym.findFirst({
                 where: {
                     OR: [{ id: gymId }, { name: gymId }, { inviteCode: gymId }],
                 },

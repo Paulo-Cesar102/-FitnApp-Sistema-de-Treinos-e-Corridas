@@ -1,11 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GymAnnouncementRepository = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../database/prisma");
 class GymAnnouncementRepository {
     async create(data) {
-        return prisma.gymAnnouncement.create({
+        return prisma_1.prisma.gymAnnouncement.create({
             data: {
                 title: data.title,
                 content: data.content,
@@ -20,7 +19,7 @@ class GymAnnouncementRepository {
         });
     }
     async findById(id) {
-        return prisma.gymAnnouncement.findUnique({
+        return prisma_1.prisma.gymAnnouncement.findUnique({
             where: { id },
             include: {
                 gym: true,
@@ -28,7 +27,7 @@ class GymAnnouncementRepository {
         });
     }
     async findByGym(gymId, limit = 20) {
-        return prisma.gymAnnouncement.findMany({
+        return prisma_1.prisma.gymAnnouncement.findMany({
             where: { gymId },
             orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
             take: limit,
@@ -38,7 +37,7 @@ class GymAnnouncementRepository {
         });
     }
     async findByGymPaginated(gymId, skip = 0, take = 10) {
-        return prisma.gymAnnouncement.findMany({
+        return prisma_1.prisma.gymAnnouncement.findMany({
             where: { gymId },
             orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
             skip,
@@ -49,7 +48,7 @@ class GymAnnouncementRepository {
         });
     }
     async update(id, data) {
-        return prisma.gymAnnouncement.update({
+        return prisma_1.prisma.gymAnnouncement.update({
             where: { id },
             data,
             include: {
@@ -58,12 +57,12 @@ class GymAnnouncementRepository {
         });
     }
     async delete(id) {
-        return prisma.gymAnnouncement.delete({
+        return prisma_1.prisma.gymAnnouncement.delete({
             where: { id },
         });
     }
     async getUrgentAnnouncements(gymId) {
-        return prisma.gymAnnouncement.findMany({
+        return prisma_1.prisma.gymAnnouncement.findMany({
             where: {
                 gymId,
                 priority: {
@@ -77,7 +76,7 @@ class GymAnnouncementRepository {
         });
     }
     async countByGym(gymId) {
-        return prisma.gymAnnouncement.count({
+        return prisma_1.prisma.gymAnnouncement.count({
             where: { gymId },
         });
     }

@@ -17,8 +17,9 @@ class GymService {
             user: updateUser
         };
     }
-    async searchGyms(name) {
-        return await GymRepository_1.default.findByName(name);
+    async findGymByIdentifier(identifier) {
+        const gym = await GymRepository_1.default.findByIdOrCode(identifier);
+        return gym ? [gym] : [];
     }
     async registerGym(data) {
         const inviteCode = data.inviteCode || Math.random().toString(36).substring(2, 8).toUpperCase();

@@ -1,11 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GymRankingRepository = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../database/prisma");
 class GymRankingRepository {
     async create(data) {
-        return prisma.gymRanking.create({
+        return prisma_1.prisma.gymRanking.create({
             data: {
                 userId: data.userId,
                 gymId: data.gymId,
@@ -21,7 +20,7 @@ class GymRankingRepository {
         });
     }
     async findById(id) {
-        return prisma.gymRanking.findUnique({
+        return prisma_1.prisma.gymRanking.findUnique({
             where: { id },
             include: {
                 user: true,
@@ -30,7 +29,7 @@ class GymRankingRepository {
         });
     }
     async findByUserAndGym(userId, gymId) {
-        return prisma.gymRanking.findUnique({
+        return prisma_1.prisma.gymRanking.findUnique({
             where: {
                 userId_gymId: {
                     userId,
@@ -44,7 +43,7 @@ class GymRankingRepository {
         });
     }
     async findByGym(gymId) {
-        return prisma.gymRanking.findMany({
+        return prisma_1.prisma.gymRanking.findMany({
             where: { gymId },
             orderBy: { position: "asc" },
             include: {
@@ -54,7 +53,7 @@ class GymRankingRepository {
         });
     }
     async findTop10ByGym(gymId) {
-        return prisma.gymRanking.findMany({
+        return prisma_1.prisma.gymRanking.findMany({
             where: { gymId },
             orderBy: { position: "asc" },
             take: 10,
@@ -65,7 +64,7 @@ class GymRankingRepository {
         });
     }
     async update(id, data) {
-        return prisma.gymRanking.update({
+        return prisma_1.prisma.gymRanking.update({
             where: { id },
             data,
             include: {
@@ -75,7 +74,7 @@ class GymRankingRepository {
         });
     }
     async delete(id) {
-        return prisma.gymRanking.delete({
+        return prisma_1.prisma.gymRanking.delete({
             where: { id },
         });
     }

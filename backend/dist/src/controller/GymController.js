@@ -24,9 +24,9 @@ class GymController {
         }
     }
     async search(req, res) {
-        const { name } = req.query;
+        const { identifier } = req.query;
         try {
-            const gyms = await GymService_1.default.searchGyms(name || "");
+            const gyms = await GymService_1.default.findGymByIdentifier(identifier || "");
             return res.status(200).json(gyms);
         }
         catch (error) {

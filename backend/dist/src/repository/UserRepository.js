@@ -16,13 +16,35 @@ class UserRepository {
         return user;
     }
     async findById(id) {
-        return prisma_1.prisma.user.findUnique({
-            where: { id }
+        const user = await prisma_1.prisma.user.findUnique({
+            where: { id },
+            include: {
+                ownedGym: true,
+                gym: true,
+                _count: {
+                    select: {
+                        completedWorkouts: true,
+                        completedWorkoutExercises: true
+                    }
+                }
+            }
         });
+        if (!user)
+            return null;
+        return {
+            ...user,
+            totalWorkoutsDone: user._count.completedWorkouts,
+            totalExercisesDone: user._count.completedWorkoutExercises,
+            _count: undefined
+        };
     }
     async findByEmail(email) {
         return prisma_1.prisma.user.findUnique({
-            where: { email }
+            where: { email },
+            include: {
+                ownedGym: true,
+                gym: true
+            }
         });
     }
     async findAll() {
@@ -60,19 +82,23 @@ class UserRepository {
         });
     }
     async update(id, data) {
+        // 🔥 Filtra apenas os campos que foram enviados (diferentes de undefined)
+        // Isso evita que campos obrigatórios recebam 'undefined' por engano.
+        const updateData = {};
+        const fields = [
+            "name", "email", "password", "sex", "weightGoal", "height",
+            "goalType", "experienceLevel", "onboardingCompleted",
+            "level", "xp", "streak", "maxStreak", "lastActivityDate", "gymId",
+            "lastUnsubscribedAt" // 🔥 Adicionado
+        ];
+        fields.forEach(field => {
+            if (data[field] !== undefined) {
+                updateData[field] = data[field];
+            }
+        });
         const user = await prisma_1.prisma.user.update({
             where: { id },
-            data: {
-                name: data.name,
-                email: data.email,
-                password: data.password,
-                sex: data.sex,
-                weightGoal: data.weightGoal,
-                level: data.level,
-                xp: data.xp,
-                streak: data.streak,
-                maxStreak: data.maxStreak
-            }
+            data: updateData
         });
         return user;
     }

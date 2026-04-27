@@ -91,7 +91,12 @@ class GymPersonalController {
     }
     async assignStudent(req, res) {
         try {
-            const { personalId, studentId } = req.body;
+            const { personalId } = req.body;
+            let { studentId } = req.body;
+            // Se studentId não for enviado, assume que o próprio usuário logado quer se inscrever
+            if (!studentId) {
+                studentId = req.userId || req.user?.id;
+            }
             if (!personalId || !studentId) {
                 return res.status(400).json({
                     error: "personalId e studentId são obrigatórios",

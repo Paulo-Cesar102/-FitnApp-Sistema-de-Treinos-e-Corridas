@@ -9,11 +9,13 @@ class CheckInController {
     }
     async performCheckIn(req, res) {
         try {
-            const { userId, gymId } = req.body;
-            if (!userId || !gymId) {
-                return res
-                    .status(400)
-                    .json({ error: "userId e gymId são obrigatórios" });
+            const { gymId } = req.body;
+            const userId = req.userId || req.user?.id;
+            if (!userId) {
+                return res.status(401).json({ error: "Usuário não autenticado" });
+            }
+            if (!gymId) {
+                return res.status(400).json({ error: "gymId é obrigatório" });
             }
             const checkIn = await this.checkInService.performCheckIn({
                 userId,
@@ -25,6 +27,7 @@ class CheckInController {
             });
         }
         catch (error) {
+            console.error("Erro no CheckInController:", error);
             return res.status(400).json({ error: error.message });
         }
     }
@@ -35,6 +38,7 @@ class CheckInController {
             return res.json(checkIns);
         }
         catch (error) {
+            console.error("Erro no CheckInController:", error);
             return res.status(400).json({ error: error.message });
         }
     }
@@ -45,6 +49,7 @@ class CheckInController {
             return res.json(checkIns);
         }
         catch (error) {
+            console.error("Erro no CheckInController:", error);
             return res.status(400).json({ error: error.message });
         }
     }
@@ -55,6 +60,7 @@ class CheckInController {
             return res.json({ count });
         }
         catch (error) {
+            console.error("Erro no CheckInController:", error);
             return res.status(400).json({ error: error.message });
         }
     }
@@ -65,6 +71,7 @@ class CheckInController {
             return res.json({ streak });
         }
         catch (error) {
+            console.error("Erro no CheckInController:", error);
             return res.status(400).json({ error: error.message });
         }
     }
@@ -75,6 +82,7 @@ class CheckInController {
             return res.json({ monthlyCount: count });
         }
         catch (error) {
+            console.error("Erro no CheckInController:", error);
             return res.status(400).json({ error: error.message });
         }
     }

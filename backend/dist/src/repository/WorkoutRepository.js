@@ -8,6 +8,7 @@ class WorkoutRepository {
             data: {
                 name: data.name,
                 userId: data.userId,
+                gymId: data.gymId,
                 exercises: {
                     create: data.exercises.map((exercise) => ({
                         exerciseId: exercise.exerciseId,
@@ -19,7 +20,12 @@ class WorkoutRepository {
             include: {
                 exercises: {
                     include: {
-                        exercise: true,
+                        exercise: {
+                            include: {
+                                category: true,
+                                primaryMuscle: true
+                            }
+                        },
                     },
                 },
             },
@@ -34,7 +40,12 @@ class WorkoutRepository {
             include: {
                 exercises: {
                     include: {
-                        exercise: true,
+                        exercise: {
+                            include: {
+                                category: true,
+                                primaryMuscle: true
+                            }
+                        },
                     },
                 },
             },
@@ -49,7 +60,12 @@ class WorkoutRepository {
             include: {
                 exercises: {
                     include: {
-                        exercise: true,
+                        exercise: {
+                            include: {
+                                category: true,
+                                primaryMuscle: true
+                            }
+                        },
                     },
                 },
             },

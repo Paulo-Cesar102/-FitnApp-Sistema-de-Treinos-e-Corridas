@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const UserRepository_1 = require("../repository/UserRepository");
+const prisma_1 = require("../database/prisma");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 class AuthService {
@@ -24,6 +25,14 @@ class AuthService {
         }, "segredo-super-secreto", // Dica: use process.env.JWT_SECRET no futuro
         { expiresIn: "7d" });
         // --- ALTERAÇÃO AQUI: RETORNANDO O TOKEN + DADOS DO USUÁRIO ---
+        const userData = user;
+        const gymId = userData.role === "GYM_OWNER" ? userData.ownedGym?.id : userData.gymId;
+        const gymName = userData.role === "GYM_OWNER" ? userData.ownedGym?.name : userData.gym?.name;
+        // Busca inscrições com personals se for aluno
+        const personalSubscriptions = await prisma_1.prisma.gymPersonalStudent.findMany({
+            where: { studentId: user.id },
+            select: { personalId: true }
+        });
         return {
             token,
             user: {
@@ -33,8 +42,16 @@ class AuthService {
                 role: user.role,
                 level: user.level,
                 xp: user.xp,
-                streak: user.streak
-                // Não envie a senha (password) aqui por segurança!
+                streak: user.streak,
+                onboardingCompleted: user.onboardingCompleted,
+                totalWorkoutsDone: user.totalWorkoutsDone || 0,
+                height: user.height,
+                weightGoal: user.weightGoal,
+                goalType: user.goalType,
+                experienceLevel: user.experienceLevel,
+                gymId,
+                gymName,
+                personalSubscriptions: personalSubscriptions.map(s => s.personalId)
             }
         };
     }

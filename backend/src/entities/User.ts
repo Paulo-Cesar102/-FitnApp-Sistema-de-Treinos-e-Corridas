@@ -19,6 +19,7 @@ export interface IUser {
   goalType?: string; // Adicionado
   experienceLevel?: string; // Adicionado
   onboardingCompleted?: boolean; // Adicionado
+  lastUnsubscribedAt?: Date; // 🔥 Adicionado para resolver erro de compilação
   lastActivityDate?: Date;
   gymId?: string;
   role?: Role;    

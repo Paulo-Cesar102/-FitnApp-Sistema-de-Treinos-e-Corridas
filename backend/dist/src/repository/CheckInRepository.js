@@ -1,11 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CheckInRepository = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../database/prisma");
 class CheckInRepository {
     async create(data) {
-        return prisma.checkIn.create({
+        return prisma_1.prisma.checkIn.create({
             data: {
                 userId: data.userId,
                 gymId: data.gymId,
@@ -18,7 +17,7 @@ class CheckInRepository {
         });
     }
     async findById(id) {
-        return prisma.checkIn.findUnique({
+        return prisma_1.prisma.checkIn.findUnique({
             where: { id },
             include: {
                 user: true,
@@ -32,7 +31,7 @@ class CheckInRepository {
         today.setHours(0, 0, 0, 0);
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
-        return prisma.checkIn.findFirst({
+        return prisma_1.prisma.checkIn.findFirst({
             where: {
                 userId,
                 gymId,
@@ -44,7 +43,7 @@ class CheckInRepository {
         });
     }
     async getUserCheckIns(userId, gymId) {
-        return prisma.checkIn.findMany({
+        return prisma_1.prisma.checkIn.findMany({
             where: { userId, gymId },
             orderBy: { checkedInAt: "desc" },
             include: {
@@ -54,7 +53,7 @@ class CheckInRepository {
         });
     }
     async getGymCheckIns(gymId, limit = 30) {
-        return prisma.checkIn.findMany({
+        return prisma_1.prisma.checkIn.findMany({
             where: { gymId },
             orderBy: { checkedInAt: "desc" },
             take: limit,
@@ -69,7 +68,7 @@ class CheckInRepository {
         today.setHours(0, 0, 0, 0);
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
-        return prisma.checkIn.count({
+        return prisma_1.prisma.checkIn.count({
             where: {
                 gymId,
                 checkedInAt: {
@@ -82,7 +81,7 @@ class CheckInRepository {
     async getMonthlyCheckInCount(userId, gymId) {
         const now = new Date();
         const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-        return prisma.checkIn.count({
+        return prisma_1.prisma.checkIn.count({
             where: {
                 userId,
                 gymId,
@@ -94,7 +93,7 @@ class CheckInRepository {
         });
     }
     async getCheckInStreak(userId, gymId) {
-        const checkIns = await prisma.checkIn.findMany({
+        const checkIns = await prisma_1.prisma.checkIn.findMany({
             where: { userId, gymId },
             orderBy: { checkedInAt: "desc" },
             take: 31,

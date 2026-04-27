@@ -1,11 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GymPersonalRepository = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../database/prisma");
 class GymPersonalRepository {
     async create(data) {
-        return prisma.gymPersonal.create({
+        return prisma_1.prisma.gymPersonal.create({
             data: {
                 userId: data.userId,
                 gymId: data.gymId,
@@ -25,7 +24,7 @@ class GymPersonalRepository {
         });
     }
     async findById(id) {
-        return prisma.gymPersonal.findUnique({
+        return prisma_1.prisma.gymPersonal.findUnique({
             where: { id },
             include: {
                 user: true,
@@ -49,7 +48,7 @@ class GymPersonalRepository {
         });
     }
     async findByUserId(userId) {
-        return prisma.gymPersonal.findUnique({
+        return prisma_1.prisma.gymPersonal.findUnique({
             where: { userId },
             include: {
                 user: true,
@@ -64,7 +63,7 @@ class GymPersonalRepository {
         });
     }
     async findByGymId(gymId) {
-        return prisma.gymPersonal.findMany({
+        return prisma_1.prisma.gymPersonal.findMany({
             where: { gymId },
             include: {
                 user: true,
@@ -78,7 +77,7 @@ class GymPersonalRepository {
         });
     }
     async update(id, data) {
-        return prisma.gymPersonal.update({
+        return prisma_1.prisma.gymPersonal.update({
             where: { id },
             data,
             include: {
@@ -93,13 +92,13 @@ class GymPersonalRepository {
         });
     }
     async delete(id) {
-        return prisma.gymPersonal.delete({
+        return prisma_1.prisma.gymPersonal.delete({
             where: { id },
         });
     }
     // Adicionar aluno ao personal
     async assignStudent(personalId, studentId) {
-        return prisma.gymPersonalStudent.create({
+        return prisma_1.prisma.gymPersonalStudent.create({
             data: {
                 personalId,
                 studentId,
@@ -112,7 +111,7 @@ class GymPersonalRepository {
     }
     // Remover aluno
     async removeStudent(personalId, studentId) {
-        return prisma.gymPersonalStudent.delete({
+        return prisma_1.prisma.gymPersonalStudent.delete({
             where: {
                 personalId_studentId: {
                     personalId,
@@ -123,16 +122,29 @@ class GymPersonalRepository {
     }
     // Obter alunos de um personal
     async getStudents(personalId) {
-        return prisma.gymPersonalStudent.findMany({
+        return prisma_1.prisma.gymPersonalStudent.findMany({
             where: { personalId },
             include: {
                 student: true,
             },
         });
     }
+    // Obter personals de um aluno
+    async getPersonalsByStudentId(studentId) {
+        return prisma_1.prisma.gymPersonalStudent.findMany({
+            where: { studentId },
+            include: {
+                personal: {
+                    include: {
+                        user: true
+                    }
+                },
+            },
+        });
+    }
     // Criar chat de suporte
     async createSupportChat(personalId, chatId) {
-        return prisma.gymPersonalChat.create({
+        return prisma_1.prisma.gymPersonalChat.create({
             data: {
                 personalId,
                 chatId,
@@ -150,7 +162,7 @@ class GymPersonalRepository {
     }
     // Obter chats de suporte
     async getSupportChats(personalId) {
-        return prisma.gymPersonalChat.findMany({
+        return prisma_1.prisma.gymPersonalChat.findMany({
             where: { personalId },
             include: {
                 chat: {
