@@ -1,4 +1,4 @@
-import { Role } from '@prisma/client';
+import { Role, Difficulty } from '@prisma/client';
 import { CompletedWorkout } from './CompletedWorkout';
 import type { UserBadge } from './UserBadge'; 
 import { Feedback } from './Feedback';
@@ -15,10 +15,11 @@ export interface IUser {
   streak: number;
   maxStreak: number;
   weightGoal?: number;
-  height?: number; // Adicionado
-  goalType?: string; // Adicionado
-  experienceLevel?: string; // Adicionado
-  onboardingCompleted?: boolean; // Adicionado
+  height?: number;
+  goalType?: string;
+  experienceLevel?: Difficulty;
+  onboardingCompleted?: boolean;
+  lastUnsubscribedAt?: Date;
   lastActivityDate?: Date;
   gymId?: string;
   role?: Role;    
