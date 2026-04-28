@@ -183,9 +183,7 @@ function Layout({ children }) {
   );
 }
 
-function AppContent() {
-  const location = useLocation();
-
+const AppContent = React.memo(() => {
   useEffect(() => {
     const userJson = localStorage.getItem("user");
     if (userJson) {
@@ -198,7 +196,7 @@ function AppContent() {
         console.error("Erro ao ler dados do usuário no App:", error);
       }
     }
-  }, [location.pathname]);
+  }, []); // Só roda ao montar o App inicial
 
   return (
     <Layout>
@@ -221,7 +219,7 @@ function AppContent() {
       </Routes>
     </Layout>
   );
-}
+});
 
 export default function App() {
   return (

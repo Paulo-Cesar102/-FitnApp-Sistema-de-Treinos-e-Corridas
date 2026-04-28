@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { googleLogout } from "@react-oauth/google";
 import GymCheckIn from "../Componentes/GymCheckIn";
 import GymRanking from "../Componentes/GymRanking";
 import GymAnnouncements from "../Componentes/GymAnnouncements";
@@ -30,6 +31,7 @@ export default function Academy() {
   };
 
   const handleLogout = () => {
+    googleLogout();
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     localStorage.removeItem("role");

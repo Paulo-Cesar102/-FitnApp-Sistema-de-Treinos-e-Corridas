@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { googleLogout } from "@react-oauth/google";
 import { getUser, updateUser } from "../api/userService";
 import "./Configuracoes.css";
 import CustomAlert from "../Componentes/CustomAlert";
@@ -105,6 +106,7 @@ export default function Configuracoes() {
       message: "Deseja realmente desconectar?",
       type: "error",
       onConfirm: () => {
+        googleLogout();
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         localStorage.removeItem("role");

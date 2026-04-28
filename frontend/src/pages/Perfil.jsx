@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { googleLogout } from "@react-oauth/google";
 import "./Perfil.css";
 import CustomAlert from "../Componentes/CustomAlert";
 import { getUser, updateUser } from "../api/userService";
@@ -183,6 +184,7 @@ export default function Perfil() {
       message: "Tem certeza que deseja desconectar?",
       type: "error",
       onConfirm: () => {
+        googleLogout();
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         navigate("/login");

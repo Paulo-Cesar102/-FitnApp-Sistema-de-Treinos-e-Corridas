@@ -132,7 +132,6 @@ export default function Login() {
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={() => showAlert("Erro", "Falha na conexão com Google", "error")}
-            useOneTap
             theme="filled_black"
             shape="pill"
             width="320px"
