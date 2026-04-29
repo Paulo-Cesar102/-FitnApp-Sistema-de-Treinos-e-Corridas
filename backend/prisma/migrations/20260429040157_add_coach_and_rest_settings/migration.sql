@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE "User" ADD COLUMN     "defaultRest" INTEGER NOT NULL DEFAULT 60,
-ADD COLUMN     "isCoachEnabled" BOOLEAN NOT NULL DEFAULT true;

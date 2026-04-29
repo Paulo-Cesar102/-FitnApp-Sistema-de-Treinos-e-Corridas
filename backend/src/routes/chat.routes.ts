@@ -25,6 +25,7 @@ router.delete("/message/:messageId", controller.deleteMessage.bind(controller));
 
 // 🗑️ Limpar Conversa
 router.delete("/:chatId/clear", controller.clearChat.bind(controller));
+router.delete("/:chatId", controller.deleteChat.bind(controller));
 
 // 🏋️ Compartilhamento de Treino
 router.post("/save-workout", controller.saveWorkout.bind(controller));

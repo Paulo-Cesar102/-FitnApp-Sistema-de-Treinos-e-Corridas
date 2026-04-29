@@ -37,6 +37,47 @@ export class FriendRequestRepository {
         });
     }
 
+    async accept(requestId: string) {
+        return prisma.$transaction(async (tx) => {
+            // 1. Atualiza o status da solicitação
+            const request = await tx.friendRequest.update({
+                where: { id: requestId },
+                data: { status: "ACCEPTED" }
+            });
+
+            // 2. Verifica se já existe um chat privado entre eles
+            const existingChat = await tx.chat.findFirst({
+                where: {
+                    isGroup: false,
+                    participants: {
+                        every: {
+                            userId: { in: [request.senderId, request.receiverId] }
+                        }
+                    }
+                }
+            });
+
+            if (existingChat) return existingChat;
+
+            // 3. Cria o chat privado
+            const chat = await tx.chat.create({
+                data: {
+                    isGroup: false
+                }
+            });
+
+            // 4. Adiciona os participantes
+            await tx.chatParticipant.createMany({
+                data: [
+                    { chatId: chat.id, userId: request.senderId, role: "MEMBER" },
+                    { chatId: chat.id, userId: request.receiverId, role: "MEMBER" }
+                ]
+            });
+
+            return chat;
+        });
+    }
+
     async findFriends(userId:string){
         return prisma.friendRequest.findMany({
             where:{
