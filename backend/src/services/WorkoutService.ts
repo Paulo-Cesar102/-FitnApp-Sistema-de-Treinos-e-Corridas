@@ -76,7 +76,8 @@ export class WorkoutService {
       },
     });
 
-    const xpGained = alreadyCompletedToday ? 10 : 50;
+    // Se já completou hoje, não ganha mais XP
+    const xpGained = alreadyCompletedToday ? 0 : 50;
 
     await prisma.completedWorkout.create({
       data: {
@@ -86,13 +87,18 @@ export class WorkoutService {
       },
     });
 
-    const newXp = (user.xp || 0) + xpGained;
-    const newLevel = Math.floor(newXp / 100) + 1;
+    let newXp = user.xp || 0;
+    let newLevel = user.level || 1;
 
-    await prisma.user.update({
-      where: { id: userId },
-      data: { xp: newXp, level: newLevel },
-    });
+    if (xpGained > 0) {
+      newXp += xpGained;
+      newLevel = Math.floor(newXp / 100) + 1;
+
+      await prisma.user.update({
+        where: { id: userId },
+        data: { xp: newXp, level: newLevel },
+      });
+    }
 
     const streakData = await this.streakService.updateUserStreak(userId);
 
@@ -101,19 +107,20 @@ export class WorkoutService {
       workoutId,
       xpGained,
       streak: streakData.streak,
-      message: alreadyCompletedToday ? "Treino registrado!" : "Treino concluído com sucesso!"
+      message: xpGained > 0 ? "Treino concluído com sucesso!" : "Treino registrado!"
     });
 
-    // Salvar no banco
-    await this.notificationService.create(
-      userId,
-      "Treino Finalizado!",
-      alreadyCompletedToday ? "Seu treino foi registrado." : `Treino concluído! Você ganhou ${xpGained} XP. Sequência: ${streakData.streak} dias!`,
-      "WORKOUT_COMPLETED"
-    );
+    if (xpGained > 0) {
+      await this.notificationService.create(
+        userId,
+        "Treino Finalizado!",
+        `Treino concluído! Você ganhou ${xpGained} XP. Sequência: ${streakData.streak} dias!`,
+        "WORKOUT_COMPLETED"
+      );
+    }
 
     return {
-      message: alreadyCompletedToday ? "Treino registrado" : "Treino concluído com sucesso",
+      message: xpGained > 0 ? "Treino concluído com sucesso" : "Treino registrado",
       xpGained,
       newXp,
       newLevel,
@@ -129,48 +136,88 @@ export class WorkoutService {
 
     if (!workoutExercise) throw new Error("Exercício não encontrado no treino");
 
-    const xpGained = 10;
+    const todayStr = new Date().toISOString().split('T')[0];
 
-    await prisma.completedWorkoutExercise.create({
-      data: {
+    const alreadyDoneToday = await prisma.completedWorkoutExercise.findFirst({
+      where: {
         userId,
         workoutId,
         exerciseId,
-        xpEarned: xpGained,
-        completionDate: new Date().toISOString().split('T')[0]
-      },
+        completionDate: todayStr
+      }
     });
 
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) throw new Error("Usuário não encontrado");
+    const xpGained = alreadyDoneToday ? 0 : 10;
 
-    const newXp = (user.xp || 0) + xpGained;
-    const newLevel = Math.floor(newXp / 100) + 1;
+    if (!alreadyDoneToday) {
+      await prisma.completedWorkoutExercise.create({
+        data: {
+          userId,
+          workoutId,
+          exerciseId,
+          xpEarned: xpGained,
+          completionDate: todayStr
+        },
+      });
 
-    await prisma.user.update({
-      where: { id: userId },
-      data: { xp: newXp, level: newLevel },
-    });
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user) throw new Error("Usuário não encontrado");
 
-    const streakData = await this.streakService.updateUserStreak(userId);
+      const newXp = (user.xp || 0) + xpGained;
+      const newLevel = Math.floor(newXp / 100) + 1;
 
-    // Notificar via Socket
-    io.to(userId).emit("exercise:completed", {
-      exerciseName: workoutExercise.exercise.name,
-      xpGained,
-      streak: streakData.streak
-    });
+      await prisma.user.update({
+        where: { id: userId },
+        data: { xp: newXp, level: newLevel },
+      });
+
+      const streakData = await this.streakService.updateUserStreak(userId);
+
+      // Notificar via Socket
+      io.to(userId).emit("exercise:completed", {
+        exerciseName: workoutExercise.exercise.name,
+        xpGained,
+        streak: streakData.streak
+      });
+
+      return {
+        message: "Exercício concluído com sucesso",
+        xpGained,
+        newXp,
+        newLevel,
+        streak: streakData.streak,
+      };
+    }
 
     return {
-      message: "Exercício concluído com sucesso",
-      xpGained,
-      newXp,
-      newLevel,
-      streak: streakData.streak,
+      message: "Exercício já realizado hoje",
+      xpGained: 0
     };
   }
 
   async getFocusDistribution(userId: string) {
+    // 1. Buscar treinos completos e seus exercícios
+    const completedWorkouts = await prisma.completedWorkout.findMany({
+      where: { userId },
+      include: {
+        workout: {
+          include: {
+            exercises: {
+              include: {
+                exercise: {
+                  include: {
+                    primaryMuscle: true,
+                    category: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // 2. Buscar exercícios completados individualmente
     const completedExercises = await prisma.completedWorkoutExercise.findMany({
       where: { userId },
       include: {
@@ -184,8 +231,20 @@ export class WorkoutService {
     });
 
     const counts: Record<string, number> = {};
+
+    // Contabilizar exercícios de treinos completos
+    completedWorkouts.forEach(cw => {
+      if (cw.workout?.exercises) {
+        cw.workout.exercises.forEach(we => {
+          const muscleName = we.exercise.primaryMuscle?.name || we.exercise.category?.name || "Outros";
+          counts[muscleName] = (counts[muscleName] || 0) + 1;
+        });
+      }
+    });
+
+    // Contabilizar exercícios individuais (evitando contar o que já foi contado no treino completo se necessário, 
+    // mas aqui somamos para dar peso ao esforço extra)
     completedExercises.forEach(ce => {
-      // Priorizar o grupo muscular primário para o gráfico de foco
       const muscleName = ce.exercise.primaryMuscle?.name || ce.exercise.category?.name || "Outros";
       counts[muscleName] = (counts[muscleName] || 0) + 1;
     });
@@ -194,6 +253,7 @@ export class WorkoutService {
       return [{ name: "Sem dados", value: 1 }];
     }
 
+    // Retornar formatado e ordenado
     return Object.entries(counts)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value);

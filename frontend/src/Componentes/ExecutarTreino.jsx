@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./ExecutarTreino.css";
 import CustomAlert from "./CustomAlert";
-import { completeWorkout } from "../api/workoutService";
+import { completeWorkout, completeExercise } from "../api/workoutService";
 import { askSmartCoach } from "../api/smartCoachService";
 import { socket } from "../service/socket";
 
@@ -104,10 +104,23 @@ export default function ExecutarTreino({ workout }) {
     return () => clearInterval(interval);
   }, [isResting, restTime, isFinished, isSetRunning]);
 
-  const avancarSerie = () => {
+  const avancarSerie = async () => {
     setIsResting(false);
     setIsSetRunning(false);
     setActiveTime(0);
+
+    // Registrar conclusão do exercício ao finalizar a última série
+    if (currentSet >= totalSets) {
+      const exerciseId = currentItem?.exerciseId || currentItem?.exercise?.id;
+      if (exerciseId && treinoAtual.id && treinoAtual.id !== "sample-workout") {
+        try {
+          await completeExercise(treinoAtual.id, exerciseId);
+        } catch (err) {
+          console.error("Erro ao registrar exercício:", err);
+        }
+      }
+    }
+
     if (currentSet < totalSets) {
       setCurrentSet((prev) => prev + 1);
     } else {
@@ -164,10 +177,17 @@ export default function ExecutarTreino({ workout }) {
       window.dispatchEvent(new Event('userDataUpdated'));
       
       setIsFinished(true);
-      showAlert("Treino Concluido", `Parabens! Voce ganhou ${result.xpGained || 0} XP.`, "success", () => {
-        setAlertConfig({ isOpen: false });
+
+      // Só mostra o alerta se ganhou XP (primeiro treino do dia)
+      if (result.xpGained > 0) {
+        showAlert("Treino Concluido", `Parabens! Voce ganhou ${result.xpGained} XP.`, "success", () => {
+          setAlertConfig({ isOpen: false });
+          navigate("/home");
+        });
+      } else {
+        // Se já completou hoje, apenas volta para o início sem o alerta de XP
         navigate("/home");
-      });
+      }
     } catch (error) {
       const errorMessage = error?.response?.data?.message || error?.message || "Erro ao completar treino.";
       showAlert("Erro", errorMessage, "error");
