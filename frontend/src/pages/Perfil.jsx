@@ -110,6 +110,9 @@ export default function Perfil() {
 
   useEffect(() => {
     loadAllData();
+
+    window.addEventListener('userDataUpdated', loadAllData);
+    return () => window.removeEventListener('userDataUpdated', loadAllData);
   }, []);
 
   const progressPercentage = (userData.currentXP / userData.nextLevelXP) * 100;
@@ -253,7 +256,7 @@ export default function Perfil() {
         </div>
         <div className="stat-item">
           <StreakIcon streak={userData.streak} />
-          <span>{userData.maxStreak} Dias</span>
+          <span>{userData.streak} {userData.streak === 1 ? "Dia" : "Dias"}</span>
         </div>
       </div>
 

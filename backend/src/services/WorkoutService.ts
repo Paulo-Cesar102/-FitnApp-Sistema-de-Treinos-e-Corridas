@@ -1,11 +1,9 @@
 import { prisma } from "../database/prisma";
-import { IWorkout } from "../entities/Workout";
-import { ICreateWorkoutDTO } from "../dtos/ICreateWorkoutDTO";
 import { WorkoutRepository } from "../repository/WorkoutRepository";
 import { BadgeService } from "./BadgeService";
 import { StreakService } from "./StreakService";
-import { io } from "../../server";
 import { NotificationService } from "./NotificationService";
+import { io } from "../../server";
 
 export class WorkoutService {
   private workoutRepository = new WorkoutRepository();
@@ -13,270 +11,150 @@ export class WorkoutService {
   private streakService = new StreakService();
   private notificationService = new NotificationService();
 
-  async create(data: ICreateWorkoutDTO): Promise<IWorkout> {
-    if (!data.name) {
-      throw new Error("Nome do treino é obrigatório");
-    }
-
+  async create(data: { name: string; userId: string; exercises: any[] }) {
     if (!data.exercises || data.exercises.length === 0) {
       throw new Error("O treino precisa ter pelo menos um exercício");
     }
 
     const workout = await this.workoutRepository.create(data);
 
-    // 🔥 Notificar o aluno se o treino foi criado por um personal
+    // Notificar o aluno se o treino foi criado por um personal
     if (data.userId) {
       await this.notificationService.create(
         data.userId,
-        "📋 Novo Treino Prescrito!",
+        "Novo Treino Prescrito!",
         `Um novo plano de treino "${data.name}" foi adicionado ao seu perfil por um instrutor.`,
-        "WORKOUT_SHARED"
+        "WORKOUT_PRESCRIBED"
       );
-
-      // Emitir via socket se possível
-      io.to(data.userId).emit("notification:new", {
-        title: "📋 Novo Treino!",
-        message: `Seu instrutor prescreveu o treino: ${data.name}`
-      });
     }
 
     return workout;
   }
 
-  async update(id: string, data: any): Promise<IWorkout> {
-    if (!data.name) {
-      throw new Error("Nome do treino é obrigatório");
-    }
-
-    // Primeiro removemos os exercícios antigos
-    await prisma.userWorkoutExercise.deleteMany({ where: { userWorkoutId: id } });
-
-    // Atualizamos o treino com os novos
-    const updatedWorkout = await prisma.userWorkout.update({
-      where: { id },
-      data: {
-        name: data.name,
-        exercises: {
-          create: data.exercises.map((ex: any) => ({
-            exerciseId: ex.exerciseId,
-            sets: ex.sets,
-            reps: ex.reps
-          }))
-        }
-      },
-      include: { exercises: { include: { exercise: true } } }
-    });
-
-    return updatedWorkout as unknown as IWorkout;
+  async getAllCatalog() {
+    return this.workoutRepository.findAllCatalog();
   }
 
-  async findAll(userId: string): Promise<IWorkout[]> {
-    return this.workoutRepository.findAll(userId);
+  async getAllByUser(userId: string) {
+    return this.workoutRepository.findAllByUser(userId);
   }
 
-  async getUserWorkouts(userId: string): Promise<IWorkout[]> {
-    return prisma.userWorkout.findMany({
-      where: { userId },
-      include: {
-        exercises: { 
-          include: { 
-            exercise: {
-              include: {
-                category: true,
-                primaryMuscle: true
-              }
-            } 
-          } 
-        },
-      },
-    }) as unknown as IWorkout[];
+  async getById(id: string) {
+    return this.workoutRepository.findById(id);
   }
 
-  async getCatalog(): Promise<IWorkout[]> {
-    return prisma.userWorkout.findMany({
-      where: { userId: { equals: null } },
-      include: {
-        exercises: { 
-          include: { 
-            exercise: {
-              include: {
-                category: true,
-                primaryMuscle: true
-              }
-            } 
-          } 
-        },
-      },
-    }) as unknown as IWorkout[];
-  }
-
-  async delete(id: string): Promise<void> {
+  async delete(id: string) {
     const workout = await this.workoutRepository.findById(id);
 
     if (!workout) {
       throw new Error("Treino não encontrado");
     }
 
-    // 🔥 Proteção contra erro de Foreign Key (Recuperado do antigo)
+    // Proteção contra erro de Foreign Key
     await prisma.userWorkoutExercise.deleteMany({ where: { userWorkoutId: id } });
     await prisma.completedWorkout.deleteMany({ where: { workoutId: id } });
     await prisma.completedWorkoutExercise.deleteMany({ where: { workoutId: id } });
     await prisma.workoutShare.deleteMany({ where: { workoutId: id } });
 
-    await this.workoutRepository.delete(id);
-  }
-
-  private calculateLevel(xp: number): number {
-    return Math.floor(xp / 100) + 1;
-  }
-
-  private getDifficultyBaseXp(level: string): number {
-    switch (level) {
-      case "BEGINNER": return 10;
-      case "INTERMEDIATE": return 20;
-      case "ADVANCED": return 30;
-      default: return 10;
-    }
-  }
-
-  private calculateWorkoutXp(workout: any): number {
-    let totalXp = 0;
-    if (!workout.exercises || workout.exercises.length === 0) return 10;
-
-    for (const item of workout.exercises) {
-      const baseXp = this.getDifficultyBaseXp(item.exercise.level);
-      const volumeBonus = Math.floor((item.sets * item.reps) / 10);
-      totalXp += baseXp + volumeBonus;
-    }
-    return totalXp;
-  }
-
-  private calculateExerciseXp(item: any): number {
-    const baseXp = this.getDifficultyBaseXp(item.exercise.level);
-    const volumeBonus = Math.floor((item.sets * item.reps) / 10);
-    return baseXp + volumeBonus;
+    return this.workoutRepository.delete(id);
   }
 
   async completeWorkout(userId: string, workoutId: string) {
-    const workout = await this.workoutRepository.findById(workoutId);
-    if (!workout) throw new Error("Treino não encontrado");
-
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new Error("Usuário não encontrado");
 
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
 
     const alreadyCompletedToday = await prisma.completedWorkout.findFirst({
       where: {
         userId,
         workoutId,
-        doneAt: { gte: startOfDay, lte: endOfDay },
+        doneAt: {
+          gte: today,
+        },
       },
     });
 
-    let xpGained = 0;
-    if (!alreadyCompletedToday) {
-      xpGained = this.calculateWorkoutXp(workout);
-      await prisma.completedWorkout.create({
-        data: { userId, workoutId, xpEarned: xpGained },
-      });
+    const xpGained = alreadyCompletedToday ? 10 : 50;
 
-      const currentXp = user.xp ?? 0;
-      const newXp = currentXp + xpGained;
-      const newLevel = this.calculateLevel(newXp);
-
-      await prisma.user.update({
-        where: { id: userId },
-        data: { xp: newXp, level: newLevel },
-      });
-    }
-
-    // Registrar volume para o gráfico (Sempre registra)
-    const today = new Date().toISOString().split("T")[0];
-    if (workout.exercises && workout.exercises.length > 0) {
-      for (const item of workout.exercises) {
-        await prisma.completedWorkoutExercise.create({
-          data: {
-            userId,
-            workoutId,
-            exerciseId: item.exerciseId,
-            xpEarned: 0, 
-            completionDate: `${today}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`
-          }
-        });
-      }
-    }
-
-    const totalCompleted = await prisma.completedWorkout.count({ where: { userId } });
-    const newBadges = await this.badgeService.grantBadgesByLevel(userId, user.level);
-    const streakData = await this.streakService.updateUserStreak(userId);
-
-    // 🔥 Notificar frontend em tempo real
-    io.to(userId).emit("workout:completed", {
-      workoutId,
-      xpGained,
-      streak: streakData.streak,
-      message: alreadyCompletedToday ? "Treino registrado!" : "Treino concluído! +XP"
+    await prisma.completedWorkout.create({
+      data: {
+        userId,
+        workoutId,
+        xpEarned: xpGained
+      },
     });
 
-    // 💾 Salvar no banco
-    await this.notificationService.create(
-      userId,
-      "🔥 Treino Finalizado!",
-      alreadyCompletedToday ? "Seu treino foi registrado." : `Treino concluído! Você ganhou ${xpGained} XP. Streak: ${streakData.streak} dias!`,
-      "WORKOUT_COMPLETED"
-    );
-
-    return {
-      message: alreadyCompletedToday ? "Treino registrado (sem XP adicional)" : "Treino concluído com sucesso",
-      xpGained,
-      streak: streakData.streak,
-    };
-  }
-
-  async completeExercise(userId: string, workoutId: string, exerciseId: string) {
-    const workout = await prisma.userWorkout.findUnique({
-      where: { id: workoutId },
-      include: { exercises: { include: { exercise: true } } },
-    });
-
-    if (!workout) throw new Error("Treino não encontrado");
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) throw new Error("Usuário não encontrado");
-
-    const workoutExercise = workout.exercises.find((item) => item.exerciseId === exerciseId);
-    if (!workoutExercise) throw new Error("Exercício não encontrado neste treino");
-
-    const today = new Date().toISOString().split("T")[0];
-    const alreadyCompletedToday = await prisma.completedWorkoutExercise.findFirst({
-      where: { userId, workoutId, exerciseId, completionDate: today },
-    });
-
-    if (alreadyCompletedToday) throw new Error("Você já concluiu esse exercício hoje.");
-
-    const xpGained = this.calculateExerciseXp(workoutExercise);
-    const currentXp = user.xp ?? 0;
-    const newXp = currentXp + xpGained;
-    const newLevel = this.calculateLevel(newXp);
-
-    await prisma.completedWorkoutExercise.create({
-      data: { userId, workoutId, exerciseId, xpEarned: xpGained, completionDate: today },
-    });
+    const newXp = (user.xp || 0) + xpGained;
+    const newLevel = Math.floor(newXp / 100) + 1;
 
     await prisma.user.update({
       where: { id: userId },
       data: { xp: newXp, level: newLevel },
     });
 
-    const newBadges = await this.badgeService.grantBadgesByLevel(userId, newLevel);
-
-    // 🔥 Atualiza o foguinho ao completar um exercício individual
     const streakData = await this.streakService.updateUserStreak(userId);
 
-    // 🔥 Notificar via Socket
+    // Notificar frontend em tempo real
+    io.to(userId).emit("workout:completed", {
+      workoutId,
+      xpGained,
+      streak: streakData.streak,
+      message: alreadyCompletedToday ? "Treino registrado!" : "Treino concluído com sucesso!"
+    });
+
+    // Salvar no banco
+    await this.notificationService.create(
+      userId,
+      "Treino Finalizado!",
+      alreadyCompletedToday ? "Seu treino foi registrado." : `Treino concluído! Você ganhou ${xpGained} XP. Sequência: ${streakData.streak} dias!`,
+      "WORKOUT_COMPLETED"
+    );
+
+    return {
+      message: alreadyCompletedToday ? "Treino registrado" : "Treino concluído com sucesso",
+      xpGained,
+      newXp,
+      newLevel,
+      streak: streakData.streak,
+    };
+  }
+
+  async completeExercise(userId: string, workoutId: string, exerciseId: string) {
+    const workoutExercise = await prisma.userWorkoutExercise.findFirst({
+      where: { userWorkoutId: workoutId, exerciseId },
+      include: { exercise: true },
+    });
+
+    if (!workoutExercise) throw new Error("Exercício não encontrado no treino");
+
+    const xpGained = 10;
+
+    await prisma.completedWorkoutExercise.create({
+      data: {
+        userId,
+        workoutId,
+        exerciseId,
+        xpEarned: xpGained,
+        completionDate: new Date().toISOString().split('T')[0]
+      },
+    });
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new Error("Usuário não encontrado");
+
+    const newXp = (user.xp || 0) + xpGained;
+    const newLevel = Math.floor(newXp / 100) + 1;
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { xp: newXp, level: newLevel },
+    });
+
+    const streakData = await this.streakService.updateUserStreak(userId);
+
+    // Notificar via Socket
     io.to(userId).emit("exercise:completed", {
       exerciseName: workoutExercise.exercise.name,
       xpGained,
@@ -288,78 +166,56 @@ export class WorkoutService {
       xpGained,
       newXp,
       newLevel,
-      newBadges,
       streak: streakData.streak,
     };
   }
 
-  // 🔥 NOVO: Distribuição de Foco (Categorias)
   async getFocusDistribution(userId: string) {
     const completedExercises = await prisma.completedWorkoutExercise.findMany({
       where: { userId },
       include: {
         exercise: {
-          include: {
-            category: true,
-          },
-        },
-      },
-    });
-
-    const counts: Record<string, number> = {};
-    let total = 0;
-
-    completedExercises.forEach((item) => {
-      const categoryName = item.exercise.category.name;
-      counts[categoryName] = (counts[categoryName] || 0) + 1;
-      total++;
-    });
-
-    // Converter para o formato do gráfico { name, value }
-    const data = Object.keys(counts).map((name) => ({
-      name,
-      value: counts[name],
-      percentage: total > 0 ? Math.round((counts[name] / total) * 100) : 0,
-    }));
-
-    // Se não houver dados, retorna um padrão vazio para o gráfico não quebrar
-    if (data.length === 0) {
-      return [{ name: "Sem dados", value: 1, percentage: 0 }];
-    }
-
-    return data;
-  }
-
-  // 🔥 NOVO: Atividade Semanal (Treinos por dia)
-  async getWeeklyStats(userId: string) {
-    const today = new Date();
-    const dayOfWeek = today.getDay(); // 0 (Dom) a 6 (Sáb)
-    
-    // Ajustar para considerar Segunda como o primeiro dia da semana (padrão Brasil)
-    const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-    const monday = new Date(today.setDate(diff));
-    monday.setHours(0, 0, 0, 0);
-
-    const completedWorkouts = await prisma.completedWorkout.findMany({
-      where: {
-        userId,
-        doneAt: { gte: monday }
+          include: { category: true }
+        }
       }
     });
 
-    const days = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
-    const stats = days.map((day, index) => {
-      // Filtrar treinos que batem com o dia da semana (considerando 0=Seg, 1=Ter...)
-      const count = completedWorkouts.filter(w => {
-        const d = new Date(w.doneAt);
-        let dayIndex = d.getDay() - 1; 
-        if (dayIndex === -1) dayIndex = 6; // Domingo
-        return dayIndex === index;
-      }).length;
-
-      return { name: day, treinos: count };
+    const counts: Record<string, number> = {};
+    completedExercises.forEach(ce => {
+      const catName = ce.exercise.category?.name || "Outros";
+      counts[catName] = (counts[catName] || 0) + 1;
     });
 
-    return stats;
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+  }
+
+  async getWeeklyStats(userId: string) {
+    if (!userId) throw new Error("ID do usuário é obrigatório");
+
+    const today = new Date();
+    const dayOfWeek = today.getDay(); 
+
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+    monday.setUTCHours(0, 0, 0, 0);
+
+    const workouts = await prisma.completedWorkout.findMany({
+      where: {
+        userId,
+        doneAt: { gte: monday }
+      },
+      select: { doneAt: true }
+    });
+
+    const days = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"];
+    const data = days.map(day => ({ name: day, treinos: 0 }));
+
+    workouts.forEach(w => {
+      const d = new Date(w.doneAt).getDay();
+      const index = d === 0 ? 6 : d - 1;
+      data[index].treinos++;
+    });
+
+    return data;
   }
 }

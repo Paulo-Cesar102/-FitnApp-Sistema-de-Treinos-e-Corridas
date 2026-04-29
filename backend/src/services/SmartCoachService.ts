@@ -28,7 +28,6 @@ export class SmartCoachService {
    */
   async getSuggestion(userId: string, exerciseId: string) {
     const user = await this.repository.getUserFitnessData(userId);
-    const exercise = await this.repository.getExercises(user?.experienceLevel || "BEGINNER"); // Busca rápida para validar
     
     const goalType = (user?.goalType || "SAÚDE").toUpperCase();
     
@@ -53,7 +52,7 @@ export class SmartCoachService {
       rest,
       effort,
       aiCoachTip: tip,
-      recommendedWeight: 0, // Pode ser calculado baseado no histórico se houver
+      recommendedWeight: 0, 
       reason: "Sugestão baseada no seu nível e objetivo atual."
     };
   }
@@ -69,7 +68,7 @@ export class SmartCoachService {
 
     // 1. DICAS DO COACH
     const coachTips = [
-      "Dica: Foque na cadência, controle a descida do peso para máximo rompimento de fibras! ⚡",
+      "Dica: Foque na cadência, controle a descida do peso para máximo rompimento de fibras!",
       "Dica: A hidratação é a chave para o rendimento. Beba água antes de sentir sede!",
       "Dica: Não ignore o descanso. É no sono que o músculo realmente cresce.",
       "Dica: A execução perfeita vence a carga alta. Menos ego, mais técnica!",
@@ -118,7 +117,7 @@ export class SmartCoachService {
       if (isCardio && muscleGroups.length === 0) {
         const water = (weight * 0.035).toFixed(1);
         return {
-          answer: `Certo ${name}! Para cardio focado em **${goalType}**, recomendo:\n\n1. **Corrida:** 30 min (Trote moderado)\n2. **Bike:** 40 min (Ritmo constante)\n3. **HIIT:** 15 min (30s explosão / 30s descanso)\n\nLembre-se de beber pelo menos **${water}L** de água hoje! 🏃💨`,
+          answer: `Certo ${name}! Para cardio focado em **${goalType}**, recomendo:\n\n1. **Corrida:** 30 min (Trote moderado)\n2. **Bike:** 40 min (Ritmo constante)\n3. **HIIT:** 15 min (30s explosão / 30s descanso)\n\nLembre-se de beber pelo menos **${water}L** de água hoje!`,
         };
       }
 
@@ -160,12 +159,11 @@ export class SmartCoachService {
 
       let table = `\n| Exercício | Séries | Reps | Descanso | Esforço |\n| :--- | :--- | :--- | :--- | :--- |\n`;
       allExercises.forEach(ex => { 
-        const link = ex.tutorial ? ` [🔗](${ex.tutorial})` : "";
-        table += `| ${ex.name}${link} | ${sets} | ${repsLabel} | ${rest}s | ${effort} |\n`; 
+        table += `| ${ex.name} | ${sets} | ${repsLabel} | ${rest}s | ${effort} |\n`; 
       });
 
       return {
-        answer: `Fala ${name}! ${contextMsg}Para seu objetivo de **${goalType}**, montei este treino:\n${table}\n\n${randomTip}\n\nBora esmagar? 💪🔥`,
+        answer: `Fala ${name}! ${contextMsg}Para seu objetivo de **${goalType}**, montei este treino:\n${table}\n\n${randomTip}\n\nBora esmagar?`,
         workoutData
       };
     }
@@ -177,12 +175,12 @@ export class SmartCoachService {
       const water = (weight * 35 / 1000).toFixed(1);
 
       return {
-        answer: `Certo ${name}! Para **${goalType}** com ${weight}kg, aqui está sua base nutricional:\n\n1. **Proteína:** ~${protein}g (Construção muscular)\n2. **Carbo:** ~${carbs}g (Energia para o treino)\n3. **Gordura:** ~${fat}g (Saúde hormonal)\n4. **Água:** Mínimo de **${water} Litros/dia**.\n\n**Dica Nutri:** Priorize comida de verdade e evite ultraprocessados! 🥩🍎`
+        answer: `Certo ${name}! Para **${goalType}** com ${weight}kg, aqui está sua base nutricional:\n\n1. **Proteína:** ~${protein}g (Construção muscular)\n2. **Carbo:** ~${carbs}g (Energia para o treino)\n3. **Gordura:** ~${fat}g (Saúde hormonal)\n4. **Água:** Mínimo de **${water} Litros/dia**.\n\n**Dica Nutri:** Priorize comida de verdade e evite ultraprocessados!`
       };
     }
 
     return {
-      answer: `Olá ${name}! Sou seu Smart Coach Elite. 🤖\n\nPosso te ajudar a **montar um treino**, calcular sua **dieta** ou dar dicas de execução.\n\n${randomTip}`
+      answer: `Olá ${name}! Sou seu Smart Coach Elite. Posso te ajudar a **montar um treino**, calcular sua **dieta** ou dar dicas de execução.\n\n${randomTip}`
     };
   }
 }

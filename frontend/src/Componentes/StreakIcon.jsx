@@ -2,8 +2,8 @@ import React from "react";
 import "./StreakIcon.css";
 
 export const StreakIcon = ({ streak }) => {
-  // Nível 3: Elite (10 ou mais dias)
-  if (streak >= 10) {
+  // Nível 3: Elite (7 ou mais dias) - Fogo azul/foguete
+  if (streak >= 7) {
     return (
       <div className="streak-icon-container level-3">
         <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flame-elite">
@@ -13,8 +13,8 @@ export const StreakIcon = ({ streak }) => {
     );
   }
 
-  // Nível 2: Acesa (5 a 9 dias)
-  if (streak >= 5) {
+  // Nível 2: Acesa (1 a 6 dias) - Fogo laranja/amarelo
+  if (streak >= 1) {
     return (
       <div className="streak-icon-container level-2">
         <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="fire-logs-active">
@@ -27,7 +27,7 @@ export const StreakIcon = ({ streak }) => {
     );
   }
 
-  // Nível 1: Apagada (0 a 4 dias)
+  // Nível 1: Apagada (0 dias)
   return (
     <div className="streak-icon-container level-1">
       <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="logs-only-animated">

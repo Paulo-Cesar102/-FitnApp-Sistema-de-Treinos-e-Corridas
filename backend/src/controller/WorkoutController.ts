@@ -22,7 +22,6 @@ export class WorkoutController {
       const workout = await this.workoutService.create({
         name,
         userId,
-        gymId: req.user?.gymId,
         exercises,
       });
 
@@ -50,7 +49,6 @@ export class WorkoutController {
           .json({ message: "Nome e exercícios são obrigatórios" });
       }
 
-      // Idealmente, deve-se verificar se o usuário é o dono do treino antes de atualizar
       const workout = await this.workoutService.update(id, { name, exercises });
       return res.status(200).json(workout);
     } catch (error) {
@@ -68,7 +66,7 @@ export class WorkoutController {
         return res.status(401).json({ message: "Usuário não identificado" });
       }
 
-      const workouts = await this.workoutService.findAll(userId);
+      const workouts = await this.workoutService.getAllByUser(userId);
       return res.json(workouts);
     } catch (error) {
       return res.status(400).json({
@@ -86,7 +84,7 @@ export class WorkoutController {
         return res.status(401).json({ message: "Usuário não identificado" });
       }
 
-      const workouts = await this.workoutService.getUserWorkouts(userId);
+      const workouts = await this.workoutService.getAllByUser(userId);
       return res.status(200).json(workouts);
     } catch (error) {
       return res.status(400).json({
@@ -106,7 +104,7 @@ export class WorkoutController {
         return res.status(400).json({ message: "userId é obrigatório" });
       }
 
-      const workouts = await this.workoutService.getUserWorkouts(userId);
+      const workouts = await this.workoutService.getAllByUser(userId);
       return res.status(200).json(workouts);
     } catch (error) {
       return res.status(400).json({
@@ -120,7 +118,7 @@ export class WorkoutController {
 
   async getCatalog(req: Request, res: Response) {
     try {
-      const catalog = await this.workoutService.getCatalog();
+      const catalog = await this.workoutService.getAllCatalog();
       return res.status(200).json(catalog);
     } catch (error) {
       return res.status(400).json({
@@ -137,7 +135,6 @@ export class WorkoutController {
       if (Array.isArray(id)) {
         return res.status(400).json({ message: "ID inválido" });
       }
-
 
       await this.workoutService.delete(id);
       return res.status(204).send();

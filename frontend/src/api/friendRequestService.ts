@@ -1,90 +1,78 @@
 import { api } from "./api";
 
-// 👥 LISTAR AMIGOS
-export const getFriends = async () => {
+export const searchUsers = async (query: string) => {
   try {
-    const response = await api.get("/friends");
+    const response = await api.get(`/users/search?q=${query}`);
     return response.data;
-  } catch (error: any) {
-    console.error("Erro ao buscar amigos:", error.response?.data || error.message);
-    throw error;
+  } catch (err) {
+    console.error("Erro ao buscar usuários:", err);
+    return [];
   }
 };
 
-// ⏳ LISTAR PENDENTES
+// LISTAR PENDENTES
 export const getPendingRequests = async () => {
   try {
     const response = await api.get("/friends/pending");
     return response.data;
-  } catch (error: any) {
-    console.error("Erro ao buscar pendentes:", error.response?.data || error.message);
-    throw error;
+  } catch (err) {
+    console.error("Erro ao buscar solicitações pendentes:", err);
+    return [];
   }
 };
 
-// 🔍 BUSCAR USUÁRIOS
-export const searchUsers = async (query: string) => {
+export const getFriends = async () => {
   try {
-    const response = await api.get(`/friends/search?query=${query}`);
+    const response = await api.get("/friends");
     return response.data;
-  } catch (error: any) {
-    console.error("Erro na busca:", error.response?.data || error.message);
-    throw error;
+  } catch (err) {
+    console.error("Erro ao buscar amigos:", err);
+    return [];
   }
 };
 
-// ➕ ENVIAR SOLICITAÇÃO
-export const addFriend = async (receiverId: string) => {
+export const sendFriendRequest = async (receiverId: string) => {
   try {
     console.log("Enviando solicitação para:", receiverId);
-    
-    // 🔥 Garanta que o objeto tenha exatamente o nome que o Controller espera
     const response = await api.post("/friends/request", {
-      receiverId: receiverId 
+      receiverId: receiverId
     });
-
     return response.data;
-  } catch (error: any) {
-    // Aqui você vai ver se o erro é "Solicitação já pendente" ou "Não pode adicionar a si mesmo"
-    console.error("Erro ao adicionar amigo:", error.response?.data?.message || error.message);
-    alert(error.response?.data?.message || "Erro ao enviar solicitação");
-    throw error;
+  } catch (err: any) {
+    console.error("Erro ao enviar solicitação:", err?.response?.data || err);
+    throw err;
   }
 };
 
-// ✅ ACEITAR
+// ACEITAR
 export const acceptFriend = async (requestId: string) => {
   try {
-    const response = await api.post("/friends/accept", {
-      requestId: requestId
-    });
+    const response = await api.post("/friends/accept", { requestId });
     return response.data;
-  } catch (error: any) {
-    console.error("Erro ao aceitar amigo:", error.response?.data || error.message);
-    throw error;
+  } catch (err) {
+    console.error("Erro ao aceitar amizade:", err);
+    throw err;
   }
 };
 
-// ❌ RECUSAR
+// RECUSAR
 export const rejectFriend = async (requestId: string) => {
   try {
-    const response = await api.post("/friends/reject", {
-      requestId: requestId
-    });
+    const response = await api.post("/friends/reject", { requestId });
     return response.data;
-  } catch (error: any) {
-    console.error("Erro ao recusar amigo:", error.response?.data || error.message);
-    throw error;
+  } catch (err) {
+    console.error("Erro ao recusar amizade:", err);
+    throw err;
   }
 };
 
-// 🗑️ REMOVER AMIGO
+// REMOVER AMIGO
 export const deleteFriend = async (id: string) => {
   try {
     const response = await api.delete(`/friends/${id}`);
     return response.data;
-  } catch (error: any) {
-    console.error("Erro ao remover amigo:", error.response?.data || error.message);
-    throw error;
+  } catch (err) {
+    console.error("Erro ao remover amigo:", err);
+    throw err;
   }
 };

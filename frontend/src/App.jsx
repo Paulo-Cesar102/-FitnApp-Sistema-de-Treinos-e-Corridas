@@ -16,8 +16,9 @@ import Configuracoes from "./pages/Configuracoes";
 import Friends from "./pages/friends";
 import Academy from "./pages/academy";
 import SmartCoach from "./Componentes/SmartCoach";
+import CoachDrawer from "./Componentes/CoachDrawer";
 import CompleteProfile from "./Componentes/CompleteProfile";
-import CustomAlert from "./Componentes/CustomAlert"; // 🔥 Importação do Alerta
+import CustomAlert from "./Componentes/CustomAlert"; 
 import { getUser } from "./api/userService";
 
 function Layout({ children }) {
@@ -47,6 +48,13 @@ function Layout({ children }) {
         localStorage.setItem("user", JSON.stringify(freshUser));
         localStorage.setItem("role", freshUser.role);
         localStorage.setItem("userId", freshUser.id);
+
+        // Garante que gymId e gymName estejam sincronizados
+        const gId = freshUser.gymId || freshUser.gym?.id || "";
+        const gName = freshUser.gymName || freshUser.gym?.name || "";
+        localStorage.setItem("gymId", gId);
+        localStorage.setItem("gymName", gName);
+
         setCurrentUser(freshUser);
         
         // Verifica onboarding
@@ -90,10 +98,10 @@ function Layout({ children }) {
     const handleBadgeEarned = (badge) => {
       setAlertConfig({
         isOpen: true,
-        title: "🏆 Nova Conquista!",
+        title: "Nova Conquista!",
         message: `Parabéns! Você desbloqueou a medalha: ${badge.name}`,
         type: "success",
-        confirmText: "Uhul!",
+        confirmText: "Ok",
         onConfirm: () => setAlertConfig({ isOpen: false })
       });
     };
@@ -101,13 +109,12 @@ function Layout({ children }) {
     const handleFriendRequest = (data) => {
       setAlertConfig({
         isOpen: true,
-        title: "🤝 Nova Solicitação",
-        message: `${data.senderName} quer ser seu amigo no FitnApp!`,
+        title: "Nova Solicitação",
+        message: `${data.senderName} quer ser seu amigo no sistema!`,
         type: "info",
         confirmText: "Ver Pedidos",
         onConfirm: () => {
           setAlertConfig({ isOpen: false });
-          // Opcional: redirecionar para amigos
         },
         cancelText: "Fechar",
         onCancel: () => setAlertConfig({ isOpen: false })
@@ -117,8 +124,8 @@ function Layout({ children }) {
     const handleWorkoutCompleted = (data) => {
       setAlertConfig({
         isOpen: true,
-        title: "🔥 Treino Finalizado!",
-        message: `${data.message} XP Ganhos: ${data.xpGained}. Streak: ${data.streak} dias!`,
+        title: "Treino Finalizado!",
+        message: `${data.message} XP Ganhos: ${data.xpGained}. Sequência: ${data.streak} dias!`,
         type: "success",
         confirmText: "Continuar",
         onConfirm: () => setAlertConfig({ isOpen: false })
@@ -126,7 +133,6 @@ function Layout({ children }) {
     };
 
     const handleExerciseCompleted = (data) => {
-      // Notificação mais discreta se possível, mas aqui usaremos o Alert por enquanto
       console.log("Exercício concluído:", data);
     };
 
@@ -147,7 +153,7 @@ function Layout({ children }) {
   const rotasComMenu = ["/home", "/exercicio", "/perfil", "/amigos", "/academy", "/smart-coach"];
   let mostrarMenu = rotasComMenu.includes(location.pathname);
   
-  // Rotas de autenticação onde o onboarding NÃO deve aparecer
+  // Rotas de autenticação onde o onboarding e o Drawer NÃO devem aparecer
   const authRoutes = ["/login", "/register", "/register-owner", "/"];
   const isAuthRoute = authRoutes.includes(location.pathname);
   
@@ -177,6 +183,10 @@ function Layout({ children }) {
       {!isAuthRoute && showCompleteProfile && currentUser && (
         <CompleteProfile user={currentUser} onComplete={handleProfileComplete} />
       )}
+
+      {/* Menu Gaveta Lateral para o Coach */}
+      {!isAuthRoute && <CoachDrawer />}
+
       {children}
       {mostrarMenu && <MenuBar />}
     </div>

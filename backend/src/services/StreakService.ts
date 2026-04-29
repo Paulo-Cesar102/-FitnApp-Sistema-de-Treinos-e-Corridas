@@ -3,21 +3,26 @@ import { prisma } from "../database/prisma";
 export class StreakService {
   private normalizeDate(date: Date): Date {
     const normalized = new Date(date);
-    normalized.setHours(0, 0, 0, 0);
+    normalized.setUTCHours(0, 0, 0, 0);
     return normalized;
   }
 
   private isSameDay(date1: Date, date2: Date): boolean {
-    return this.normalizeDate(date1).getTime() === this.normalizeDate(date2).getTime();
+    const d1 = this.normalizeDate(date1);
+    const d2 = this.normalizeDate(date2);
+    return d1.getTime() === d2.getTime();
   }
 
   private isYesterday(lastDate: Date, currentDate: Date): boolean {
+    const d1 = this.normalizeDate(lastDate);
+    const d2 = this.normalizeDate(currentDate);
+    
     const oneDayInMs = 24 * 60 * 60 * 1000;
+    const diff = d2.getTime() - d1.getTime();
 
-    const normalizedLastDate = this.normalizeDate(lastDate);
-    const normalizedCurrentDate = this.normalizeDate(currentDate);
-
-    return normalizedCurrentDate.getTime() - normalizedLastDate.getTime() === oneDayInMs;
+    // Aceita uma pequena margem para mudanças de fuso horário se necessário, 
+    // mas com UTC puro deve ser exatamente oneDayInMs
+    return diff === oneDayInMs;
   }
 
   async updateUserStreak(userId: string) {
@@ -73,6 +78,7 @@ export class StreakService {
       };
     }
 
+    // Se passou mais de um dia, reseta para 1
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {

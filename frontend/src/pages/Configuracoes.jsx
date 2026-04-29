@@ -13,6 +13,7 @@ const BellIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="non
 const ShieldIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
 const GymIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6.5 6.5 11 11"/><path d="m21 21-1.5-1.5"/><path d="M9 22H5a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3h14a3 3 0 0 1 3 3v4"/><path d="M18 22V15"/></svg>;
 const InfoIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>;
+const RobotIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>;
 
 export default function Configuracoes() {
   const navigate = useNavigate();
@@ -23,24 +24,37 @@ export default function Configuracoes() {
     weightGoal: 0, 
     defaultRest: 60,
     isPublicProfile: true,
-    notificationsEnabled: true 
+    notificationsEnabled: true,
+    isCoachEnabled: true
   });
   const [loading, setLoading] = useState(false);
   const [alertConfig, setAlertConfig] = useState({ isOpen: false });
 
+  const showAlert = (title, message, type, onConfirm) => {
+    setAlertConfig({
+      isOpen: true,
+      title,
+      message,
+      type,
+      onConfirm: onConfirm || (() => setAlertConfig({ isOpen: false }))
+    });
+  };
+
   useEffect(() => {
     async function loadUser() {
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      if (user.id) {
+      const userJson = localStorage.getItem("user");
+      if (userJson) {
         try {
+          const user = JSON.parse(userJson);
           const details = await getUser(user.id);
           setUserData({
             name: details.name,
             sex: details.sex || "M",
             weightGoal: details.weightGoal || 0,
-            defaultRest: user.defaultRest || 60,
+            defaultRest: details.defaultRest || 60,
             isPublicProfile: details.isPublicProfile !== false,
-            notificationsEnabled: details.notificationsEnabled !== false
+            notificationsEnabled: details.notificationsEnabled !== false,
+            isCoachEnabled: details.isCoachEnabled !== false
           });
         } catch (err) {
           console.error(err);
@@ -59,13 +73,16 @@ export default function Configuracoes() {
     setLoading(true);
     try {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
-      await updateUser(user.id, {
+      const updatedUser = await updateUser(user.id, {
         name: userData.name,
         sex: userData.sex,
-        weightGoal: userData.weightGoal
+        weightGoal: userData.weightGoal,
+        defaultRest: userData.defaultRest
       });
       
-      localStorage.setItem("user", JSON.stringify({ ...user, ...userData }));
+      // Sincroniza cache local e notifica o App
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      window.dispatchEvent(new Event("userDataUpdated"));
       
       setAlertConfig({
         isOpen: true,
@@ -87,14 +104,17 @@ export default function Configuracoes() {
     
     try {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
-      await updateUser(user.id, { [field]: newValue });
+      const updatedUser = await updateUser(user.id, { [field]: newValue });
       
-      // Atualiza localmente também
-      const updatedLocal = { ...user, [field]: newValue };
-      localStorage.setItem("user", JSON.stringify(updatedLocal));
+      // Sincroniza cache local e notifica componentes
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      window.dispatchEvent(new Event("userDataUpdated"));
+      
+      if (field === "isCoachEnabled") {
+        window.dispatchEvent(new Event("coachSettingUpdated"));
+      }
     } catch (err) {
       console.error(`Erro ao atualizar ${field}:`, err);
-      // Reverte em caso de erro
       setUserData(prev => ({ ...prev, [field]: currentValue }));
     }
   };
@@ -110,6 +130,9 @@ export default function Configuracoes() {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         localStorage.removeItem("role");
+        localStorage.removeItem("userId");
+        localStorage.removeItem("gymId");
+        localStorage.removeItem("gymName");
         navigate("/login");
       }
     });
@@ -219,6 +242,24 @@ export default function Configuracoes() {
         </section>
 
         <section className="config-group">
+          <h3 className="config-group-title">Assistente</h3>
+          <div className="config-item-row" onClick={() => handleToggle('isCoachEnabled', userData.isCoachEnabled)}>
+            <div className="config-item-info">
+              <div className="config-icon-box">
+                <RobotIcon />
+              </div>
+              <div className="config-text">
+                <h4>SmartCoach</h4>
+                <p>Menu rápido na lateral da tela</p>
+              </div>
+            </div>
+            <div className={`theme-switch-pill ${userData.isCoachEnabled ? 'light' : 'dark'}`}>
+               <div className="switch-dot"></div>
+            </div>
+          </div>
+        </section>
+
+        <section className="config-group">
           <h3 className="config-group-title">Aparência</h3>
           <div className="config-item-row" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
             <div className="config-item-info">
@@ -238,14 +279,14 @@ export default function Configuracoes() {
 
         <section className="config-group">
           <h3 className="config-group-title">Sobre</h3>
-          <div className="config-item-row" onClick={() => setAlertConfig({ isOpen: true, title: "GymClub", message: "Versão 3.1.0\nFocado em performance.", type: "info" })}>
+          <div className="config-item-row" onClick={() => showAlert("GymClub Elite", "Versao 3.1.0\nSistema de Alta Performance.\nDesenvolvido para atletas que buscam a excelencia.", "info")}>
             <div className="config-item-info">
               <div className="config-icon-box">
                 <InfoIcon />
               </div>
               <div className="config-text">
-                <h4>Informações</h4>
-                <p>Versão do app e suporte</p>
+                <h4>Informacoes</h4>
+                <p>Versao do sistema e suporte</p>
               </div>
             </div>
           </div>

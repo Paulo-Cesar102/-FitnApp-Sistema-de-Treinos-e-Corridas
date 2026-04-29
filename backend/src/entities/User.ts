@@ -21,6 +21,8 @@ export interface IUser {
   onboardingCompleted?: boolean; // Adicionado
   isPublicProfile?: boolean; // 🔥 Adicionado
   notificationsEnabled?: boolean; // 🔥 Adicionado
+  isCoachEnabled?: boolean; // 🔥 Adicionado
+  defaultRest?: number; // 🔥 Adicionado
   lastUnsubscribedAt?: Date; // 🔥 Adicionado para resolver erro de compilação
   lastActivityDate?: Date;
   gymId?: string;

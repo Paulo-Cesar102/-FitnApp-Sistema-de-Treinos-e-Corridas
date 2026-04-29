@@ -1,74 +1,38 @@
 import React, { useState, useEffect } from "react";
-import { gymService } from "../api/gymService";
-import { socket } from "../service/socket";
+import * as gymRankingService from "../api/rankingService";
+import "./GymRanking.css";
+
+// Ícones Minimalistas
+const TrophyIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-2.34"/><path d="M12 2v12.66"/><path d="M12 2a5 5 0 0 0-5 5v2h10V7a5 5 0 0 0-5-5z"/></svg>;
+const UsersIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
+const CheckIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
+const StarIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
 
 export default function GymRanking() {
   const [ranking, setRanking] = useState([]);
-  const [userRank, setUserRank] = useState(null);
-  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [offset, setOffset] = useState(0);
-  const limit = 50;
+  const [stats, setStats] = useState(null);
+  const [userRank, setUserRank] = useState(null);
 
-  const userId = localStorage.getItem("userId");
   const gymId = localStorage.getItem("gymId");
 
   useEffect(() => {
-    if (gymId && gymId !== "null" && gymId !== "undefined") {
-      loadRanking(gymId, offset);
-    } else {
-      setLoading(false);
+    if (gymId && gymId !== "null") {
+      loadRanking();
     }
+  }, [gymId]);
 
-    if (socket && gymId) {
-      socket.emit("join_gym_room", gymId);
-
-      const handleRankingUpdate = (data) => {
-        if (data.gymId === gymId) {
-          loadRanking(gymId, offset);
-        }
-      };
-
-      socket.on("ranking_updated", handleRankingUpdate);
-
-      return () => {
-        socket.off("ranking_updated", handleRankingUpdate);
-        socket.emit("leave_gym_room", gymId);
-      };
-    }
-  }, [gymId, offset]);
-
-  const loadRanking = async (gId, currentOffset) => {
-    setLoading(true);
+  const loadRanking = async () => {
     try {
-      const rankData = await gymService.getGymRanking(gId, limit, currentOffset);
-      setRanking(rankData);
-
-      if (userId) {
-        const userRankData = await gymService.getUserRank(userId, gId);
-        // Buscar posição real se não estiver no rankData
-        const positionData = await gymService.getUserRankPosition(userId, gId);
-        setUserRank({ ...userRankData, position: positionData.position });
-      }
-
-      const statsData = await gymService.getRankingStats(gId);
-      setStats(statsData);
+      setLoading(true);
+      const data = await gymRankingService.getGymRanking(gymId);
+      setRanking(data.ranking || []);
+      setStats(data.stats || null);
+      setUserRank(data.userRank || null);
     } catch (error) {
       console.error("Erro ao carregar ranking:", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (stats && offset + limit < stats.totalMembers) {
-      setOffset(offset + limit);
-    }
-  };
-
-  const handlePrevPage = () => {
-    if (offset - limit >= 0) {
-      setOffset(offset - limit);
     }
   };
 
@@ -83,97 +47,55 @@ export default function GymRanking() {
   return (
     <div className="ranking-container fade-in">
       <div className="checkin-header" style={{ marginBottom: "30px" }}>
-        <div className="icon-pulse" style={{ color: "#ffd700", textShadow: "0 0 15px rgba(255, 215, 0, 0.4)" }}>🏆</div>
+        <div className="icon-pulse" style={{ color: "#ffd700" }}>
+          <TrophyIcon />
+        </div>
         <h2>Ranking da Academia</h2>
-        <p>Acompanhe os líderes de check-ins e XP</p>
+        <p>Acompanhe os líderes de presença e evolução</p>
       </div>
 
       {stats && (
         <div className="stats-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
           <div className="stat-card glass" style={{ flexDirection: "column", padding: "15px", gap: "5px" }}>
-            <span className="stat-label">👥 Membros</span>
+            <span className="stat-label"><UsersIcon /> Membros</span>
             <span className="stat-value" style={{ fontSize: "1.5rem", color: "var(--text-main)" }}>{stats.totalMembers}</span>
           </div>
           <div className="stat-card glass" style={{ flexDirection: "column", padding: "15px", gap: "5px" }}>
-            <span className="stat-label">✅ Check-ins</span>
+            <span className="stat-label"><CheckIcon /> Presenças</span>
             <span className="stat-value" style={{ fontSize: "1.5rem", color: "#ffd700" }}>{stats.totalCheckIns}</span>
           </div>
           <div className="stat-card glass" style={{ flexDirection: "column", padding: "15px", gap: "5px" }}>
-            <span className="stat-label">⭐ XP Total</span>
+            <span className="stat-label"><StarIcon /> XP Total</span>
             <span className="stat-value" style={{ fontSize: "1.5rem", color: "var(--accent-neon)" }}>{stats.totalXpEarned}</span>
           </div>
         </div>
       )}
 
       {userRank && (
-        <div className="user-rank-banner glass neon-border" style={{ marginTop: "20px", marginBottom: "30px", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px", borderRadius: "15px" }}>
-          <div>
-            <h3 style={{ margin: "0 0 5px 0", color: "var(--text-main)", fontSize: "1.1rem" }}>Sua Posição</h3>
-            <p style={{ margin: "0", color: "var(--text-dim)", fontSize: "0.85rem" }}>Continue treinando para subir!</p>
-          </div>
-          <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
-            <div style={{ textAlign: "center" }}>
-              <span style={{ display: "block", fontSize: "0.75rem", color: "var(--text-dim)", textTransform: "uppercase" }}>Posição</span>
-              <span style={{ fontSize: "1.5rem", fontWeight: "800", color: "#ffd700" }}>#{userRank.position}</span>
-            </div>
-            <div style={{ textAlign: "center" }}>
-              <span style={{ display: "block", fontSize: "0.75rem", color: "var(--text-dim)", textTransform: "uppercase" }}>Check-ins</span>
-              <span style={{ fontSize: "1.2rem", fontWeight: "700" }}>{userRank.checkInCount}</span>
-            </div>
-            <div style={{ textAlign: "center" }}>
-              <span style={{ display: "block", fontSize: "0.75rem", color: "var(--text-dim)", textTransform: "uppercase" }}>XP</span>
-              <span style={{ fontSize: "1.2rem", fontWeight: "700", color: "var(--accent-neon)" }}>{userRank.totalXpGained}</span>
-            </div>
-          </div>
+        <div className="user-rank-highlight glass">
+           <div className="rank-pos">Sua Posição: <span>#{userRank.position}</span></div>
+           <div className="rank-xp">{userRank.totalXpGained} XP acumulados</div>
         </div>
       )}
 
-      <div className="ranking-panel glass">
-        <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3>🥇 Atletas ({offset + 1} - {Math.min(offset + limit, stats?.totalMembers || 0)})</h3>
-          <div className="pagination-controls" style={{ display: 'flex', gap: '10px' }}>
-            <button 
-              className="btn-small glass" 
-              onClick={handlePrevPage} 
-              disabled={offset === 0}
-              style={{ opacity: offset === 0 ? 0.5 : 1, cursor: offset === 0 ? 'not-allowed' : 'pointer' }}
-            >
-              ⬅️ Anterior
-            </button>
-            <button 
-              className="btn-small glass" 
-              onClick={handleNextPage} 
-              disabled={!stats || offset + limit >= stats.totalMembers}
-              style={{ opacity: !stats || offset + limit >= stats.totalMembers ? 0.5 : 1, cursor: !stats || offset + limit >= stats.totalMembers ? 'not-allowed' : 'pointer' }}
-            >
-              Próximo ➡️
-            </button>
-          </div>
-        </div>
-        <div className="ranking-table">
-          {ranking.map((member, index) => {
-            const actualPosition = offset + index + 1;
-            return (
-              <div key={member.id} className={`ranking-row ${member.userId === userId ? "is-current-user" : ""}`} style={{ backgroundColor: member.userId === userId ? "rgba(255, 69, 0, 0.1)" : "" }}>
-                <div className="user-pos" style={{ width: "50px", fontSize: actualPosition <= 3 ? "1.5rem" : "1.2rem", color: actualPosition === 1 ? "#ffd700" : actualPosition === 2 ? "#c0c0c0" : actualPosition === 3 ? "#cd7f32" : "var(--accent-neon)" }}>
-                  {actualPosition === 1 ? "🥇" : actualPosition === 2 ? "🥈" : actualPosition === 3 ? "🥉" : `#${actualPosition}`}
-                </div>
-                <div className="user-avatar" style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", marginRight: "15px", fontWeight: "bold" }}>
-                  {member.user.name.charAt(0)}
-                </div>
-                <div className="user-name" style={{ flexGrow: 1 }}>
-                  <div style={{ fontWeight: "600", color: "var(--text-main)" }}>{member.user.name} {member.userId === userId ? "(Você)" : ""}</div>
-                  <div style={{ fontSize: "0.8rem", color: "var(--text-dim)" }}>Nível {member.user.level}</div>
-                </div>
-                <div className="user-score" style={{ textAlign: "right" }}>
-                  <div style={{ color: "#ffd700", fontWeight: "700", fontSize: "1rem" }}>{member.totalXpGained} XP</div>
-                  <div style={{ color: "#4ecdc4", fontSize: "0.8rem", fontWeight: "600" }}>{member.checkInCount} check-ins</div>
-                </div>
+      <div className="ranking-list">
+        {ranking.length === 0 ? (
+          <p className="empty-msg">O ranking ainda está sendo processado.</p>
+        ) : (
+          ranking.map((item, index) => (
+            <div key={item.id} className={`ranking-item glass ${index < 3 ? `top-${index + 1}` : ""}`}>
+              <div className="pos">#{index + 1}</div>
+              <div className="user-info">
+                <div className="avatar">{item.user.name.charAt(0)}</div>
+                <span className="name">{item.user.name}</span>
               </div>
-            );
-          })}
-          {ranking.length === 0 && <div className="empty-panel-msg">Nenhum dado de ranking disponível nesta página.</div>}
-        </div>
+              <div className="score">
+                <span className="xp">{item.totalXpGained} XP</span>
+                <span className="checks">{item.checkInCount} presenças</span>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

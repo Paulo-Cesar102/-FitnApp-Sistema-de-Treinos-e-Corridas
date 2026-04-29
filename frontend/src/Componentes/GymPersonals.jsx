@@ -1,71 +1,35 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { gymService } from "../api/gymService";
-import { workoutService } from "../api/workoutService";
-import { socket } from "../service/socket";
-import CustomAlert from "./CustomAlert";
+import * as gymService from "../api/gymService";
+import "./GymPersonals.css";
+
+const UsersIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
+const ChevronDown = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>;
+const ChevronUp = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>;
 
 export default function GymPersonals() {
-  const navigate = useNavigate();
   const [personals, setPersonals] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState("");
   const [selectedPersonalId, setSelectedPersonalId] = useState(null);
   const [personalWorkouts, setPersonalWorkouts] = useState([]);
-  const [alertConfig, setAlertConfig] = useState({ isOpen: false });
-
+  const [workoutsLoading, setWorkoutsLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  
+  const navigate = useNavigate();
   const gymId = localStorage.getItem("gymId");
-
-  const showAlert = (title, message, type, onConfirm) => {
-    setAlertConfig({
-      isOpen: true, title, message, type,
-      onConfirm: onConfirm || (() => setAlertConfig({ isOpen: false }))
-    });
-  };
-
-  const showConfirm = (title, message, onConfirm) => {
-    setAlertConfig({
-      isOpen: true, 
-      title, 
-      message, 
-      type: "warning", 
-      confirmText: "Sim, Sair", 
-      cancelText: "Cancelar",
-      onConfirm, 
-      onCancel: () => setAlertConfig({ isOpen: false })
-    });
-  };
+  const currentUserId = localStorage.getItem("userId");
 
   useEffect(() => {
-    if (gymId && gymId !== "null" && gymId !== "undefined") {
-      loadPersonals(gymId);
-    } else {
-      setLoading(false);
-    }
-
-    if (socket && gymId) {
-      socket.emit("join_gym_room", gymId);
-
-      const handleNewPersonal = (data) => {
-        if (data.gymId === gymId) {
-          loadPersonals(gymId);
-        }
-      };
-
-      socket.on("personal_updated", handleNewPersonal);
-
-      return () => {
-        socket.off("personal_updated", handleNewPersonal);
-        socket.emit("leave_gym_room", gymId);
-      };
+    if (gymId && gymId !== "null") {
+      loadPersonals();
     }
   }, [gymId]);
 
-  const loadPersonals = async (gId) => {
-    setLoading(true);
+  const loadPersonals = async () => {
     try {
-      const data = await gymService.getGymPersonals(gId);
-      setPersonals(data);
+      setLoading(true);
+      const data = await gymService.getGymPersonals(gymId);
+      setPersonals(data || []);
     } catch (error) {
       console.error("Erro ao carregar personals:", error);
     } finally {
@@ -73,78 +37,52 @@ export default function GymPersonals() {
     }
   };
 
-  const loadPersonalWorkouts = async (userId) => {
-    if (selectedPersonalId === userId) {
+  const loadPersonalWorkouts = async (pUserId) => {
+    if (selectedPersonalId === pUserId) {
       setSelectedPersonalId(null);
-      setPersonalWorkouts([]);
       return;
     }
     
     try {
-      const data = await workoutService.getUserWorkouts(userId);
-      setPersonalWorkouts(data);
-      setSelectedPersonalId(userId);
-    } catch (err) {
-      setMessage("Erro ao carregar treinos deste personal");
+      setSelectedPersonalId(pUserId);
+      setWorkoutsLoading(true);
+      const data = await gymService.getPersonalWorkouts(pUserId);
+      setPersonalWorkouts(data || []);
+    } catch (error) {
+      console.error("Erro ao carregar treinos do personal:", error);
+    } finally {
+      setWorkoutsLoading(false);
+    }
+  };
+
+  const handleEnroll = async (pId, e) => {
+    e.stopPropagation();
+    try {
+      await gymService.enrollWithPersonal(pId);
+      setMessage("Inscrição realizada com sucesso.");
+      loadPersonals();
+      setTimeout(() => setMessage(""), 3000);
+    } catch (error) {
+      setMessage("Erro ao solicitar inscrição.");
       setTimeout(() => setMessage(""), 3000);
     }
   };
 
-  const currentUserId = localStorage.getItem("userId");
-
-  const handleEnroll = async (personalId, e) => {
+  const handleUnsubscribe = async (pId, e) => {
     e.stopPropagation();
     try {
-      await gymService.assignStudent(personalId);
-      showAlert("Sucesso", "Você agora está inscrito com este personal!", "success");
-      
-      // Atualiza o localStorage para o ExecutarTreino saber para quem enviar o sinal
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      if (!user.personalSubscriptions) user.personalSubscriptions = [];
-      user.personalSubscriptions.push(personalId);
-      localStorage.setItem("user", JSON.stringify(user));
-      
-      loadPersonals(gymId);
-
-      if (socket) {
-        socket.emit("student_enrolled", { personalId });
-      }
-    } catch (err) {
-      const errorMsg = err.response?.data?.error || "Erro ao se inscrever";
-      showAlert("Atenção", errorMsg, "error");
+      await gymService.unsubscribeFromPersonal(pId);
+      setMessage("Vínculo removido com sucesso.");
+      loadPersonals();
+      setTimeout(() => setMessage(""), 3000);
+    } catch (error) {
+      setMessage("Erro ao remover vínculo.");
+      setTimeout(() => setMessage(""), 3000);
     }
-  };
-
-  const handleUnsubscribe = async (personalId, e) => {
-    e.stopPropagation();
-    
-    showConfirm("Sair do Personal", "Tem certeza que deseja encerrar o acompanhamento? Você só poderá se inscrever em um novo personal após 24 horas.", async () => {
-      setAlertConfig({ isOpen: false });
-      try {
-        await gymService.removeStudent(personalId, currentUserId);
-        
-        // Remove do localStorage
-        const user = JSON.parse(localStorage.getItem("user") || "{}");
-        if (user.personalSubscriptions) {
-          user.personalSubscriptions = user.personalSubscriptions.filter(id => id !== personalId);
-          localStorage.setItem("user", JSON.stringify(user));
-        }
-        
-        showAlert("Sucesso", "Você encerrou o acompanhamento com sucesso.", "success");
-        loadPersonals(gymId);
-      } catch (err) {
-        showAlert("Erro", "Não foi possível processar sua saída. Tente novamente.", "error");
-      }
-    });
   };
 
   const startTraining = (workout) => {
-    if (workout?.exercises?.length > 0) {
-      const workoutSeguro = JSON.parse(JSON.stringify(workout));
-      navigate("/executar-treino", { state: { workout: workoutSeguro } });
-    } else {
-      showAlert("Atenção", "Este treino ainda não possui exercícios cadastrados.", "error");
-    }
+    navigate("/executar-treino", { state: { workout: JSON.parse(JSON.stringify(workout)) } });
   };
 
   if (!gymId || gymId === "null" || gymId === "undefined") {
@@ -154,109 +92,108 @@ export default function GymPersonals() {
   return (
     <div className="personals-container fade-in">
       <div className="checkin-header" style={{ marginBottom: "30px" }}>
-        <div className="icon-pulse" style={{ color: "#ff4500", textShadow: "0 0 15px rgba(255, 69, 0, 0.4)" }}>💪</div>
-        <h2>Equipe de Personals</h2>
-        <p>Conheça os instrutores e seus treinos disponíveis</p>
+        <div className="icon-pulse" style={{ color: "var(--primary-color)" }}>
+          <UsersIcon />
+        </div>
+        <h2>Equipe de Instrutores</h2>
+        <p>Conheça os profissionais e seus treinos disponíveis</p>
       </div>
 
       {message && (
-        <div className={`toast-message ${message.includes("❌") || message.includes("Erro") ? "error" : "success"}`} style={{
-          position: 'fixed', top: '20px', right: '20px', padding: '15px 25px', borderRadius: '10px', zIndex: 1000, 
-          background: message.includes("❌") ? 'rgba(255, 77, 77, 0.9)' : 'rgba(78, 205, 196, 0.9)', color: 'white', fontWeight: '600'
+        <div className={`toast-message ${message.toLowerCase().includes("erro") ? "error" : "success"}`} style={{
+          position: 'fixed', top: '20px', right: '20px', padding: '15px 25px', borderRadius: '12px', zIndex: 1000,
+          background: message.toLowerCase().includes("erro") ? 'rgba(255, 77, 77, 0.95)' : 'rgba(78, 205, 196, 0.95)', 
+          color: 'white', fontWeight: '800', boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
         }}>
-          {message}
+          {message.toUpperCase()}
         </div>
       )}
 
       {loading && !personals.length ? (
-        <div className="loader-text" style={{ textAlign: 'center', padding: '40px' }}>Buscando equipe...</div>
+        <div className="loader-text" style={{ textAlign: 'center', padding: '40px' }}>Buscando equipe técnica...</div>
       ) : (
         <div className="personals-list-grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", display: "grid", gap: "20px" }}>
           {personals.length === 0 ? (
             <div className="empty-panel-msg" style={{ gridColumn: "1 / -1" }}>
-              Nenhum personal cadastrado nesta academia.
+              Nenhum personal cadastrado nesta unidade.
             </div>
           ) : (
             personals.map((personal) => {
               const isEnrolled = personal.students?.some(s => s.studentId === currentUserId);
-              
+
               return (
-                <div key={personal.id} className={`personal-card-new glass ${isEnrolled ? 'enrolled' : ''}`} style={{ padding: "20px", borderRadius: "15px", border: "1px solid var(--glass-border)", cursor: "pointer", transition: "all 0.3s", position: 'relative' }} onClick={() => loadPersonalWorkouts(personal.userId)}>
-                  {isEnrolled && <span style={{ position: 'absolute', top: '-10px', left: '20px', background: 'var(--accent-neon)', color: 'white', fontSize: '0.6rem', padding: '4px 10px', borderRadius: '20px', fontWeight: '800' }}>MEU PERSONAL</span>}
-                  
+                <div key={personal.id} className={`personal-card-new glass ${isEnrolled ? 'enrolled' : ''}`} style={{ padding: "20px", borderRadius: "18px", border: "1px solid var(--border-color)", cursor: "pointer", transition: "all 0.3s", position: 'relative' }} onClick={() => loadPersonalWorkouts(personal.userId)}>
+                  {isEnrolled && <span style={{ position: 'absolute', top: '-10px', left: '20px', background: 'var(--primary-color)', color: 'white', fontSize: '0.65rem', padding: '5px 12px', borderRadius: '20px', fontWeight: '900', letterSpacing: '0.5px' }}>MEU INSTRUTOR</span>}
+
                   <div className="card-header" style={{ display: "flex", alignItems: "center", gap: "15px", marginBottom: "15px" }}>
-                    <div className="avatar" style={{ width: "50px", height: "50px", background: "var(--accent-neon)", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "1.5rem" }}>
+                    <div className="avatar" style={{ width: "52px", height: "52px", background: "var(--primary-color)", borderRadius: "14px", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "900", fontSize: "1.4rem", color: "white" }}>
                       {personal.user?.name ? personal.user.name.charAt(0).toUpperCase() : "P"}
                     </div>
                     <div className="header-info" style={{ flex: 1 }}>
-                      <h3 style={{ margin: "0", fontSize: "1.1rem", color: "var(--text-main)" }}>{personal.user?.name || "Personal"}</h3>
-                      <span className="spec-tag" style={{ fontSize: "0.75rem", color: "var(--accent-neon)", background: "rgba(255, 69, 0, 0.1)", padding: "2px 8px", borderRadius: "5px", textTransform: "uppercase", fontWeight: "600", display: "inline-block", marginTop: "5px" }}>
+                      <h3 style={{ margin: "0", fontSize: "1rem", fontWeight: '800', color: "var(--text-main)" }}>{personal.user?.name || "Personal"}</h3>
+                      <span className="spec-tag" style={{ fontSize: "0.7rem", color: "var(--primary-color)", background: "rgba(255, 69, 0, 0.1)", padding: "3px 8px", borderRadius: "6px", textTransform: "uppercase", fontWeight: "800", display: "inline-block", marginTop: "5px" }}>
                         {personal.specialization || "Instrutor"}
                       </span>
                     </div>
                   </div>
-                  
-                  <div className="card-body">
-                    <p style={{ fontSize: "0.9rem", color: "var(--text-dim)", marginBottom: "15px", lineHeight: "1.4" }}>
-                      {personal.bio || "Sem descrição disponível no momento."}
-                    </p>
-                    
+
+                  <div className="card-actions-personal">
                     {isEnrolled ? (
-                      <button 
+                      <button
                         onClick={(e) => handleUnsubscribe(personal.id, e)}
-                        style={{ width: '100%', padding: '10px', background: 'rgba(255, 77, 77, 0.1)', border: '1px solid rgba(255, 77, 77, 0.3)', color: '#ff4d4d', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', marginBottom: '10px' }}
+                        style={{ width: '100%', padding: '12px', background: 'rgba(255, 77, 77, 0.1)', border: '1px solid rgba(255, 77, 77, 0.2)', color: '#ff4d4d', borderRadius: '10px', fontWeight: '800', cursor: 'pointer', marginBottom: '10px', fontSize: '0.75rem' }}
                       >
-                        Sair do Personal
+                        REMOVER VÍNCULO
                       </button>
                     ) : (
                       currentUserId !== personal.userId && (
-                        <button 
+                        <button
                           onClick={(e) => handleEnroll(personal.id, e)}
-                          style={{ width: '100%', padding: '10px', background: 'var(--accent-neon)', border: 'none', color: 'white', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', marginBottom: '10px' }}
+                          style={{ width: '100%', padding: '12px', background: 'var(--primary-color)', border: 'none', color: 'white', borderRadius: '10px', fontWeight: '800', cursor: 'pointer', marginBottom: '10px', fontSize: '0.75rem', boxShadow: '0 6px 15px var(--primary-glow)' }}
                         >
-                          Inscrever-se
+                          SOLICITAR ACOMPANHAMENTO
                         </button>
                       )
                     )}
                   </div>
-                  
-                  <div className="card-footer" style={{ borderTop: "1px solid var(--glass-border)", paddingTop: "15px", marginTop: "5px", textAlign: "center", color: "var(--accent-neon)", fontSize: "0.85rem", fontWeight: "600" }}>
-                    {selectedPersonalId === personal.userId ? "Ocultar Treinos ▲" : "Ver Treinos ▼"}
+
+                  <div className="card-footer" style={{ borderTop: "1px solid var(--border-color)", paddingTop: "15px", marginTop: "5px", textAlign: "center", color: "var(--primary-color)", fontSize: "0.75rem", fontWeight: "800", display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    {selectedPersonalId === personal.userId ? "OCULTAR TREINOS" : "VER TREINOS"}
+                    {selectedPersonalId === personal.userId ? <ChevronUp /> : <ChevronDown />}
                   </div>
 
-                {selectedPersonalId === personal.userId && (
-                  <div className="personal-workouts-list slide-down" style={{ marginTop: "15px", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "15px" }} onClick={(e) => e.stopPropagation()}>
-                    <h4 style={{ fontSize: "0.9rem", marginBottom: "10px", color: "var(--text-main)", textTransform: "uppercase" }}>Treinos Criados</h4>
-                    {personalWorkouts.length === 0 ? (
-                      <p style={{ fontSize: "0.8rem", color: "var(--text-dim)" }}>Nenhum treino público.</p>
-                    ) : (
-                      <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                        {personalWorkouts.map(w => (
-                          <li key={w.id} style={{ padding: "12px", background: "rgba(255,255,255,0.03)", borderRadius: "10px", marginBottom: "8px", fontSize: "0.85rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <div style={{ display: "flex", flexDirection: "column" }}>
-                                <span style={{ fontWeight: "600", color: "var(--text-main)" }}>{w.name}</span>
-                                <span style={{ color: "var(--text-dim)", fontSize: "0.7rem" }}>{w.exercises?.length || 0} exercícios</span>
-                            </div>
-                            <button 
-                                onClick={() => startTraining(w)}
-                                style={{ padding: "6px 15px", background: "var(--accent-neon)", border: "none", color: "white", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "700", cursor: "pointer" }}
-                            >
-                                INICIAR
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })
+                  {selectedPersonalId === personal.userId && (
+                    <div className="personal-workouts-drawer fade-in" style={{ marginTop: "15px", borderTop: "1px solid var(--border-color)", paddingTop: "15px" }}>
+                      {workoutsLoading ? (
+                        <p style={{ textAlign: "center", fontSize: "0.8rem", color: "var(--text-muted)" }}>Carregando biblioteca...</p>
+                      ) : personalWorkouts.length === 0 ? (
+                        <p style={{ textAlign: "center", fontSize: "0.8rem", color: "var(--text-muted)" }}>Este instrutor ainda não publicou treinos.</p>
+                      ) : (
+                        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                          {personalWorkouts.map(w => (
+                            <li key={w.id} style={{ padding: "12px", background: "var(--bg-card-alt)", border: '1px solid var(--border-color)', borderRadius: "12px", marginBottom: "10px", fontSize: "0.85rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <div style={{ display: "flex", flexDirection: "column" }}>
+                                  <span style={{ fontWeight: "800", color: "var(--text-main)" }}>{w.name}</span>
+                                  <span style={{ color: "var(--text-muted)", fontSize: "0.65rem", fontWeight: '700' }}>{w.exercises?.length || 0} EXERCÍCIOS</span>
+                              </div>
+                              <button
+                                  onClick={(e) => { e.stopPropagation(); startTraining(w); }}
+                                  style={{ padding: "8px 16px", background: "var(--primary-color)", border: "none", color: "white", borderRadius: "8px", fontSize: "0.7rem", fontWeight: "900", cursor: "pointer", boxShadow: '0 4px 10px var(--primary-glow)' }}
+                              >
+                                  INICIAR
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })
           )}
         </div>
       )}
-
-      <CustomAlert config={alertConfig} />
     </div>
   );
 }

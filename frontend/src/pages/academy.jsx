@@ -19,10 +19,10 @@ export default function Academy() {
   const [activeTab, setActiveTab] = useState("checkin");
 
   const tabs = [
-    { id: "checkin", label: "📍 Check-in", icon: "📍" },
-    { id: "ranking", label: "🏆 Ranking", icon: "🏆" },
-    { id: "announcements", label: "📢 Avisos", icon: "📢" },
-    { id: "personals", label: "💪 Personals", icon: "💪" },
+    { id: "checkin", label: "Check-in" },
+    { id: "ranking", label: "Ranking" },
+    { id: "announcements", label: "Avisos" },
+    { id: "personals", label: "Equipe" },
   ];
 
   const handleJoined = (newGymId) => {

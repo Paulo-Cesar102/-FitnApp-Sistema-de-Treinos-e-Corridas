@@ -34,10 +34,32 @@ export class WorkoutRepository {
     return workout as unknown as IWorkout;
   }
 
-  async findAll(userId: string): Promise<IWorkout[]> {
+  async findAllByUser(userId: string): Promise<IWorkout[]> {
     const workouts = await prisma.userWorkout.findMany({
       where: {
-        userId,
+        userId: userId,
+      },
+      include: {
+        exercises: {
+          include: {
+            exercise: {
+              include: {
+                category: true,
+                primaryMuscle: true
+              }
+            },
+          },
+        },
+      },
+    });
+
+    return workouts as unknown as IWorkout[];
+  }
+
+  async findAllCatalog(): Promise<IWorkout[]> {
+    const workouts = await prisma.userWorkout.findMany({
+      where: {
+        userId: null, // Treinos do catálogo oficial não possuem userId vinculado
       },
       include: {
         exercises: {
@@ -76,6 +98,41 @@ export class WorkoutRepository {
     });
 
     return workout as unknown as IWorkout | null;
+  }
+
+  async update(id: string, data: { name: string; exercises: any[] }): Promise<IWorkout> {
+    // Primeiro limpa exercícios antigos para evitar duplicidade ou erro de constraint
+    await prisma.userWorkoutExercise.deleteMany({
+        where: { userWorkoutId: id }
+    });
+
+    const workout = await prisma.userWorkout.update({
+        where: { id },
+        data: {
+            name: data.name,
+            exercises: {
+                create: data.exercises.map((ex: any) => ({
+                    exerciseId: ex.exerciseId,
+                    sets: ex.sets || 3,
+                    reps: ex.reps || 12
+                }))
+            }
+        },
+        include: {
+            exercises: {
+                include: {
+                    exercise: {
+                        include: {
+                            category: true,
+                            primaryMuscle: true
+                        }
+                    },
+                },
+            },
+        }
+    });
+
+    return workout as unknown as IWorkout;
   }
 
   async delete(id: string): Promise<void> {

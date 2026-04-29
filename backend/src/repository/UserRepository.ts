@@ -103,7 +103,7 @@ export class UserRepository implements IUserRepository {
       "goalType", "experienceLevel", "onboardingCompleted", 
       "level", "xp", "streak", "maxStreak", "lastActivityDate", "gymId",
       "lastUnsubscribedAt",
-      "isPublicProfile", "notificationsEnabled" // 🔥 Adicionado
+      "isPublicProfile", "notificationsEnabled", "isCoachEnabled", "defaultRest" // 🔥 Adicionado
     ];
 
     fields.forEach(field => {

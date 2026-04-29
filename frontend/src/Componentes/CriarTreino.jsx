@@ -10,6 +10,8 @@ const SearchIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="n
 const CheckIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
 const DumbbellIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 15H4a2 2 0 0 1-2-2V11a2 2 0 0 1 2-2h2m12 6h2a2 2 0 0 0 2-2V11a2 2 0 0 0-2-2h-2M9 7v10m6-10v10m-6-5h6"/></svg>;
 
+const ChevronRight = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>;
+
 export default function CriarTreino({ onCreated, students = [] }) {
   const navigate = useNavigate();
   const [nomeTreino, setNomeTreino] = useState("");
@@ -23,8 +25,20 @@ export default function CriarTreino({ onCreated, students = [] }) {
   const [alertConfig, setAlertConfig] = useState({ isOpen: false });
   const [targetUserId, setTargetUserId] = useState(localStorage.getItem("userId"));
   const [studentSearch, setStudentSearch] = useState("");
+  const [isFilterExpanded, setIsFilterExpanded] = useState(true);
 
   const isPersonal = localStorage.getItem("role") === "PERSONAL";
+
+  // Auto-recolher filtros ao rolar
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 150 && isFilterExpanded) {
+        setIsFilterExpanded(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isFilterExpanded]);
 
   const filteredStudents = students.filter(s => 
     s.name.toLowerCase().includes(studentSearch.toLowerCase())
@@ -146,65 +160,76 @@ export default function CriarTreino({ onCreated, students = [] }) {
         )}
       </header>
 
-      <div className="filters-glass-v3">
-        <div className="search-bar-v3">
-          <SearchIcon />
-          <input
-            type="text"
-            placeholder="Pesquisar exercício..."
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-          />
-        </div>
-
-        <div className="filter-row">
-          <span className="tiny-label">INTENSIDADE</span>
-          <div className="chips-scroll-v3">
-            {["ALL", "BEGINNER", "INTERMEDIATE", "ADVANCED"].map((diff) => (
-              <button
-                key={diff}
-                className={`chip-v3 ${selectedDifficulty === diff ? 'active' : ''}`}
-                onClick={() => setSelectedDifficulty(diff)}
-              >
-                {diff === "ALL" ? "Todos" : getDifficultyLabel(diff)}
-              </button>
-            ))}
+      <div className={`filters-glass-v3 ${isFilterExpanded ? "expanded" : "collapsed"}`}>
+        <div className="search-bar-row">
+          <div className="search-bar-v3">
+            <SearchIcon />
+            <input
+              type="text"
+              placeholder="Pesquisar exercício..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+            />
           </div>
+          <button 
+            className={`btn-toggle-filters ${isFilterExpanded ? "active" : ""}`}
+            onClick={() => setIsFilterExpanded(!isFilterExpanded)}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="2" y1="14" x2="6" y2="14"/><line x1="10" y1="8" x2="14" y2="8"/><line x1="18" y1="16" x2="22" y2="16"/></svg>
+            <span>{isFilterExpanded ? "Recolher" : "Filtros"}</span>
+          </button>
         </div>
 
-        {categories.length > 1 && (
+        <div className="collapsible-filters">
           <div className="filter-row">
-            <span className="tiny-label">MODALIDADE</span>
+            <span className="tiny-label">INTENSIDADE</span>
             <div className="chips-scroll-v3">
-              {categories.map((cat) => (
+              {["ALL", "BEGINNER", "INTERMEDIATE", "ADVANCED"].map((diff) => (
                 <button
-                  key={cat}
-                  className={`chip-v3-small ${selectedCategory === cat ? 'active' : ''}`}
-                  onClick={() => setSelectedCategory(cat)}
+                  key={diff}
+                  className={`chip-v3 ${selectedDifficulty === diff ? 'active' : ''}`}
+                  onClick={() => setSelectedDifficulty(diff)}
                 >
-                  {cat === "ALL" ? "Todas" : cat}
+                  {diff === "ALL" ? "Todos" : getDifficultyLabel(diff)}
                 </button>
               ))}
             </div>
           </div>
-        )}
 
-        {muscles.length > 1 && (
-          <div className="filter-row">
-            <span className="tiny-label">FOCO MUSCULAR</span>
-            <div className="chips-scroll-v3">
-              {muscles.map((m) => (
-                <button
-                  key={m}
-                  className={`chip-v3-small ${selectedMuscle === m ? 'active' : ''}`}
-                  onClick={() => setSelectedMuscle(m)}
-                >
-                  {m === "ALL" ? "Geral" : m}
-                </button>
-              ))}
+          {categories.length > 1 && (
+            <div className="filter-row">
+              <span className="tiny-label">MODALIDADE</span>
+              <div className="chips-scroll-v3">
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    className={`chip-v3-small ${selectedCategory === cat ? 'active' : ''}`}
+                    onClick={() => setSelectedCategory(cat)}
+                  >
+                    {cat === "ALL" ? "Todas" : cat}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+
+          {muscles.length > 1 && (
+            <div className="filter-row">
+              <span className="tiny-label">FOCO MUSCULAR</span>
+              <div className="chips-scroll-v3">
+                {muscles.map((m) => (
+                  <button
+                    key={m}
+                    className={`chip-v3-small ${selectedMuscle === m ? 'active' : ''}`}
+                    onClick={() => setSelectedMuscle(m)}
+                  >
+                    {m === "ALL" ? "Geral" : m}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="exercise-grid-v3">
@@ -254,7 +279,11 @@ export default function CriarTreino({ onCreated, students = [] }) {
       {selecionados.length > 0 && (
         <div className="floating-footer-v3">
           <button className="btn-save-premium" onClick={() => setShowNameModal(true)}>
-            FINALIZAR LISTA <span>({selecionados.length})</span>
+            <div className="btn-content">
+              <span className="btn-badge">{selecionados.length}</span>
+              <span className="btn-text">Finalizar Lista</span>
+            </div>
+            <ChevronRight />
           </button>
         </div>
       )}

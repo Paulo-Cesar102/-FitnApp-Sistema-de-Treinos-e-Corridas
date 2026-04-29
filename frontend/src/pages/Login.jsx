@@ -16,12 +16,6 @@ export default function Login() {
     const user = response.user;
     localStorage.setItem("user", JSON.stringify(user));
     localStorage.setItem("role", user.role);
-
-    const gymId = user.gymId || user.gym?.id;
-    const gymName = user.gymName || user.gym?.name || "";
-
-    localStorage.setItem("gymId", gymId);
-    localStorage.setItem("gymName", gymName);
     localStorage.setItem("userId", user.id);
 
     showAlert(

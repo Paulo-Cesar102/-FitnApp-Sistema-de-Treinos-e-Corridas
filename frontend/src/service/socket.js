@@ -11,7 +11,7 @@ export const connectSocket = (userId) => {
 
   // 🔥 EVENTO CRUCIAL: Sempre que conectar ou reconectar, se identifica
   socket.on("connect", () => {
-    console.log("🟢 Conectado e identificando usuário:", userId);
+    console.log("Conectado e identificando usuário:", userId);
     socket.emit("identify", userId);
   });
 };

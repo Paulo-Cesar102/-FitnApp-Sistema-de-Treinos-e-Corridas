@@ -1,0 +1,83 @@
+.checkin-container {
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.main-checkin-btn {
+  width: 100%;
+  max-width: 350px;
+  padding: 24px;
+  background: linear-gradient(135deg, var(--primary-color), #ff8c00);
+  border: none;
+  border-radius: 24px;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 950;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 0 15px 35px var(--primary-glow);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  margin-bottom: 40px;
+}
+
+.main-checkin-btn:active { transform: scale(0.95); }
+
+.main-checkin-btn.loading { opacity: 0.7; pointer-events: none; }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  width: 100%;
+  margin-bottom: 40px;
+}
+
+.stat-card.glass {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  background: var(--bg-card-alt);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-color);
+}
+
+.stat-info { display: flex; flex-direction: column; }
+.stat-value { font-size: 1.3rem; font-weight: 900; color: var(--text-main); }
+.stat-label { font-size: 0.65rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
+
+.history-section { width: 100%; }
+.history-section h3 { font-size: 1rem; font-weight: 900; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+
+.history-list { display: flex; flex-direction: column; gap: 12px; }
+
+.history-item.glass {
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-item .date { font-weight: 800; font-size: 0.9rem; }
+.history-item .time { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+.history-item .bonus { font-weight: 900; color: #10b981; font-size: 0.85rem; }
+
+@media (max-width: 500px) {
+  .stats-grid { grid-template-columns: 1fr; }
+}
