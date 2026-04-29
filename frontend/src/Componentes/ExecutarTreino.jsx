@@ -280,32 +280,43 @@ export default function ExecutarTreino({ workout }) {
           </div>
         </section>
 
-        <section className={`instruction-accordion glass ${showInstructions ? "is-expanded" : ""}`}>
-          <div className="accordion-handle" onClick={() => {
-            const newShow = !showInstructions;
-            setShowInstructions(newShow);
-            if (newShow) fetchAiInstruction();
-          }}>
-            <div className="handle-info">
-              <RobotIcon />
-              <span>Analise da Tecnica (IA)</span>
-            </div>
-            {loadingAi ? (
-              <div className="ai-loader-mini"></div>
-            ) : (
-              <svg className={`chevron ${showInstructions ? "rotated" : ""}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="6 9 12 15 18 9"/></svg>
-            )}
-          </div>
-          <div className="accordion-content">
-            {loadingAi ? (
-              <p className="ai-loading-text">Analisando biomecanica...</p>
-            ) : (
-              <div className="ai-instruction-box">
-                <p className="ai-text">{aiInstruction}</p>
-                <span className="ai-tag">SMART COACH V2.0</span>
+        {/* Smart Coach - Posicionado estrategicamente ENTRE a mídia e o cronômetro */}
+        <section className="smart-coach-integration-v3">
+          {!showInstructions && (
+            <button className="coach-trigger-tab" onClick={() => {
+              setShowInstructions(true);
+              fetchAiInstruction();
+            }}>
+              <RobotIcon /> <span>Dicas do Coach</span>
+            </button>
+          )}
+
+          <section className={`instruction-drawer-v3 ${showInstructions ? "is-open" : ""}`}>
+            <div className="drawer-header-v3">
+              <div className="handle-info-v3">
+                <RobotIcon />
+                <span>Smart Coach AI</span>
               </div>
-            )}
-          </div>
+              <button className="close-drawer-btn" onClick={() => setShowInstructions(false)}>✕</button>
+            </div>
+            
+            <div className="drawer-content-v3">
+              {loadingAi ? (
+                <div className="ai-loading-container">
+                  <div className="ai-loader-v3"></div>
+                  <p>Analisando biomecânica...</p>
+                </div>
+              ) : (
+                <div className="ai-instruction-box-v3">
+                  <div className="ai-text-v3">
+                    {aiInstruction.split('\n').map((line, i) => (
+                      <p key={i}>{line}</p>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
         </section>
 
         <section className="main-timer-zone-v3">
@@ -345,7 +356,7 @@ export default function ExecutarTreino({ workout }) {
         </div>
         <div className="footer-info-v3">
           {nextExercise ? (
-            <div className="next-exercise-label">
+            <div className="next-exercise-label" onClick={() => mudarExercicio("proximo")}>
               <span className="label-v3">PROXIMO</span>
               <span className="name-v3">{nextExercise}</span>
             </div>

@@ -175,18 +175,28 @@ export class WorkoutService {
       where: { userId },
       include: {
         exercise: {
-          include: { category: true }
+          include: { 
+            primaryMuscle: true,
+            category: true 
+          }
         }
       }
     });
 
     const counts: Record<string, number> = {};
     completedExercises.forEach(ce => {
-      const catName = ce.exercise.category?.name || "Outros";
-      counts[catName] = (counts[catName] || 0) + 1;
+      // Priorizar o grupo muscular primário para o gráfico de foco
+      const muscleName = ce.exercise.primaryMuscle?.name || ce.exercise.category?.name || "Outros";
+      counts[muscleName] = (counts[muscleName] || 0) + 1;
     });
 
-    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+    if (Object.keys(counts).length === 0) {
+      return [{ name: "Sem dados", value: 1 }];
+    }
+
+    return Object.entries(counts)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
   }
 
   async getWeeklyStats(userId: string) {

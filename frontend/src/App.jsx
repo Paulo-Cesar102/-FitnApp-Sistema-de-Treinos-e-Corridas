@@ -156,6 +156,7 @@ function Layout({ children }) {
   // Rotas de autenticação onde o onboarding e o Drawer NÃO devem aparecer
   const authRoutes = ["/login", "/register", "/register-owner", "/"];
   const isAuthRoute = authRoutes.includes(location.pathname);
+  const isExecutarTreino = location.pathname === "/executar-treino";
   
   if (role === "GYM_OWNER" || role === "PERSONAL") {
      if (location.pathname === "/academy") {
@@ -184,8 +185,8 @@ function Layout({ children }) {
         <CompleteProfile user={currentUser} onComplete={handleProfileComplete} />
       )}
 
-      {/* Menu Gaveta Lateral para o Coach */}
-      {!isAuthRoute && <CoachDrawer />}
+      {/* Menu Gaveta Lateral para o Coach - Oculto na execução de treino para evitar conflito */}
+      {!isAuthRoute && !isExecutarTreino && <CoachDrawer />}
 
       {children}
       {mostrarMenu && <MenuBar />}
