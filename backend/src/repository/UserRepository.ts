@@ -12,7 +12,8 @@ export class UserRepository implements IUserRepository {
         email: data.email,
         password: data.password,
         sex: data.sex,
-        role: data.role ?? "USER"
+        role: data.role ?? "USER",
+        gymId: data.gymId
       }
     });
 
@@ -85,6 +86,29 @@ export class UserRepository implements IUserRepository {
       totalWorkoutsDone: user._count.completedWorkouts,
       _count: undefined 
     })) as unknown as IUser[];
+  }
+
+  async search(query: string): Promise<IUser[]> {
+    const users = await prisma.user.findMany({
+      where: {
+        OR: [
+          { name: { contains: query, mode: "insensitive" } },
+          { email: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        sex: true,
+        level: true,
+        xp: true,
+        role: true,
+      },
+      take: 10,
+    });
+
+    return users as unknown as IUser[];
   }
 
   async delete(id: string): Promise<void> {

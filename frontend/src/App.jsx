@@ -15,6 +15,7 @@ import Perfil from "./pages/Perfil";
 import Configuracoes from "./pages/Configuracoes";
 import Friends from "./pages/friends";
 import Academy from "./pages/academy";
+import AuthHub from "./pages/AuthHub";
 import SmartCoach from "./Componentes/SmartCoach";
 import CoachDrawer from "./Componentes/CoachDrawer";
 import CompleteProfile from "./Componentes/CompleteProfile";
@@ -154,7 +155,7 @@ function Layout({ children }) {
   let mostrarMenu = rotasComMenu.includes(location.pathname);
   
   // Rotas de autenticação onde o onboarding e o Drawer NÃO devem aparecer
-  const authRoutes = ["/login", "/register", "/register-owner", "/"];
+  const authRoutes = ["/login", "/register", "/register-owner", "/", "/auth"];
   const isAuthRoute = authRoutes.includes(location.pathname);
   const isExecutarTreino = location.pathname === "/executar-treino";
   
@@ -212,10 +213,14 @@ const AppContent = React.memo(() => {
   return (
     <Layout>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/register-owner" element={<RegisterOwner />} />
+        <Route path="/" element={<Navigate to="/auth" />} />
+        <Route path="/auth" element={<AuthHub />} />
+        
+        {/* Fallbacks para compatibilidade ou redirecionamento direto */}
+        <Route path="/login" element={<Navigate to="/auth" />} />
+        <Route path="/register" element={<Navigate to="/auth" />} />
+        <Route path="/register-owner" element={<Navigate to="/auth" />} />
+
         <Route path="/home" element={<Home />} />
         <Route path="/exercicio" element={<Treinos />} />
         <Route path="/criar-treino" element={<CriarTreino />} />

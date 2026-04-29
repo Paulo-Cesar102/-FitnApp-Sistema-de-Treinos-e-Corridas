@@ -35,6 +35,10 @@ export class UserService {
     return this.userRepository.findAll();
   }
 
+  async search(query: string): Promise<IUser[]> {
+    return this.userRepository.search(query);
+  }
+
 
   async findById(id: string): Promise<IUser | null> {
     return this.userRepository.findById(id);

@@ -28,14 +28,15 @@ export class UserController {
 
   async create(req: Request, res: Response): Promise<Response> {
     try {
-      const { name, email, password, sex } = req.body;
+      const { name, email, password, sex, role, gymId } = req.body;
 
       const user = await this.userService.create({
         name,
         email,
-        password, // Dica: No seu UserService.create, lembre de usar bcrypt.hash aqui!
+        password,
         sex: sex.toUpperCase() as Sex,
-        role: "USER"
+        role: role || "USER",
+        gymId: gymId
       });
 
       return res.status(201).json(user);
@@ -50,6 +51,21 @@ export class UserController {
   async findAll(req: Request, res: Response): Promise<Response> {
     try {
       const users = await this.userService.findAll();
+      return res.json(users);
+    } catch (error) {
+      return res.status(500).json({
+        error: "Internal server error"
+      });
+    }
+  }
+
+  async search(req: Request, res: Response): Promise<Response> {
+    try {
+      const { q } = req.query;
+      if (!q) {
+        return res.status(400).json({ error: "Query parameter 'q' is required" });
+      }
+      const users = await this.userService.search(q as string);
       return res.json(users);
     } catch (error) {
       return res.status(500).json({

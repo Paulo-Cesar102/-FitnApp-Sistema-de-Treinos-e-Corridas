@@ -4,6 +4,7 @@ import "dotenv/config";
 import { ZodError } from "zod";
 import http from "http";
 import { Server } from "socket.io";
+import jwt from "jsonwebtoken";
 
 // Importação das Rotas
 import { userRoutes } from "./src/routes/user.routes";
@@ -32,6 +33,23 @@ export const io = new Server(server, {
   cors: {
     origin: ["http://localhost:5173", "http://localhost:5174"],
     methods: ["GET", "POST"]
+  }
+});
+
+// 🔥 Middleware de Autenticação para Socket.io
+io.use((socket, next) => {
+  const token = socket.handshake.auth?.token;
+
+  if (!token) {
+    return next(new Error("Authentication error: Token not provided"));
+  }
+
+  try {
+    const decoded = jwt.verify(token, "segredo-super-secreto") as any;
+    (socket as any).userId = decoded.id;
+    next();
+  } catch (err) {
+    return next(new Error("Authentication error: Invalid token"));
   }
 });
 
@@ -73,14 +91,15 @@ app.get("/", (_req, res) => {
 
 // 🔥 LÓGICA DO SOCKET.IO (REVISADA)
 io.on("connection", (socket) => {
-  console.log("🔌 Novo socket conectado:", socket.id);
+  const authenticatedUserId = (socket as any).userId;
+  console.log("🔌 Novo socket autenticado conectado:", socket.id, "User:", authenticatedUserId);
 
   /**
    * Identifica o usuário e o coloca em uma sala privativa.
-   * Sem isso, o io.to(receiverId) não encontra ninguém.
+   * Agora validamos se o userId enviado no identify bate com o do token.
    */
   socket.on("identify", (userId: string) => {
-    if (userId && userId !== "undefined") {
+    if (userId && userId === authenticatedUserId) {
       // Força a saída de salas antigas se necessário e entra na nova
       socket.join(userId);
       console.log(`🆔 USUÁRIO MAPEADO: User ${userId} está na sala. Socket: ${socket.id}`);
@@ -88,7 +107,8 @@ io.on("connection", (socket) => {
       // Feedback para o front (opcional para debug)
       socket.emit("identified", { status: "success", room: userId });
     } else {
-      console.log("⚠️ Tentativa de identificação com userId inválido");
+      console.log("⚠️ Tentativa de identificação com userId inválido ou não autorizado");
+      socket.emit("error", { message: "Não autorizado" });
     }
   });
 

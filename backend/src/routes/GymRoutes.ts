@@ -19,6 +19,7 @@ const adminOrOwner = roleMiddleware(["ADMIN", "GYM_OWNER"]);
 // ========================
 // GYM ROUTES
 // ========================
+gymRoutes.get("/validate/:identifier", gymControllerRoutes.validate.bind(gymControllerRoutes));
 gymRoutes.post("/register", authMiddleware, gymControllerRoutes.create);
 gymRoutes.post("/join", authMiddleware, gymControllerRoutes.join);
 gymRoutes.get("/search", authMiddleware, gymControllerRoutes.search.bind(gymControllerRoutes));

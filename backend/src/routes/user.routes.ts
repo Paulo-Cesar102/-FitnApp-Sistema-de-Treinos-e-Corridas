@@ -11,6 +11,7 @@ const userController = new UserController();
 userRoutes.post("/register", validate(creatUserSchema), userController.create.bind(userController));
 
 // ROTAS PROTEGIDAS
+userRoutes.get("/search", authMiddleware, userController.search.bind(userController));
 userRoutes.get("/users", authMiddleware, userController.findAll.bind(userController));
 userRoutes.get("/:id", authMiddleware, userController.findById.bind(userController));
 

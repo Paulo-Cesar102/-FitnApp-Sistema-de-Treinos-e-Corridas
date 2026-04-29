@@ -72,13 +72,7 @@ export const RegisterOwnerForm: React.FC<RegisterOwnerProps> = ({
   };
 
   return (
-    <div className="register-owner-container">
-      <div className="register-owner-card">
-        <div className="register-owner-header">
-          <h1>FitnApp Business</h1>
-          <p>{step === "owner" ? "Dados da Academia e Proprietário" : "Finalize as configurações"}</p>
-        </div>
-
+    <div className="register-owner-content">
         {step === "owner" ? (
           <form onSubmit={handleOwnerSubmit} className="owner-form">
             <div className="form-group">
@@ -145,8 +139,8 @@ export const RegisterOwnerForm: React.FC<RegisterOwnerProps> = ({
 
             {error && <div className="error-msg">{error}</div>}
 
-            <button type="submit" className="btn-primary">
-              Próximo Passo
+            <button type="submit" className="submit-btn primary">
+              PRÓXIMO PASSO
             </button>
           </form>
         ) : (
@@ -207,28 +201,16 @@ export const RegisterOwnerForm: React.FC<RegisterOwnerProps> = ({
               <button
                 type="button"
                 onClick={() => setStep("owner")}
-                className="btn-secondary"
+                className="submit-btn secondary"
               >
-                Voltar
+                VOLTAR
               </button>
-              <button type="submit" className="btn-primary" disabled={loading}>
-                {loading ? "Processando..." : "Finalizar Cadastro"}
+              <button type="submit" className="submit-btn primary" disabled={loading}>
+                {loading ? "PROCESSANDO..." : "FINALIZAR CADASTRO"}
               </button>
             </div>
           </form>
         )}
-
-        <div className="register-owner-footer">
-          <p>Já tem uma conta?</p>
-          <button onClick={onToggleLogin} className="btn-link">
-            Faça Login
-          </button>
-          <p style={{ marginTop: '15px' }}>Deseja se cadastrar como aluno?</p>
-          <button onClick={onToggleUserRegister} className="btn-link">
-            Cadastro de Aluno
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

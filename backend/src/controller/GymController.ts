@@ -35,6 +35,19 @@ async search(req: Request, res: Response) {
     }
 }
 
+async validate(req: Request, res: Response) {
+    const { identifier } = req.params;
+    try {
+        const gym = await GymService.findGymByIdentifier(identifier);
+        if (gym && gym.length > 0) {
+            return res.status(200).json(gym[0]);
+        }
+        return res.status(404).json({ message: "Academia não encontrada" });
+    } catch (error: any) {
+        return res.status(400).json({ message: error.message });
+    }
+}
+
 async create (req: Request, res: Response){    try {
         const gym = GymService.registerGym(req.body);
         return res.status(201).json(gym)
