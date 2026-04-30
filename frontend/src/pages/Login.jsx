@@ -119,17 +119,7 @@ export default function Login() {
         </form>
 
         <div className="social-login-separator">
-          <span>ou continue com</span>
-        </div>
-
-        <div className="google-login-wrapper">
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={() => showAlert("Erro", "Falha na conexão com Google", "error")}
-            theme="filled_black"
-            shape="pill"
-            width="320px"
-          />
+          <span>Acesso via Portal</span>
         </div>
 
         <footer className="login-footer">

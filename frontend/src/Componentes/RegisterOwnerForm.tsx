@@ -73,6 +73,18 @@ export const RegisterOwnerForm: React.FC<RegisterOwnerProps> = ({
 
   return (
     <div className="register-owner-content">
+        <div className="register-stepper">
+          <div className={`step-indicator ${step === 'owner' ? 'active' : ''}`}>
+            <span className="step-number">1</span>
+            <span>Proprietário</span>
+          </div>
+          <div className="step-line"></div>
+          <div className={`step-indicator ${step === 'gym' ? 'active' : ''}`}>
+            <span className="step-number">2</span>
+            <span>Academia</span>
+          </div>
+        </div>
+
         {step === "owner" ? (
           <form onSubmit={handleOwnerSubmit} className="owner-form">
             <div className="form-group">
@@ -146,7 +158,7 @@ export const RegisterOwnerForm: React.FC<RegisterOwnerProps> = ({
         ) : (
           <form onSubmit={handleGymSubmit} className="owner-form">
             <div className="form-group">
-              <label htmlFor="gymDescription">Descrição / Slogan</label>
+              <label htmlFor="gymDescription">Descrição ou Slogan</label>
               <textarea
                 id="gymDescription"
                 placeholder="Conte um pouco sobre sua academia..."

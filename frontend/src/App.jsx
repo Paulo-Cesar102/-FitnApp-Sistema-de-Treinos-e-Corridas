@@ -155,7 +155,7 @@ function Layout({ children }) {
   let mostrarMenu = rotasComMenu.includes(location.pathname);
   
   // Rotas de autenticação onde o onboarding e o Drawer NÃO devem aparecer
-  const authRoutes = ["/login", "/register", "/register-owner", "/", "/auth"];
+  const authRoutes = ["/login", "/register", "/register-owner", "/", "/auth", "/academy"];
   const isAuthRoute = authRoutes.includes(location.pathname);
   const isExecutarTreino = location.pathname === "/executar-treino";
   

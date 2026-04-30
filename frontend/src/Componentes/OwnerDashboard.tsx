@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import * as gymService from "../api/gymService";
+import { gymService } from "../api/gymService";
 import * as workoutService from "../api/workoutService";
 import "./OwnerDashboard.css";
 import CustomAlert from "./CustomAlert";
@@ -41,7 +41,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ gymId, gymName, 
       setLoading(true);
       const [statsData, personalsData, announcementsData, membersData] = await Promise.all([
         gymService.getGymStats(gymId),
-        gymService.getGymPersonals(gymId),
+        gymService.getOwnerGymPersonals(gymId),
         gymService.getGymAnnouncements(gymId),
         gymService.getGymMembers(gymId)
       ]);

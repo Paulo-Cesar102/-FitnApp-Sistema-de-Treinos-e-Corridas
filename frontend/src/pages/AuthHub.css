@@ -21,7 +21,7 @@
 }
 
 .auth-hub-card.wide {
-  max-width: 720px;
+  max-width: 950px;
 }
 
 .auth-mode-selector {
@@ -54,8 +54,8 @@
 
 .portal-selection {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
   margin-top: 10px;
 }
 
@@ -118,21 +118,28 @@
 }
 
 .back-to-choice {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    background: none;
-    border: none;
+    gap: 6px;
+    background: var(--bg-card-alt);
+    border: 1px solid var(--border-color);
     color: var(--text-secondary);
-    font-size: 0.85rem;
-    font-weight: 600;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     cursor: pointer;
     margin-bottom: 20px;
-    padding: 0;
+    padding: 8px 14px;
+    border-radius: 10px;
+    transition: all 0.2s ease;
 }
 
 .back-to-choice:hover {
+    background: var(--bg-main);
     color: var(--primary-color);
+    border-color: var(--primary-color);
+    transform: translateX(-3px);
 }
 
 @keyframes fadeIn {
@@ -144,8 +151,44 @@
     animation: fadeIn 0.4s ease-out forwards;
 }
 
+.auth-select {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    background: var(--bg-card-alt);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1rem;
+}
+
+[data-theme='light'] .auth-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+.register-form-row {
+    display: flex;
+    gap: 10px;
+}
+
+.flex-1 {
+    flex: 1;
+}
+
 @media (max-width: 600px) {
   .portal-selection {
     grid-template-columns: 1fr;
+  }
+  
+  .register-form-row {
+      flex-direction: column;
+      gap: 0;
+  }
+
+  .auth-hub-card {
+      padding: 2rem 1.5rem;
   }
 }

@@ -9,6 +9,12 @@ import "./AuthHub.css";
 import "./Login.css"; // Reaproveita estilos de form e logo
 
 // Ícones
+const UserIcon = () => (
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+    </svg>
+);
+
 const AtletaIcon = () => (
     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M18 20V10l-6-5-6 5v10" /><path d="M9 20v-5h6v5" /><circle cx="12" cy="9" r="2" />
@@ -21,8 +27,15 @@ const AcademyIcon = () => (
     </svg>
 );
 
+const BackIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m15 18-6-6 6-6"/>
+    </svg>
+);
+
 export default function AuthHub() {
     const [mode, setMode] = useState("login"); // login | choice | register-user | register-owner
+    const [targetRole, setTargetRole] = useState("USER"); // USER | PERSONAL
     const [loading, setLoading] = useState(false);
     const [alertConfig, setAlertConfig] = useState({ isOpen: false });
     const navigate = useNavigate();
@@ -99,9 +112,9 @@ export default function AuthHub() {
                 password: regData.password,
                 sex: regData.gender === "male" ? "M" : "F",
                 gymId: regData.gymId,
-                role: "PERSONAL"
+                role: targetRole
             });
-            showAlert("Sucesso!", "Sua conta de Personal foi criada. Agora faça login.", "success", () => {
+            showAlert("Sucesso!", `Sua conta de ${targetRole === "PERSONAL" ? "Personal" : "Atleta"} foi criada.`, "success", () => {
                 setAlertConfig({ isOpen: false });
                 setMode("login");
             });
@@ -133,7 +146,11 @@ export default function AuthHub() {
                 <GoogleLogin 
                     onSuccess={r => gymAuthService.googleLogin(r.credential).then(handleAuthSuccess)}
                     onError={() => showAlert("Erro", "Falha no Google Login", "error")}
-                    theme="filled_black" shape="pill" width="320"
+                    theme="filled_black" 
+                    shape="pill" 
+                    width="320"
+                    text="signin_with"
+                    locale="pt_BR"
                 />
             </div>
         </form>
@@ -141,7 +158,20 @@ export default function AuthHub() {
 
     const renderChoice = () => (
         <div className="portal-selection fade-in">
-            <div className="portal-card" onClick={() => setMode("register-user")}>
+            <div className="portal-card" onClick={() => { 
+                setMode("register-user"); 
+                setTargetRole("USER"); 
+                setRegStep("details"); 
+            }}>
+                <div className="portal-icon"><UserIcon /></div>
+                <h3>Sou Atleta</h3>
+                <p>Quero treinar, evoluir e acompanhar minha evolução.</p>
+            </div>
+            <div className="portal-card" onClick={() => { 
+                setMode("register-user"); 
+                setTargetRole("PERSONAL"); 
+                setRegStep("gym"); 
+            }}>
                 <div className="portal-icon"><AtletaIcon /></div>
                 <h3>Sou Personal</h3>
                 <p>Quero gerir meus alunos e treinos na minha academia.</p>
@@ -157,7 +187,7 @@ export default function AuthHub() {
     const renderRegisterUser = () => (
         <div className="fade-in">
             <button className="back-to-choice" onClick={() => { setMode("choice"); setRegStep("gym"); }}>
-                ← Voltar para escolha
+                <BackIcon /> Alterar perfil
             </button>
             {regStep === "gym" ? (
                 <form onSubmit={handleValidateGym}>
@@ -185,13 +215,13 @@ export default function AuthHub() {
                         <input type="email" placeholder="seu@email.com" required 
                             value={regData.email} onChange={e => setRegData({...regData, email: e.target.value})} />
                     </div>
-                    <div className="form-row" style={{display: 'flex', gap: '10px'}}>
-                        <div className="form-group" style={{flex: 1}}>
+                    <div className="form-row register-form-row">
+                        <div className="form-group flex-1">
                             <label>Senha</label>
                             <input type="password" placeholder="••••••" required 
                                 value={regData.password} onChange={e => setRegData({...regData, password: e.target.value})} />
                         </div>
-                        <div className="form-group" style={{flex: 1}}>
+                        <div className="form-group flex-1">
                             <label>Confirmar</label>
                             <input type="password" placeholder="••••••" required 
                                 value={regData.confirmPassword} onChange={e => setRegData({...regData, confirmPassword: e.target.value})} />
@@ -199,7 +229,7 @@ export default function AuthHub() {
                     </div>
                     <div className="form-group">
                         <label>Gênero</label>
-                        <select className="select-input" style={{width: '100%', padding: '12px', borderRadius: '10px', background: 'var(--bg-card-alt)', color: 'var(--text-main)', border: '1px solid var(--border-color)'}}
+                        <select className="select-input auth-select"
                             value={regData.gender} onChange={e => setRegData({...regData, gender: e.target.value})} required>
                             <option value="">Selecione</option>
                             <option value="male">Masculino</option>
@@ -231,7 +261,9 @@ export default function AuthHub() {
                 {mode === "register-user" && renderRegisterUser()}
                 {mode === "register-owner" && (
                     <div className="fade-in">
-                        <button className="back-to-choice" onClick={() => setMode("choice")}>← Voltar para escolha</button>
+                        <button className="back-to-choice" onClick={() => setMode("choice")}>
+                            <BackIcon /> Alterar perfil
+                        </button>
                         <RegisterOwnerForm 
                             onRegister={async (d) => {
                                 try {
