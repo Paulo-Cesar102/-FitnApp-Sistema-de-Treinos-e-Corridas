@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { googleLogout } from "@react-oauth/google";
 import "./Perfil.css";
 import CustomAlert from "../Componentes/CustomAlert";
 import { getUser, updateUser } from "../api/userService";
@@ -109,6 +110,9 @@ export default function Perfil() {
 
   useEffect(() => {
     loadAllData();
+
+    window.addEventListener('userDataUpdated', loadAllData);
+    return () => window.removeEventListener('userDataUpdated', loadAllData);
   }, []);
 
   const progressPercentage = (userData.currentXP / userData.nextLevelXP) * 100;
@@ -183,6 +187,7 @@ export default function Perfil() {
       message: "Tem certeza que deseja desconectar?",
       type: "error",
       onConfirm: () => {
+        googleLogout();
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         navigate("/login");
@@ -251,7 +256,7 @@ export default function Perfil() {
         </div>
         <div className="stat-item">
           <StreakIcon streak={userData.streak} />
-          <span>{userData.maxStreak} Dias</span>
+          <span>{userData.streak} {userData.streak === 1 ? "Dia" : "Dias"}</span>
         </div>
       </div>
 
@@ -404,9 +409,16 @@ export default function Perfil() {
                 </div>
               ))
             ) : (
-              <div className="empty-state-v2">
-                <p>Nenhuma conquista desbloqueada ainda.</p>
-                <span className="empty-subtext">Treine com frequência para ganhar badges exclusivos!</span>
+              <div className="empty-achievements-v2">
+                <div className="empty-badge-outline">
+                  <TrophyIcon />
+                </div>
+                <div className="empty-text-group">
+                  <h4>Galeria de Conquistas</h4>
+                  <p>Você ainda não desbloqueou badges.</p>
+                  <span className="empty-subtext">Mantenha a constância nos treinos para ganhar reconhecimentos exclusivos.</span>
+                </div>
+                <button onClick={() => navigate("/treinos")} className="btn-action-empty">Ver Treinos</button>
               </div>
             )}
           </div>

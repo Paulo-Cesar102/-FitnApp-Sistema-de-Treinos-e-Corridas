@@ -172,6 +172,23 @@ export class ChatController {
     }
   }
 
+  // 🗑️ Excluir chat/grupo (Apenas ADMIN)
+  async deleteChat(req: Request, res: Response) {
+    try {
+      const { chatId } = req.params as { chatId: string };
+      const userId = req.user?.id;
+
+      if (!userId) return res.status(401).json({ message: "Não autorizado" });
+
+      await this.service.deleteChat(chatId, userId);
+      return res.json({ message: "Grupo excluído com sucesso." });
+    } catch (error) {
+      return res.status(400).json({
+        message: error instanceof Error ? error.message : "Erro ao excluir grupo"
+      });
+    }
+  }
+
   // 🏋️ Salvar Treino
   async saveWorkout(req: Request, res: Response) {
     try {

@@ -1,0 +1,155 @@
+.personals-container {
+  padding: 20px 0;
+  color: var(--text-main);
+}
+
+.checkin-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.icon-pulse {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  background: rgba(255, 69, 0, 0.1);
+  border-radius: 20px;
+  margin-bottom: 15px;
+  color: var(--primary-color);
+}
+
+.checkin-header h2 {
+  font-size: 1.5rem;
+  font-weight: 900;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+}
+
+.checkin-header p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-top: 5px;
+}
+
+.personals-list-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.personal-card-new {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  padding: 24px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.personal-card-new:hover {
+  transform: translateY(-5px);
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-main);
+}
+
+.personal-card-new.enrolled {
+  border-color: var(--primary-color);
+  background: var(--bg-card-alt);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.avatar {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, var(--primary-color), #ff8c00);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  color: #fff;
+  box-shadow: 0 6px 15px var(--primary-glow);
+}
+
+.header-info h3 {
+  font-size: 1.1rem;
+  font-weight: 850;
+  margin: 0;
+}
+
+.spec-tag {
+  font-size: 0.65rem;
+  font-weight: 900;
+  color: var(--primary-color);
+  background: rgba(255, 69, 0, 0.1);
+  padding: 4px 10px;
+  border-radius: 8px;
+  text-transform: uppercase;
+  margin-top: 6px;
+  display: inline-block;
+}
+
+.card-actions-personal {
+  margin-top: 20px;
+}
+
+.card-footer {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--primary-color);
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.personal-workouts-drawer {
+  margin-top: 20px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.toast-message {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 16px 24px;
+  border-radius: 16px;
+  z-index: 2000;
+  font-weight: 800;
+  color: #fff;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+  animation: slideInRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.toast-message.success { background: #10b981; }
+.toast-message.error { background: #ef4444; }
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@media (max-width: 768px) {
+  .personals-list-grid {
+    grid-template-columns: 1fr;
+  }
+}

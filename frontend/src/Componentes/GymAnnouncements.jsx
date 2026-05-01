@@ -1,59 +1,33 @@
 import React, { useState, useEffect } from "react";
-import { gymService } from "../api/gymService";
-import { socket } from "../service/socket";
+import * as gymService from "../api/gymService";
+import "./GymAnnouncements.css";
+
+const BellIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>;
 
 export default function GymAnnouncements() {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-
+  const [totalPages, setTotalPages] = useState(1);
   const gymId = localStorage.getItem("gymId");
 
   useEffect(() => {
-    if (gymId && gymId !== "null" && gymId !== "undefined") {
+    if (gymId && gymId !== "null") {
       loadAnnouncements(gymId, 1);
-    } else {
-      setLoading(false);
-    }
-
-    if (socket && gymId) {
-      socket.emit("join_gym_room", gymId);
-
-      const handleNewAnnouncement = (data) => {
-        if (data.gymId === gymId) {
-          loadAnnouncements(gymId, 1);
-        }
-      };
-
-      socket.on("announcement_updated", handleNewAnnouncement);
-
-      return () => {
-        socket.off("announcement_updated", handleNewAnnouncement);
-        socket.emit("leave_gym_room", gymId);
-      };
     }
   }, [gymId]);
 
-  const loadAnnouncements = async (gId, p = 1) => {
-    setLoading(true);
+  const loadAnnouncements = async (gId, p) => {
     try {
-      const data = await gymService.getGymAnnouncements(gId, p, 10);
-      setAnnouncements(data.announcements);
-      setTotalPages(data.pagination.pages);
+      setLoading(true);
+      const data = await gymService.getGymAnnouncements(gId, p);
+      setAnnouncements(data.announcements || []);
+      setTotalPages(data.totalPages || 1);
       setPage(p);
     } catch (error) {
       console.error("Erro ao carregar avisos:", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const getPriorityInfo = (priority) => {
-    switch (priority) {
-      case 2: return { label: "🔴 URGENTE", color: "#ff4d4d" };
-      case 1: return { label: "⭐ IMPORTANTE", color: "#ffd700" };
-      default: return { label: "📌 NORMAL", color: "#4ecdc4" };
     }
   };
 
@@ -64,9 +38,11 @@ export default function GymAnnouncements() {
   return (
     <div className="announcements-container fade-in">
       <div className="checkin-header" style={{ marginBottom: "30px" }}>
-        <div className="icon-pulse" style={{ color: "#4ecdc4", textShadow: "0 0 15px rgba(78, 205, 196, 0.4)" }}>📢</div>
+        <div className="icon-pulse" style={{ color: "var(--primary-color)" }}>
+          <BellIcon />
+        </div>
         <h2>Avisos da Academia</h2>
-        <p>Fique por dentro das novidades e comunicados</p>
+        <p>Fique por dentro das novidades e comunicados oficiais</p>
       </div>
 
       {loading && !announcements.length ? (
@@ -75,24 +51,18 @@ export default function GymAnnouncements() {
         <>
           <div className="announcements-list">
             {announcements.length === 0 ? (
-              <div className="empty-panel-msg">Nenhum aviso no momento.</div>
+              <div className="empty-panel-msg">Não há avisos publicados no momento.</div>
             ) : (
-              announcements.map((announcement) => {
-                const priorityInfo = getPriorityInfo(announcement.priority);
+              announcements.map((ann) => {
+                const priorityClass = ann.priority === 2 ? "urgent" : ann.priority === 1 ? "important" : "normal";
                 return (
-                  <div key={announcement.id} className="announcement-card glass" style={{ padding: "20px", borderRadius: "15px", marginBottom: "15px", borderLeft: `4px solid ${priorityInfo.color}` }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
-                      <h3 style={{ margin: 0, fontSize: "1.2rem", color: "var(--text-main)" }}>{announcement.title}</h3>
-                      <span style={{ fontSize: "0.75rem", fontWeight: "700", color: priorityInfo.color, padding: "4px 8px", background: "rgba(255,255,255,0.05)", borderRadius: "6px" }}>
-                        {priorityInfo.label}
-                      </span>
+                  <div key={ann.id} className={`announcement-card glass ${priorityClass}`}>
+                    <div className="ann-header">
+                      <h3>{ann.title}</h3>
+                      <span className="ann-date">{new Date(ann.createdAt).toLocaleDateString()}</span>
                     </div>
-                    <p style={{ fontSize: "0.95rem", color: "var(--text-dim)", lineHeight: "1.5", margin: "10px 0" }}>
-                      {announcement.content}
-                    </p>
-                    <div style={{ fontSize: "0.8rem", color: "#888", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "10px", marginTop: "10px" }}>
-                      Publicado em {new Date(announcement.createdAt).toLocaleDateString("pt-BR")} às {new Date(announcement.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                    </div>
+                    <p className="ann-content">{ann.content}</p>
+                    {ann.imageUrl && <img src={ann.imageUrl} alt={ann.title} className="ann-image" />}
                   </div>
                 );
               })
@@ -101,20 +71,38 @@ export default function GymAnnouncements() {
 
           {totalPages > 1 && (
             <div className="pagination-controls" style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "15px", marginTop: "30px" }}>
-              <button 
-                onClick={() => loadAnnouncements(gymId, page - 1)} 
+              <button
+                onClick={() => loadAnnouncements(gymId, page - 1)}
                 disabled={page === 1}
-                style={{ padding: "8px 15px", background: "var(--glass-bg)", border: "1px solid var(--glass-border)", color: "white", borderRadius: "8px", cursor: page === 1 ? "not-allowed" : "pointer", opacity: page === 1 ? 0.5 : 1 }}
+                style={{ 
+                  padding: "10px 20px", 
+                  background: "var(--bg-card)", 
+                  border: "1px solid var(--border-color)", 
+                  color: "var(--text-main)", 
+                  borderRadius: "12px", 
+                  fontWeight: "700",
+                  cursor: page === 1 ? "not-allowed" : "pointer", 
+                  opacity: page === 1 ? 0.5 : 1 
+                }}
               >
-                ◀️ Anterior
+                ANTERIOR
               </button>
-              <span style={{ color: "var(--text-dim)", fontSize: "0.9rem" }}>Página {page} de {totalPages}</span>
-              <button 
-                onClick={() => loadAnnouncements(gymId, page + 1)} 
+              <span style={{ color: "var(--text-muted)", fontSize: "0.85rem", fontWeight: "800" }}>{page} / {totalPages}</span>
+              <button
+                onClick={() => loadAnnouncements(gymId, page + 1)}
                 disabled={page === totalPages}
-                style={{ padding: "8px 15px", background: "var(--glass-bg)", border: "1px solid var(--glass-border)", color: "white", borderRadius: "8px", cursor: page === totalPages ? "not-allowed" : "pointer", opacity: page === totalPages ? 0.5 : 1 }}
+                style={{ 
+                  padding: "10px 20px", 
+                  background: "var(--bg-card)", 
+                  border: "1px solid var(--border-color)", 
+                  color: "var(--text-main)", 
+                  borderRadius: "12px", 
+                  fontWeight: "700",
+                  cursor: page === totalPages ? "not-allowed" : "pointer", 
+                  opacity: page === totalPages ? 0.5 : 1 
+                }}
               >
-                Próxima ▶️
+                PRÓXIMA
               </button>
             </div>
           )}

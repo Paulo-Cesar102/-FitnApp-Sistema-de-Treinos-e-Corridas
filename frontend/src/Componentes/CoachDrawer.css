@@ -1,0 +1,87 @@
+.coach-drawer-wrapper {
+  position: fixed;
+  right: 0;
+  top: 55%; /* Um pouco mais para baixo para não atrapalhar outros botões */
+  transform: translateY(-50%);
+  z-index: 2000;
+  pointer-events: none;
+}
+
+.drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(4px);
+  pointer-events: all;
+  z-index: -1;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.drawer-container {
+  pointer-events: all;
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform: translateX(calc(100% - 35px)); /* ORELHA BEM MAIS ENCOLHIDA */
+}
+
+.coach-drawer-wrapper.open .drawer-container {
+  transform: translateX(-15px); /* Abre menos para ficar mais elegante */
+}
+
+.drawer-trigger {
+  background: linear-gradient(135deg, var(--primary-color), #ff8c00);
+  border: none;
+  height: 50px; /* Menor altura */
+  min-width: 50px; /* Menor largura */
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
+  border-radius: 25px 0 0 25px;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: -5px 0 20px var(--primary-glow);
+  gap: 12px;
+  transition: 0.3s;
+}
+
+.trigger-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.trigger-icon svg {
+  width: 20px; /* Ícone menor */
+  height: 20px;
+}
+
+.trigger-text {
+  font-weight: 950;
+  font-size: 0.75rem; /* Texto menor e mais forte */
+  letter-spacing: 1px;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(10px);
+  transition: 0.3s 0.2s;
+}
+
+.coach-drawer-wrapper.open .trigger-text {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Efeito de brilho sutil quando fechado */
+.coach-drawer-wrapper:not(.open) .drawer-trigger {
+  animation: miniPulse 2.5s infinite;
+}
+
+@keyframes miniPulse {
+  0% { opacity: 0.85; filter: brightness(1); }
+  50% { opacity: 1; filter: brightness(1.2); }
+  100% { opacity: 0.85; filter: brightness(1); }
+}

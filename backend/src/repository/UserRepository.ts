@@ -12,7 +12,8 @@ export class UserRepository implements IUserRepository {
         email: data.email,
         password: data.password,
         sex: data.sex,
-        role: data.role ?? "USER"
+        role: data.role ?? "USER",
+        gymId: data.gymId
       }
     });
 
@@ -87,6 +88,29 @@ export class UserRepository implements IUserRepository {
     })) as unknown as IUser[];
   }
 
+  async search(query: string): Promise<IUser[]> {
+    const users = await prisma.user.findMany({
+      where: {
+        OR: [
+          { name: { contains: query, mode: "insensitive" } },
+          { email: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        sex: true,
+        level: true,
+        xp: true,
+        role: true,
+      },
+      take: 10,
+    });
+
+    return users as unknown as IUser[];
+  }
+
   async delete(id: string): Promise<void> {
     await prisma.user.delete({
       where: { id }
@@ -103,7 +127,7 @@ export class UserRepository implements IUserRepository {
       "goalType", "experienceLevel", "onboardingCompleted", 
       "level", "xp", "streak", "maxStreak", "lastActivityDate", "gymId",
       "lastUnsubscribedAt",
-      "isPublicProfile", "notificationsEnabled" // 🔥 Adicionado
+      "isPublicProfile", "notificationsEnabled", "isCoachEnabled", "defaultRest" // 🔥 Adicionado
     ];
 
     fields.forEach(field => {

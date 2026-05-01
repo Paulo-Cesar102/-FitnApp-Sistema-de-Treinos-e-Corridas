@@ -16,4 +16,10 @@ export const getUser = async (id: string) => {
 export const updateUser = async (id: string, data: any) => {
   const response = await api.put(`/users/${id}`, data);
   return response.data;
+};
+
+// VALIDAR ACADEMIA POR ID OU CÓDIGO
+export const validateGym = async (identifier: string) => {
+  const response = await api.get(`/gym/validate/${identifier}`);
+  return response.data;
 };  

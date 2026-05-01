@@ -15,9 +15,11 @@ import Perfil from "./pages/Perfil";
 import Configuracoes from "./pages/Configuracoes";
 import Friends from "./pages/friends";
 import Academy from "./pages/academy";
+import AuthHub from "./pages/AuthHub";
 import SmartCoach from "./Componentes/SmartCoach";
+import CoachDrawer from "./Componentes/CoachDrawer";
 import CompleteProfile from "./Componentes/CompleteProfile";
-import CustomAlert from "./Componentes/CustomAlert"; // 🔥 Importação do Alerta
+import CustomAlert from "./Componentes/CustomAlert"; 
 import { getUser } from "./api/userService";
 
 function Layout({ children }) {
@@ -47,6 +49,13 @@ function Layout({ children }) {
         localStorage.setItem("user", JSON.stringify(freshUser));
         localStorage.setItem("role", freshUser.role);
         localStorage.setItem("userId", freshUser.id);
+
+        // Garante que gymId e gymName estejam sincronizados
+        const gId = freshUser.gymId || freshUser.gym?.id || "";
+        const gName = freshUser.gymName || freshUser.gym?.name || "";
+        localStorage.setItem("gymId", gId);
+        localStorage.setItem("gymName", gName);
+
         setCurrentUser(freshUser);
         
         // Verifica onboarding
@@ -90,10 +99,10 @@ function Layout({ children }) {
     const handleBadgeEarned = (badge) => {
       setAlertConfig({
         isOpen: true,
-        title: "🏆 Nova Conquista!",
+        title: "Nova Conquista!",
         message: `Parabéns! Você desbloqueou a medalha: ${badge.name}`,
         type: "success",
-        confirmText: "Uhul!",
+        confirmText: "Ok",
         onConfirm: () => setAlertConfig({ isOpen: false })
       });
     };
@@ -101,13 +110,12 @@ function Layout({ children }) {
     const handleFriendRequest = (data) => {
       setAlertConfig({
         isOpen: true,
-        title: "🤝 Nova Solicitação",
-        message: `${data.senderName} quer ser seu amigo no FitnApp!`,
+        title: "Nova Solicitação",
+        message: `${data.senderName} quer ser seu amigo no sistema!`,
         type: "info",
         confirmText: "Ver Pedidos",
         onConfirm: () => {
           setAlertConfig({ isOpen: false });
-          // Opcional: redirecionar para amigos
         },
         cancelText: "Fechar",
         onCancel: () => setAlertConfig({ isOpen: false })
@@ -117,8 +125,8 @@ function Layout({ children }) {
     const handleWorkoutCompleted = (data) => {
       setAlertConfig({
         isOpen: true,
-        title: "🔥 Treino Finalizado!",
-        message: `${data.message} XP Ganhos: ${data.xpGained}. Streak: ${data.streak} dias!`,
+        title: "Treino Finalizado!",
+        message: `${data.message} XP Ganhos: ${data.xpGained}. Sequência: ${data.streak} dias!`,
         type: "success",
         confirmText: "Continuar",
         onConfirm: () => setAlertConfig({ isOpen: false })
@@ -126,7 +134,6 @@ function Layout({ children }) {
     };
 
     const handleExerciseCompleted = (data) => {
-      // Notificação mais discreta se possível, mas aqui usaremos o Alert por enquanto
       console.log("Exercício concluído:", data);
     };
 
@@ -146,6 +153,11 @@ function Layout({ children }) {
   // Rotas onde o MenuBar inferior deve aparecer
   const rotasComMenu = ["/home", "/exercicio", "/perfil", "/amigos", "/academy", "/smart-coach"];
   let mostrarMenu = rotasComMenu.includes(location.pathname);
+  
+  // Rotas de autenticação onde o onboarding e o Drawer NÃO devem aparecer
+  const authRoutes = ["/login", "/register", "/register-owner", "/", "/auth", "/academy"];
+  const isAuthRoute = authRoutes.includes(location.pathname);
+  const isExecutarTreino = location.pathname === "/executar-treino";
   
   if (role === "GYM_OWNER" || role === "PERSONAL") {
      if (location.pathname === "/academy") {
@@ -170,18 +182,20 @@ function Layout({ children }) {
     >
       <CustomAlert config={alertConfig} />
       
-      {showCompleteProfile && currentUser && (
+      {!isAuthRoute && showCompleteProfile && currentUser && (
         <CompleteProfile user={currentUser} onComplete={handleProfileComplete} />
       )}
+
+      {/* Menu Gaveta Lateral para o Coach - Oculto na execução de treino para evitar conflito */}
+      {!isAuthRoute && !isExecutarTreino && <CoachDrawer />}
+
       {children}
       {mostrarMenu && <MenuBar />}
     </div>
   );
 }
 
-function AppContent() {
-  const location = useLocation();
-
+const AppContent = React.memo(() => {
   useEffect(() => {
     const userJson = localStorage.getItem("user");
     if (userJson) {
@@ -194,15 +208,19 @@ function AppContent() {
         console.error("Erro ao ler dados do usuário no App:", error);
       }
     }
-  }, [location.pathname]);
+  }, []); // Só roda ao montar o App inicial
 
   return (
     <Layout>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/register-owner" element={<RegisterOwner />} />
+        <Route path="/" element={<Navigate to="/auth" />} />
+        <Route path="/auth" element={<AuthHub />} />
+        
+        {/* Fallbacks para compatibilidade ou redirecionamento direto */}
+        <Route path="/login" element={<Navigate to="/auth" />} />
+        <Route path="/register" element={<Navigate to="/auth" />} />
+        <Route path="/register-owner" element={<Navigate to="/auth" />} />
+
         <Route path="/home" element={<Home />} />
         <Route path="/exercicio" element={<Treinos />} />
         <Route path="/criar-treino" element={<CriarTreino />} />
@@ -217,7 +235,7 @@ function AppContent() {
       </Routes>
     </Layout>
   );
-}
+});
 
 export default function App() {
   return (

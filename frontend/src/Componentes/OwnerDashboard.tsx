@@ -1,41 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { socket } from "../service/socket";
-import { gymAuthService } from "../api/gymAuthService";
+import { useNavigate } from "react-router-dom";
 import { gymService } from "../api/gymService";
-import { workoutService } from "../api/workoutService";
+import * as workoutService from "../api/workoutService";
 import "./OwnerDashboard.css";
+import CustomAlert from "./CustomAlert";
 
-interface Personal {
-  id: string;
-  userId: string;
-  name: string;
-  email: string;
-  specialization: string;
-  bio: string;
-  students?: any[];
-}
-
-interface GymStats {
-  gym: {
-    id: string;
-    name: string;
-    inviteCode: string;
-  };
-  stats: {
-    totalMembers: number;
-    totalPersonals: number;
-    todayCheckIns: number;
-  };
-  topRanking: any[];
-}
-
-interface Announcement {
-  id: string;
-  title: string;
-  content: string;
-  isUrgent: boolean;
-  createdAt: string;
-}
+// Ícones Minimalistas Premium
+const BarChartIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>;
+const UsersIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
+const BellIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>;
+const TeacherIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>;
+const LogoutIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>;
+const CheckIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
+const TrophyIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-2.34"/><path d="M12 2v12.66"/><path d="M12 2a5 5 0 0 0-5 5v2h10V7a5 5 0 0 0-5-5z"/></svg>;
 
 interface OwnerDashboardProps {
   gymId: string;
@@ -44,597 +21,287 @@ interface OwnerDashboardProps {
   onLogout: () => void;
 }
 
-export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
-  gymId,
-  gymName,
-  token,
-  onLogout,
-}) => {
-  const [activeTab, setActiveTab] = useState<"overview" | "personals" | "announcements" | "members">("overview");
-  const [personals, setPersonals] = useState<Personal[]>([]);
-  const [stats, setStats] = useState<GymStats | null>(null);
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ gymId, gymName, token, onLogout }) => {
+  const [activeTab, setActiveTab] = useState<"stats" | "personals" | "announcements" | "members">("stats");
+  const [stats, setStats] = useState<any>(null);
+  const [personals, setPersonals] = useState<any[]>([]);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
-  const [memberSearch, setMemberSearch] = useState("");
   const [loading, setLoading] = useState(true);
-  const [showCreatePersonal, setShowCreatePersonal] = useState(false);
-  const [showCreateAnnouncement, setShowCreateAnnouncement] = useState(false);
-  const [error, setError] = useState("");
-  const [selectedPersonalId, setSelectedPersonalId] = useState<string | null>(null);
-  const [personalWorkouts, setPersonalWorkouts] = useState<any[]>([]);
-
-  const [newPersonal, setNewPersonal] = useState({
-    name: "",
-    email: "",
-    password: "",
-    specialization: "",
-    bio: "",
-  });
-
-  const [newAnnouncement, setNewAnnouncement] = useState({
-    title: "",
-    content: "",
-    isUrgent: false,
-  });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [alertConfig, setAlertConfig] = useState({ isOpen: false });
+  
+  const navigate = useNavigate();
 
   useEffect(() => {
-    loadStats();
-    loadPersonals();
-    if (activeTab === "announcements") loadAnnouncements();
-    if (activeTab === "members") loadMembers();
+    loadDashboardData();
+  }, [activeTab]);
 
-    if (socket && gymId) {
-      socket.emit("join_gym_room", gymId);
-
-      const handleUpdate = (data: any) => {
-        if (data.gymId === gymId) {
-          loadStats();
-          if (activeTab === "personals") loadPersonals();
-          if (activeTab === "announcements") loadAnnouncements();
-        }
-      };
-
-      socket.on("ranking_updated", handleUpdate);
-      socket.on("personal_updated", handleUpdate);
-      socket.on("announcement_updated", handleUpdate);
-
-      return () => {
-        socket.off("ranking_updated", handleUpdate);
-        socket.off("personal_updated", handleUpdate);
-        socket.off("announcement_updated", handleUpdate);
-        socket.emit("leave_gym_room", gymId);
-      };
-    }
-  }, [gymId, activeTab]);
-
-  const loadStats = async () => {
+  const loadDashboardData = async () => {
     try {
-      const data = await gymAuthService.getStats(gymId);
-      setStats(data);
+      setLoading(true);
+      const [statsData, personalsData, announcementsData, membersData] = await Promise.all([
+        gymService.getGymStats(gymId),
+        gymService.getOwnerGymPersonals(gymId),
+        gymService.getGymAnnouncements(gymId),
+        gymService.getGymMembers(gymId)
+      ]);
+      setStats(statsData);
+      setPersonals(personalsData);
+      setAnnouncements(announcementsData);
+      setMembers(membersData);
     } catch (err) {
-      setError("Erro ao carregar estatísticas");
-    }
-  };
-
-  const loadPersonals = async () => {
-    try {
-      const data = await gymAuthService.listPersonals(gymId);
-      setPersonals(data.personals || []);
-    } catch (err) {
-      setError("Erro ao carregar personals");
+      console.error("Erro ao carregar dados do dashboard:", err);
+      showAlert("Erro de Conexão", "Não foi possível carregar os dados. Verifique sua internet.", "error");
     } finally {
       setLoading(false);
     }
   };
 
-  const loadAnnouncements = async () => {
-    try {
-      const data = await gymService.getGymAnnouncements(gymId);
-      setAnnouncements(data.announcements || []);
-    } catch (err) {
-      setError("Erro ao carregar anúncios");
-    }
+  const showAlert = (title: string, message: string, type: "success" | "error" | "info") => {
+    setAlertConfig({
+      isOpen: true, title, message, type,
+      onConfirm: () => setAlertConfig({ isOpen: false })
+    });
   };
 
-  const loadMembers = async (search?: string) => {
-    try {
-      const data = await gymAuthService.listMembers(gymId, search);
-      setMembers(data.members || []);
-    } catch (err) {
-      setError("Erro ao carregar membros");
-    }
+  const filteredMembers = members.filter(m => 
+    m.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    m.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleAddPersonal = () => {
+      showAlert("Em Breve", "A funcionalidade de convite direto para personals está sendo finalizada.", "info");
   };
 
-  const handleMemberSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    loadMembers(memberSearch);
-  };
-
-  const handleCreatePersonal = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await gymAuthService.createPersonal(gymId, newPersonal);
-
-      setNewPersonal({
-        name: "",
-        email: "",
-        password: "",
-        specialization: "",
-        bio: "",
-      });
-      setShowCreatePersonal(false);
-      loadPersonals();
-      loadStats();
-
-      if (socket) {
-        socket.emit("personal_updated", { gymId });
-      }
-
-    } catch (err: any) {
-      setError(err.response?.data?.error || err.message);
-    }
-  };
-
-  const handleDeletePersonal = async (personalId: string) => {
-    if (!confirm("Tem certeza que deseja deletar este personal?")) return;
-
-    try {
-      await gymAuthService.deletePersonal(gymId, personalId);
-      loadPersonals();
-      loadStats();
-      
-      if (socket) {
-        socket.emit("personal_updated", { gymId });
-      }
-    } catch (err: any) {
-      setError(err.response?.data?.error || err.message);
-    }
-  };
-
-  const handleCreateAnnouncement = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await gymService.createAnnouncement({ ...newAnnouncement, gymId });
-      setNewAnnouncement({ title: "", content: "", isUrgent: false });
-      setShowCreateAnnouncement(false);
-      loadAnnouncements();
-      
-      if (socket) {
-        socket.emit("announcement_updated", { gymId });
-      }
-    } catch (err: any) {
-      setError(err.response?.data?.error || err.message);
-    }
-  };
-
-  const handleDeleteAnnouncement = async (id: string) => {
-    if (!confirm("Deletar este comunicado?")) return;
-    try {
-      await gymService.deleteAnnouncement(id);
-      loadAnnouncements();
-      if (socket) {
-        socket.emit("announcement_updated", { gymId });
-      }
-    } catch (err: any) {
-      setError(err.response?.data?.error || err.message);
-    }
-  };
-
-  const loadPersonalWorkouts = async (userId: string) => {
-    if (selectedPersonalId === userId) {
-      setSelectedPersonalId(null);
-      setPersonalWorkouts([]);
-      return;
-    }
-    
-    try {
-      const data = await workoutService.getUserWorkouts(userId);
-      setPersonalWorkouts(data);
-      setSelectedPersonalId(userId);
-    } catch (err) {
-      setError("Erro ao carregar treinos do personal");
-    }
-  };
-
-  const handleDeleteWorkout = async (workoutId: string) => {
-    if (!confirm("Deletar este treino do personal?")) return;
-    try {
-      await workoutService.deleteWorkout(workoutId);
-      setPersonalWorkouts(prev => prev.filter(w => w.id !== workoutId));
-    } catch (err: any) {
-      setError(err.response?.data?.error || err.message);
-    }
+  const handleNewAnnouncement = () => {
+      showAlert("Novo Comunicado", "Use o portal mobile para publicar avisos com foto. A versão desktop chegará na próxima atualização.", "info");
   };
 
   return (
     <div className="owner-dashboard">
-      <aside className="dashboard-sidebar">
-        <div className="sidebar-brand">
-          <div className="brand-icon">🏢</div>
-          <h2>{gymName}</h2>
-        </div>
+      <main className="dashboard-viewport">
+        <div className="content-container fade-in">
+            {/* CABEÇALHO INTEGRADO (PADRÃO APP) - VISÍVEL EM TODAS AS ABAS */}
+            <header className="app-style-header">
+                <div className="brand-section">
+                    <div className="brand-logo">Gym<span>Club</span></div>
+                    <div className="gym-id-pill" onClick={() => {
+                        navigator.clipboard.writeText(gymId);
+                        showAlert("Copiado!", "ID da academia copiado.", "success");
+                    }}>
+                        <code>#{gymId.substring(0, 6).toUpperCase()}</code>
+                    </div>
+                </div>
+                <div className="view-title-row">
+                    <div className="view-info">
+                        <h1>{activeTab === "stats" ? "Dashboard" : 
+                             activeTab === "personals" ? "Equipe" :
+                             activeTab === "announcements" ? "Avisos" : "Comunidade"}</h1>
+                        <p>{gymName}</p>
+                    </div>
+                    <button className="btn-logout-circle" onClick={onLogout} title="Sair">
+                        <LogoutIcon />
+                    </button>
+                </div>
+            </header>
 
-        <nav className="sidebar-nav">
-          <button
-            className={`nav-item ${activeTab === "overview" ? "active" : ""}`}
-            onClick={() => setActiveTab("overview")}
+            {/* CONTEÚDO DINÂMICO BASEADO NA ABA */}
+            {activeTab === "stats" && stats && (
+              <div className="tab-fade-content">
+                 <div className="metrics-grid">
+                   <div className="metric-card glass">
+                     <div className="metric-icon members"><UsersIcon /></div>
+                     <div className="metric-data">
+                       <span className="label">Total de Alunos</span>
+                       <span className="value">{stats.stats.totalMembers}</span>
+                     </div>
+                   </div>
+
+                   <div className="metric-card glass">
+                     <div className="metric-icon personals"><TeacherIcon /></div>
+                     <div className="metric-data">
+                       <span className="label">Equipe Personal</span>
+                       <span className="value">{stats.stats.totalPersonals}</span>
+                     </div>
+                   </div>
+
+                   <div className="metric-card glass">
+                     <div className="metric-icon checkin"><CheckIcon /></div>
+                     <div className="metric-data">
+                       <span className="label">Check-ins Hoje</span>
+                       <span className="value">{stats.stats.todayCheckIns}</span>
+                     </div>
+                   </div>
+                 </div>
+
+                 <div className="dashboard-row">
+                     <div className="ranking-panel glass">
+                         <div className="panel-header">
+                             <TrophyIcon />
+                             <h3>Top 10 Alunos</h3>
+                         </div>
+                         <div className="ranking-table">
+                             {stats.topRanking.map((user: any, index: number) => (
+                                 <div key={index} className="ranking-row">
+                                     <div className="user-pos">#{index + 1}</div>
+                                     <div className="user-name">{user.user.name}</div>
+                                     <div className="user-score">{user.totalXpGained} XP</div>
+                                 </div>
+                             ))}
+                         </div>
+                     </div>
+                 </div>
+              </div>
+            )}
+
+            {activeTab === "personals" && (
+               <div className="tab-fade-content">
+                  <header className="content-sub-header">
+                     <h2>Gestão de Personals</h2>
+                     <button className="btn-primary-dash" onClick={handleAddPersonal}>
+                        Adicionar Personal
+                     </button>
+                  </header>
+                  <div className="personals-list-dash">
+                     {personals.length === 0 ? (
+                         <div className="empty-state glass">
+                             <TeacherIcon />
+                             <p>Nenhum personal cadastrado nesta unidade.</p>
+                         </div>
+                     ) : (
+                         personals.map(p => (
+                             <div key={p.id} className="personal-card-dash glass">
+                                 <div className="p-info">
+                                     <h3>{p.name || p.user?.name}</h3>
+                                     <span>{p.specialization || "Instrutor Geral"}</span>
+                                 </div>
+                                 <div className="p-stats">
+                                     <span>{p.studentsCount || p.students?.length || 0} alunos vinculados</span>
+                                 </div>
+                             </div>
+                         ))
+                     )}
+                  </div>
+               </div>
+            )}
+
+            {activeTab === "announcements" && (
+                <div className="tab-fade-content">
+                    <header className="content-sub-header">
+                        <h2>Comunicados</h2>
+                        <button className="btn-primary-dash" onClick={handleNewAnnouncement}>Novo Aviso</button>
+                    </header>
+                    <div className="announcements-list-dash">
+                        {announcements.length === 0 ? (
+                            <div className="empty-state glass">
+                                <BellIcon />
+                                <p>Não há avisos publicados.</p>
+                            </div>
+                        ) : (
+                            announcements.map(a => (
+                                <div key={a.id} className="announcement-card-dash glass">
+                                    <h3>{a.title}</h3>
+                                    <p>{a.content}</p>
+                                    <span className="date">Publicado em: {new Date(a.createdAt).toLocaleDateString()}</span>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {activeTab === "members" && (
+               <div className="tab-fade-content">
+                   <header className="content-sub-header">
+                        <h2>Lista de Membros</h2>
+                        <div className="search-box-dash">
+                            <input 
+                                type="text" 
+                                placeholder="Filtrar por nome ou e-mail..." 
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                   </header>
+                   
+                   <div className="members-table-container glass">
+                     <table className="members-table">
+                       <thead>
+                         <tr>
+                           <th>Atleta</th>
+                           <th>E-mail</th>
+                           <th>Status</th>
+                           <th>Sequência</th>
+                           <th>Última Atividade</th>
+                         </tr>
+                       </thead>
+                       <tbody>
+                         {filteredMembers.length === 0 ? (
+                             <tr>
+                                 <td colSpan={5} style={{textAlign: 'center', padding: '40px', color: 'var(--text-secondary)'}}>
+                                     Nenhum membro encontrado com esse termo.
+                                 </td>
+                             </tr>
+                         ) : (
+                             filteredMembers.map(member => (
+                               <tr key={member.id}>
+                                 <td className="member-name-cell">
+                                   <div className="mini-avatar">{member.name.charAt(0)}</div>
+                                   {member.name}
+                                 </td>
+                                 <td>{member.email}</td>
+                                 <td>
+                                   <span className="level-tag">Lvl {member.level}</span>
+                                 </td>
+                                 <td>{member.streak} dias</td>
+                                 <td>{member.lastActivityDate ? new Date(member.lastActivityDate).toLocaleDateString() : "---"}</td>
+                               </tr>
+                             ))
+                         )}
+                       </tbody>
+                     </table>
+                   </div>
+               </div>
+            )}
+        </div>
+      </main>
+
+      {/* NAVEGAÇÃO INFERIOR PADRONIZADA (PADRÃO APP) */}
+      <nav className="admin-tab-bar">
+        <div className="tab-bar-content">
+          <button 
+            className={`tab-item ${activeTab === "stats" ? "active" : ""}`}
+            onClick={() => setActiveTab("stats")}
           >
-            <span className="icon">📊</span> Visão Geral
+            <div className="pill-container"><BarChartIcon /></div>
+            <span className="tab-label">Início</span>
           </button>
-          <button
-            className={`nav-item ${activeTab === "personals" ? "active" : ""}`}
+          <button 
+            className={`tab-item ${activeTab === "personals" ? "active" : ""}`}
             onClick={() => setActiveTab("personals")}
           >
-            <span className="icon">👨‍🏫</span> Personals
+            <div className="pill-container"><TeacherIcon /></div>
+            <span className="tab-label">Equipe</span>
           </button>
-          <button
-            className={`nav-item ${activeTab === "announcements" ? "active" : ""}`}
+          <button 
+            className={`tab-item ${activeTab === "announcements" ? "active" : ""}`}
             onClick={() => setActiveTab("announcements")}
           >
-            <span className="icon">📢</span> Avisos
+            <div className="pill-container"><BellIcon /></div>
+            <span className="tab-label">Avisos</span>
           </button>
-          <button
-            className={`nav-item ${activeTab === "members" ? "active" : ""}`}
+          <button 
+            className={`tab-item ${activeTab === "members" ? "active" : ""}`}
             onClick={() => setActiveTab("members")}
           >
-            <span className="icon">👥</span> Membros
+            <div className="pill-container"><UsersIcon /></div>
+            <span className="tab-label">Comunidade</span>
           </button>
-        </nav>
-
-        <div className="sidebar-footer">
-            <div className="gym-code-box">
-                <p>Código da Academia</p>
-                <strong>{stats?.gym?.inviteCode || "---"}</strong>
-            </div>
-            <button onClick={onLogout} className="logout-btn">
-                Sair do Sistema
-            </button>
         </div>
-      </aside>
+      </nav>
 
-      <main className="dashboard-main">
-        {error && <div className="error-toast">{error}</div>}
-
-        {activeTab === "overview" && stats && (
-          <div className="fade-in">
-            <div className="content-header">
-              <h1>Dashboard Executivo</h1>
-              <p>Métricas e desempenho em tempo real</p>
-            </div>
-
-            <div className="metrics-grid">
-              <div className="metric-card glass">
-                <div className="metric-icon members">👥</div>
-                <div className="metric-data">
-                  <span className="label">Total de Membros</span>
-                  <span className="value">{stats.stats.totalMembers}</span>
-                </div>
-              </div>
-
-              <div className="metric-card glass">
-                <div className="metric-icon personals">👨‍🏫</div>
-                <div className="metric-data">
-                  <span className="label">Equipe Personal</span>
-                  <span className="value">{stats.stats.totalPersonals}</span>
-                </div>
-              </div>
-
-              <div className="metric-card glass">
-                <div className="metric-icon checkin">✅</div>
-                <div className="metric-data">
-                  <span className="label">Check-ins Hoje</span>
-                  <span className="value">{stats.stats.todayCheckIns}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="dashboard-row">
-                <div className="ranking-panel glass">
-                    <div className="panel-header">
-                        <h3>🏆 Top 10 Alunos</h3>
-                        <p>Líderes de engajamento</p>
-                    </div>
-                    <div className="ranking-table">
-                        {stats.topRanking.map((user, index) => (
-                            <div key={index} className="ranking-row">
-                                <div className="user-pos">#{index + 1}</div>
-                                <div className="user-name">{user.user.name}</div>
-                                <div className="user-score">{user.totalXpGained} XP</div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="activity-panel glass">
-                    <div className="panel-header">
-                        <h3>📈 Atividade Recente</h3>
-                    </div>
-                    <div className="empty-panel-msg">
-                        Nenhuma atividade recente registrada.
-                    </div>
-                </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "personals" && (
-          <div className="fade-in">
-            <div className="content-header flex-header">
-              <div>
-                <h1>Gestão da Equipe</h1>
-                <p>Cadastre e gerencie seus instrutores</p>
-              </div>
-              <button
-                className="add-btn neon-glow"
-                onClick={() => setShowCreatePersonal(!showCreatePersonal)}
-              >
-                {showCreatePersonal ? "Fechar" : "+ Novo Personal"}
-              </button>
-            </div>
-
-            {showCreatePersonal && (
-              <div className="form-container glass slide-down">
-                <h3>Novo Cadastro de Instrutor</h3>
-                <form onSubmit={handleCreatePersonal} className="personal-form">
-                  <div className="form-grid">
-                    <div className="input-group">
-                        <label>Nome Completo</label>
-                        <input
-                            type="text"
-                            value={newPersonal.name}
-                            onChange={(e) => setNewPersonal({ ...newPersonal, name: e.target.value })}
-                            required
-                        />
-                    </div>
-                    <div className="input-group">
-                        <label>E-mail Profissional</label>
-                        <input
-                            type="email"
-                            value={newPersonal.email}
-                            onChange={(e) => setNewPersonal({ ...newPersonal, email: e.target.value })}
-                            required
-                        />
-                    </div>
-                    <div className="input-group">
-                        <label>Senha Provisória</label>
-                        <input
-                            type="password"
-                            value={newPersonal.password}
-                            onChange={(e) => setNewPersonal({ ...newPersonal, password: e.target.value })}
-                            required
-                        />
-                    </div>
-                    <div className="input-group">
-                        <label>Especialização</label>
-                        <input
-                            type="text"
-                            placeholder="Ex: Musculação, Yoga..."
-                            value={newPersonal.specialization}
-                            onChange={(e) => setNewPersonal({ ...newPersonal, specialization: e.target.value })}
-                            required
-                        />
-                    </div>
-                  </div>
-                  <div className="input-group">
-                    <label>Bio / Experiência</label>
-                    <textarea
-                        value={newPersonal.bio}
-                        onChange={(e) => setNewPersonal({ ...newPersonal, bio: e.target.value })}
-                        rows={3}
-                    />
-                  </div>
-                  <button type="submit" className="submit-btn neon-glow">
-                    Confirmar Cadastro
-                  </button>
-                </form>
-              </div>
-            )}
-
-            <div className="personals-list-grid">
-              {personals.length === 0 ? (
-                <div className="empty-state glass">
-                    <p>Sua equipe de personals está vazia.</p>
-                </div>
-              ) : (
-                personals.map((personal) => (
-                  <div key={personal.id} className="personal-card-new glass">
-                    <div className="card-header">
-                        <div className="avatar">{personal.name.charAt(0)}</div>
-                        <div className="header-info">
-                            <h3>{personal.name}</h3>
-                            <span className="spec-tag">{personal.specialization}</span>
-                        </div>
-                    </div>
-                    <div className="card-body">
-                        <p className="email">✉ {personal.email}</p>
-                        <p className="bio">{personal.bio || "Sem descrição disponível."}</p>
-                    </div>
-                    <div className="card-footer">
-                        <span className="student-count">👥 {personal.students?.length || 0} alunos</span>
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                          <button 
-                            className="workouts-btn"
-                            onClick={() => loadPersonalWorkouts(personal.userId)}
-                          >
-                            Treinos
-                          </button>
-                          <button
-                              className="delete-icon-btn"
-                              onClick={() => handleDeletePersonal(personal.id)}
-                              title="Remover Personal"
-                          >
-                              🗑
-                          </button>
-                        </div>
-                    </div>
-                    {selectedPersonalId === personal.userId && (
-                      <div className="personal-workouts-list slide-down" style={{ marginTop: '15px', borderTop: '1px solid var(--glass-border)', paddingTop: '15px' }}>
-                        <h4 style={{ fontSize: '0.9rem', marginBottom: '10px', color: 'var(--accent-neon)' }}>Treinos do Personal</h4>
-                        {personalWorkouts.length === 0 ? (
-                          <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>Nenhum treino criado.</p>
-                        ) : (
-                          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                            {personalWorkouts.map(w => (
-                              <li key={w.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', fontSize: '0.85rem' }}>
-                                <span>{w.name} ({w.exercises?.length || 0} exerc.)</span>
-                                <button 
-                                  onClick={() => handleDeleteWorkout(w.id)}
-                                  style={{ background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer' }}
-                                >
-                                  X
-                                </button>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-
-        {activeTab === "announcements" && (
-          <div className="fade-in">
-            <div className="content-header flex-header">
-              <div>
-                <h1>Comunicados</h1>
-                <p>Mantenha seus alunos informados</p>
-              </div>
-              <button
-                className="add-btn neon-glow"
-                onClick={() => setShowCreateAnnouncement(!showCreateAnnouncement)}
-              >
-                {showCreateAnnouncement ? "Fechar" : "+ Novo Aviso"}
-              </button>
-            </div>
-
-            {showCreateAnnouncement && (
-              <div className="form-container glass slide-down">
-                <h3>Criar Novo Comunicado</h3>
-                <form onSubmit={handleCreateAnnouncement} className="personal-form">
-                  <div className="input-group">
-                    <label>Título</label>
-                    <input
-                      type="text"
-                      value={newAnnouncement.title}
-                      onChange={(e) => setNewAnnouncement({ ...newAnnouncement, title: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="input-group">
-                    <label>Conteúdo</label>
-                    <textarea
-                      value={newAnnouncement.content}
-                      onChange={(e) => setNewAnnouncement({ ...newAnnouncement, content: e.target.value })}
-                      rows={4}
-                      required
-                    />
-                  </div>
-                  <div className="input-group checkbox-group">
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={newAnnouncement.isUrgent}
-                        onChange={(e) => setNewAnnouncement({ ...newAnnouncement, isUrgent: e.target.checked })}
-                      />
-                      Marcar como Urgente
-                    </label>
-                  </div>
-                  <button type="submit" className="submit-btn neon-glow">
-                    Publicar Aviso
-                  </button>
-                </form>
-              </div>
-            )}
-
-            <div className="announcements-grid">
-              {announcements.length === 0 ? (
-                <div className="empty-state glass">
-                  <p>Nenhum comunicado publicado ainda.</p>
-                </div>
-              ) : (
-                announcements.map((ann) => (
-                  <div key={ann.id} className={`announcement-card glass ${ann.isUrgent ? 'urgent' : ''}`}>
-                    <div className="card-header">
-                      <h3>{ann.title}</h3>
-                      {ann.isUrgent && <span className="urgent-badge">URGENTE</span>}
-                    </div>
-                    <div className="card-body">
-                      <p>{ann.content}</p>
-                      <span className="date">{new Date(ann.createdAt).toLocaleDateString()}</span>
-                    </div>
-                    <div className="card-footer">
-                      <button onClick={() => handleDeleteAnnouncement(ann.id)} className="delete-btn">
-                        Deletar
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-
-        {activeTab === "members" && (
-          <div className="fade-in">
-            <div className="content-header">
-              <h1>Gestão de Membros</h1>
-              <p>Visualize e busque por alunos ativos</p>
-            </div>
-
-            <div className="search-bar-container glass">
-              <form onSubmit={handleMemberSearch} className="search-form">
-                <input
-                  type="text"
-                  placeholder="Buscar por nome ou e-mail..."
-                  value={memberSearch}
-                  onChange={(e) => setMemberSearch(e.target.value)}
-                  className="search-input"
-                />
-                <button type="submit" className="search-btn">🔍 Buscar</button>
-              </form>
-            </div>
-
-            <div className="members-list glass">
-              {members.length === 0 ? (
-                <div className="empty-panel-msg">Nenhum membro encontrado.</div>
-              ) : (
-                <table className="members-table">
-                  <thead>
-                    <tr>
-                      <th>Atleta</th>
-                      <th>E-mail</th>
-                      <th>Nível / XP</th>
-                      <th>Streak</th>
-                      <th>Último Treino</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {members.map((member) => (
-                      <tr key={member.id}>
-                        <td className="member-name-cell">
-                          <div className="mini-avatar">{member.name.charAt(0)}</div>
-                          {member.name}
-                        </td>
-                        <td>{member.email}</td>
-                        <td>
-                          <span className="level-tag">Lvl {member.level}</span>
-                          <span className="xp-text">{member.xp} XP</span>
-                        </td>
-                        <td>🔥 {member.streak} dias</td>
-                        <td>{member.lastActivityDate ? new Date(member.lastActivityDate).toLocaleDateString() : "---"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
-        )}
-      </main>
+      <CustomAlert config={alertConfig} />
     </div>
   );
 };

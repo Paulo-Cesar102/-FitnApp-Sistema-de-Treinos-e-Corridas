@@ -1,14 +1,21 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { socket, connectSocket } from "../service/socket"; 
 import { 
-  getFriends, getPendingRequests, searchUsers, addFriend, 
+  getFriends, getPendingRequests, searchUsers, sendFriendRequest, 
   acceptFriend, rejectFriend 
 } from "../api/friendRequestService";
 import { createPrivateChat, getChats, markAsRead } from "../api/chatService";
 
 import ChatBox from "../Componentes/ChatBox";
 import GroupInfoModal from "../Componentes/GroupInfoModal";
-import "./Friends.css";
+import CustomAlert from "../Componentes/CustomAlert";
+import "./friends.css";
+
+// Ícones Minimalistas Premium
+const SearchIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>;
+const MailIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/><rect width="20" height="16" x="2" y="4" rx="2"/></svg>;
+const UsersIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
+const PlusIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>;
 
 export default function Friends() {
   const [activeTab, setActiveTab] = useState("amigos"); 
@@ -20,6 +27,7 @@ export default function Friends() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeChat, setActiveChat] = useState(null);
   const [isModalGroupOpen, setIsModalGroupOpen] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({ isOpen: false });
 
   const processedMessages = useRef(new Set());
 
@@ -38,10 +46,7 @@ export default function Friends() {
       const currentUserId = localStorage.getItem("userId");
       const allChats = Array.isArray(chatsData) ? chatsData : [];
       const incomingGroups = allChats.filter(c => 
-        c.isGroup === true || 
-        c.is_group === true || 
-        c.type === 'group' || 
-        c.group_id
+        c.isGroup === true || c.is_group === true || c.type === 'group' || c.group_id
       );
       
       const privateChatMap = {};
@@ -69,6 +74,16 @@ export default function Friends() {
       console.error("Erro ao carregar dados:", err);
     }
   }, []);
+
+  const showAlert = (title, message, type) => {
+    setAlertConfig({
+      isOpen: true,
+      title,
+      message,
+      type,
+      onConfirm: () => setAlertConfig({ isOpen: false })
+    });
+  };
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
@@ -103,7 +118,6 @@ export default function Friends() {
     };
   }, [loadData]);
 
-  // Busca com Debounce
   useEffect(() => {
     if (searchQuery.length < 3) {
       setSearchResults([]);
@@ -111,7 +125,7 @@ export default function Friends() {
     }
     const delay = setTimeout(async () => {
       const results = await searchUsers(searchQuery);
-      setSearchResults(results);
+      setSearchResults(results || []);
     }, 400);
     return () => clearTimeout(delay);
   }, [searchQuery]);
@@ -131,7 +145,10 @@ export default function Friends() {
           chatId = chat.id;
         }
         setActiveChat({ chatId, friend: target });
-      } catch (err) { return; }
+      } catch (err) { 
+        console.error("Erro ao abrir chat:", err);
+        return; 
+      }
     }
 
     const hasUnread = existingChat?.unreadCount > 0;
@@ -142,42 +159,51 @@ export default function Friends() {
     }
   };
 
+  const handleAddFriend = async (uId) => {
+    try {
+      await sendFriendRequest(uId);
+      showAlert("Sucesso", "Pedido de amizade enviado.", "success");
+    } catch (err) {
+      showAlert("Aviso", "Nao foi possivel enviar o pedido.", "error");
+    }
+  };
+
   return (
-    <div className="friends-container">
+    <div className="friends-container fade-in">
       <header className="friends-header">
         <h2 className="gym-title">Gym<span>Club</span></h2>
         <p className="subtitle">COMUNIDADE E ATLETAS</p>
       </header>
 
-      <div className="friends-tabs">
+      <div className="friends-tabs-v3">
         <button className={activeTab === "amigos" ? "active" : ""} onClick={() => setActiveTab("amigos")}>
           Amigos
         </button>
         <button className={activeTab === "solicitacoes" ? "active" : ""} onClick={() => setActiveTab("solicitacoes")}>
-          Pedidos {pending.length > 0 && <span className="tab-badge">{pending.length}</span>}
+          Pedidos {pending.length > 0 && <span className="tab-badge-v3">{pending.length}</span>}
         </button>
         <button className={activeTab === "grupos" ? "active" : ""} onClick={() => setActiveTab("grupos")}>
-          Grupos {totalUnreadGroups > 0 && <span className="tab-badge-orange">{totalUnreadGroups}</span>}
+          Grupos {totalUnreadGroups > 0 && <span className="tab-badge-v3 orange">{totalUnreadGroups}</span>}
         </button>
-        <button className={activeTab === "buscar" ? "active" : ""} onClick={() => setActiveTab("buscar")}>🔍</button>
+        <button className={activeTab === "buscar" ? "active" : ""} onClick={() => setActiveTab("buscar")}><SearchIcon /></button>
       </div>
 
       <div className="friends-list-content">
         {activeTab === "amigos" && (
-          friends.length === 0 ? <p className="empty-msg">Sua lista de amigos está vazia.</p> :
+          friends.length === 0 ? <div className="empty-panel-msg">Sua lista de amigos esta vazia.</div> :
           friends.map(f => {
             const chatInfo = friendChats[f.id];
             return (
-              <div key={f.id} className="user-card-item">
-                <div className="user-avatar-small">{f.name?.charAt(0).toUpperCase()}</div>
-                <div className="user-details">
+              <div key={f.id} className="user-card-item glass">
+                <div className="user-avatar-v3">{f.name?.charAt(0).toUpperCase()}</div>
+                <div className="user-details-v3">
                   <h4>{f.name}</h4>
                   {chatInfo?.unreadCount > 0 && (
-                    <span className="friend-unread">{chatInfo.unreadCount > 9 ? "9+" : chatInfo.unreadCount} nova</span>
+                    <span className="unread-tag-v3">{chatInfo.unreadCount} NOVA</span>
                   )}
                 </div>
-                <button className="btn-chat btn-chat-theme" onClick={() => onOpenChat(f)} title="Abrir conversa">
-                  ✉
+                <button className="btn-action-chat" onClick={() => onOpenChat(f)}>
+                  <MailIcon />
                 </button>
               </div>
             );
@@ -186,19 +212,22 @@ export default function Friends() {
 
         {activeTab === "grupos" && (
           <div className="groups-section">
-            <button className="btn-create-group" onClick={() => setIsModalGroupOpen(true)}>+ Criar Novo Grupo</button>
-            {groups.length === 0 ? <p className="empty-msg">Nenhum grupo encontrado.</p> :
+            <button className="btn-create-group-v3" onClick={() => setIsModalGroupOpen(true)}>
+              <PlusIcon /> NOVO GRUPO
+            </button>
+            {groups.length === 0 ? <div className="empty-panel-msg">Nenhum grupo encontrado.</div> :
               groups.map(g => (
-                <div key={g.id} className="user-card-item group-card" onClick={() => onOpenChat(g, true)}>
-                  <div className="user-avatar-small group-icon-box">
-                    👥 {g.unreadCount > 0 && <div className="unread-badge-dot">{g.unreadCount}</div>}
+                <div key={g.id} className="user-card-item group-card-v3 glass" onClick={() => onOpenChat(g, true)}>
+                  <div className="group-avatar-v3">
+                    <UsersIcon />
+                    {g.unreadCount > 0 && <div className="unread-dot-badge"></div>}
                   </div>
-                  <div className="user-details">
+                  <div className="user-details-v3">
                     <div className="card-header-row">
                       <h4>{g.name}</h4>
-                      {g.unreadCount > 0 && <span className="new-indicator">NOVA</span>}
+                      {g.unreadCount > 0 && <span className="new-label-v3">NOVA</span>}
                     </div>
-                    <span>{g.participants?.length || 0} membros</span>
+                    <span className="members-count">{g.participants?.length || 0} INTEGRANTES</span>
                   </div>
                 </div>
               ))
@@ -207,32 +236,33 @@ export default function Friends() {
         )}
 
         {activeTab === "solicitacoes" && (
-          pending.length === 0 ? <p className="empty-msg">Sem pedidos pendentes.</p> :
+          pending.length === 0 ? <div className="empty-panel-msg">Sem pedidos pendentes.</div> :
           pending.map(req => (
-            <div key={req.id} className="user-card-item">
-              <div className="user-avatar-small">{req.sender?.name?.charAt(0)}</div>
-              <div className="user-details">
+            <div key={req.id} className="user-card-item glass">
+              <div className="user-avatar-v3">{req.sender?.name?.charAt(0)}</div>
+              <div className="user-details-v3">
                 <h4>{req.sender?.name}</h4>
-                <span>Enviou um pedido</span>
+                <span className="req-subtext">ENVIOU UM PEDIDO</span>
               </div>
-              <div className="action-pair">
-                <button className="btn-accept" onClick={async () => { await acceptFriend(req.id); loadData(); }}>Aceitar</button>
-                <button className="btn-reject" onClick={async () => { await rejectFriend(req.id); loadData(); }}>Recusar</button>
+              <div className="action-pair-v3">
+                <button className="btn-accept-v3" onClick={async () => { await acceptFriend(req.id); loadData(); }}>ACEITAR</button>
+                <button className="btn-reject-v3" onClick={async () => { await rejectFriend(req.id); loadData(); }}>X</button>
               </div>
             </div>
           ))
         )}
 
         {activeTab === "buscar" && (
-          <div className="search-area">
-             <div className="friends-search-bar">
+          <div className="search-area-v3">
+             <div className="friends-search-bar-v3">
+                <SearchIcon />
                 <input placeholder="Procurar atleta..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
              </div>
              {searchResults.map(u => (
-               <div key={u.id} className="user-card-item">
-                 <div className="user-avatar-small">{u.name?.charAt(0)}</div>
-                 <div className="user-details"><h4>{u.name}</h4></div>
-                 <button className="btn-add-friend" onClick={async () => { await addFriend(u.id); alert("Pedido enviado!"); }}>+</button>
+               <div key={u.id} className="user-card-item glass">
+                 <div className="user-avatar-v3">{u.name?.charAt(0)}</div>
+                 <div className="user-details-v3"><h4>{u.name}</h4></div>
+                 <button className="btn-add-friend-v3" onClick={() => handleAddFriend(u.id)}><PlusIcon /></button>
                </div>
              ))}
           </div>
@@ -241,6 +271,7 @@ export default function Friends() {
 
       <GroupInfoModal isOpen={isModalGroupOpen} onClose={() => setIsModalGroupOpen(false)} onAddMembers={loadData} />
       {activeChat && <ChatBox chatId={activeChat.chatId} friend={activeChat.friend} onClose={() => { setActiveChat(null); loadData(); }} />}
+      <CustomAlert config={alertConfig} />
     </div>
   );
 }

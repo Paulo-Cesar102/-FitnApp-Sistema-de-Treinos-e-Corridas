@@ -6,4 +6,5 @@ export interface ICreateUserDTO {
   password: string;
   sex: Sex;
   role?: Role;
+  gymId?: string;
 }

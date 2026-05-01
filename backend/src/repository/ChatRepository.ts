@@ -77,17 +77,20 @@ export class ChatRepository {
     });
   }
 
-  // 🔥 ATUALIZADO: Suporte para sharedWorkoutId
+  // 🔥 ATUALIZADO: Suporte para sharedWorkoutId e inclusão do remetente
   async createMessage(chatId: string, senderId: string, content: string, workoutId?: string) {
     return prisma.message.create({
       data: {
         chatId,
         senderId,
         content,
-        sharedWorkoutId: workoutId // Se vier vazio, o Prisma ignora por ser opcional (?)
+        sharedWorkoutId: workoutId
       },
       include: {
-        sharedWorkout: true // Retorna o treino logo após criar a mensagem
+        sharedWorkout: true,
+        sender: {
+          select: { id: true, name: true }
+        }
       }
     });
   }

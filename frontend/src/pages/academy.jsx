@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { googleLogout } from "@react-oauth/google";
 import GymCheckIn from "../Componentes/GymCheckIn";
 import GymRanking from "../Componentes/GymRanking";
 import GymAnnouncements from "../Componentes/GymAnnouncements";
@@ -18,10 +19,10 @@ export default function Academy() {
   const [activeTab, setActiveTab] = useState("checkin");
 
   const tabs = [
-    { id: "checkin", label: "📍 Check-in", icon: "📍" },
-    { id: "ranking", label: "🏆 Ranking", icon: "🏆" },
-    { id: "announcements", label: "📢 Avisos", icon: "📢" },
-    { id: "personals", label: "💪 Personals", icon: "💪" },
+    { id: "checkin", label: "Check-in" },
+    { id: "ranking", label: "Ranking" },
+    { id: "announcements", label: "Avisos" },
+    { id: "personals", label: "Equipe" },
   ];
 
   const handleJoined = (newGymId) => {
@@ -30,6 +31,7 @@ export default function Academy() {
   };
 
   const handleLogout = () => {
+    googleLogout();
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     localStorage.removeItem("role");

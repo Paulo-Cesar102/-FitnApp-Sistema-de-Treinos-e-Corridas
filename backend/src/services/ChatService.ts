@@ -113,8 +113,20 @@ export class ChatService {
       workoutId
     );
 
-    // 🚀🔥 EMITE PARA A SALA DO CHAT
+    // 🚀🔥 1. EMITE PARA A SALA DO CHAT (Para quem está com o chat aberto)
     io.to(chatId).emit("chat:new_message", message);
+
+    // 🔔 2. EMITE PARA OS PARTICIPANTES INDIVIDUALMENTE (Para atualizar lista/notificações)
+    const chat = await this.repo.findById(chatId);
+    if (chat && chat.participants) {
+      chat.participants.forEach(p => {
+        // Não emite para o próprio remetente de novo via sala individual 
+        // (ele já recebe via chat room ou pelo retorno da API)
+        if (p.userId !== senderId) {
+          io.to(p.userId).emit("chat:new_message", message);
+        }
+      });
+    }
 
     return message;
   }
@@ -160,6 +172,32 @@ export class ChatService {
     io.to(chatId).emit("chat:cleared", chatId);
 
     return result;
+  }
+
+  // 🗑️ Excluir chat/grupo (Apenas ADMIN)
+  async deleteChat(chatId: string, userId: string) {
+    const isAdmin = await this.repo.checkIfIsAdmin(chatId, userId);
+    if (!isAdmin) {
+      throw new Error("Apenas administradores podem excluir o grupo.");
+    }
+
+    // Primeiro remove todas as mensagens
+    await this.repo.deleteChatMessages(chatId);
+    
+    // Remove todos os participantes
+    await prisma.chatParticipant.deleteMany({
+      where: { chatId }
+    });
+
+    // Remove o chat
+    await prisma.chat.delete({
+      where: { id: chatId }
+    });
+
+    // Notifica todos os participantes que o grupo foi excluído
+    io.to(chatId).emit("group:deleted", chatId);
+
+    return { success: true };
   }
 
   // 🏋️ Salvar treino compartilhado

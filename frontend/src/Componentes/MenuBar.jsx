@@ -30,7 +30,13 @@ const UserIcon = () => (
 );
 const AcademyIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 2L2 8v10h20V8l-10-6z"/><path d="M12 10v8"/><path d="M6 14h12"/>
+    <path d="M3 21h18" />
+    <path d="M3 10h18" />
+    <path d="M5 21V10" />
+    <path d="M19 21V10" />
+    <path d="M9 21V10" />
+    <path d="M15 21V10" />
+    <path d="m2 10 10-7 10 7" />
   </svg>
 );
 const RobotIcon = () => (
@@ -99,7 +105,6 @@ export default function MenuBar() {
   const menus = [
     { id: "home", label: "Início", path: "/home", icon: <HomeIcon /> },
     { id: "exercicio", label: "Treinos", path: "/exercicio", icon: <BarbellIcon /> },
-    { id: "coach", label: "Coach", path: "/smart-coach", icon: <RobotIcon /> },
     { id: "academy", label: "Academia", path: "/academy", icon: <AcademyIcon /> },
     { id: "friends", label: "Amigos", path: "/amigos", icon: <FriendsIcon />, hasBadge: true },
     { id: "perfil", label: "Perfil", path: "/perfil", icon: <UserIcon /> },

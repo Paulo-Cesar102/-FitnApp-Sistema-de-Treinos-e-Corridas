@@ -97,7 +97,8 @@ export const gymService = {
 
   getGymAnnouncements: async (gymId: string, page = 1, pageSize = 10) => {
     const response = await api.get(`/gym/announcement/gym/${gymId}?page=${page}&pageSize=${pageSize}`);
-    return response.data;
+    // Se a resposta for paginada, retorna o array de anúncios
+    return response.data.announcements || response.data;
   },
 
   getUrgentAnnouncements: async (gymId: string) => {
@@ -106,7 +107,7 @@ export const gymService = {
   },
 
   updateAnnouncement: async (id: string, data: any) => {
-    const response = await api.put(`/gym/announcement/${id}`, data);
+    const response = await api.put(`/gym/announcement/${id}`);
     return response.data;
   },
 
@@ -141,5 +142,21 @@ export const gymService = {
   getRankingStats: async (gymId: string) => {
     const response = await api.get(`/gym/ranking/${gymId}/stats`);
     return response.data;
+  },
+
+  // Owner Dashboard specific
+  getGymStats: async (gymId: string) => {
+    const response = await api.get(`/auth-gym/owner/${gymId}/stats`);
+    return response.data;
+  },
+
+  getGymMembers: async (gymId: string) => {
+    const response = await api.get(`/auth-gym/owner/${gymId}/members`);
+    return response.data.members || response.data;
+  },
+
+  getOwnerGymPersonals: async (gymId: string) => {
+    const response = await api.get(`/auth-gym/owner/${gymId}/personals`);
+    return response.data.personals || response.data;
   },
 };

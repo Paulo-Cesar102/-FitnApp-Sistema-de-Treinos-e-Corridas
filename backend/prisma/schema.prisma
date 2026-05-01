@@ -84,9 +84,11 @@ model User {
   lastUnsubscribedAt DateTime?
   createdAt         DateTime  @default(now())
 
-  // Configurações de Privacidade
+  // Configurações de Privacidade e Interface
   isPublicProfile    Boolean   @default(true)
   notificationsEnabled Boolean @default(true)
+  isCoachEnabled     Boolean   @default(true)
+  defaultRest        Int       @default(60)
 
   // Controle de IA (Plano Gratuito)
   aiUsageCount      Int       @default(0)

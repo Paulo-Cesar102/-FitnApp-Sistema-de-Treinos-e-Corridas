@@ -1,196 +1,112 @@
-# Projeto Final
+# GymClub - Sistema Inteligente de Alta Performance
 
-# 🏃‍♂️ Fitness App - Sistema de Treinos e Corridas
-
-Aplicação completa focada em treinos, corridas e interação social entre usuários.
-O projeto permite que usuários acompanhem sua evolução, participem de corridas e interajam com amigos dentro da plataforma.
+O **GymClub** é uma plataforma full-stack avançada projetada para transformar a experiência de treinamento e gestão de academias. Combinando inteligência artificial, gamificação e ferramentas de gestão B2B, o sistema oferece uma solução completa para alunos, instrutores e proprietários de unidades fitness.
 
 ---
 
-##  Funcionalidades
+## Diferenciais Estratégicos
 
-### Usuário
-
-* ✅ Cadastro e login com autenticação JWT
-* ✅ Senhas criptografadas com bcrypt
-* Perfil com estatísticas de treino
-* Sistema de experiência (XP)
-* Sistema de badges (conquistas)
-* Acompanhamento de progresso
-
-### Corridas
-
-* 🚧 Sistema de corridas em desenvolvimento
-* Será implementado na versão mobile com React Native
-* Futuro suporte a:
-
-  * Rastreamento por GPS
-  * Ranking por dia, semana e mês
-  * Histórico de corridas
-
-### Treinos
-
-* Criação de rotinas personalizadas
-* Sistema onde o usuário pode montar seus próprios treinos
-* Lista de exercícios por categoria
-* Organização completa de treinos
-
-###  Sistema de Amizades
-
-* Enviar solicitação de amizade
-* Aceitar / Recusar pedidos
-* Listar amigos
-* Listar pedidos pendentes
-
-###  Social (Planejado)
-
-* Chat em tempo real entre usuários
-* Envio de treinos personalizados para amigos (futuro)
+*   **Smart Coach AI:** Integração com inteligência artificial para análise biomecânica em tempo real, fornecendo instruções técnicas de execução, segurança e posicionamento.
+*   **Analytics de Precisão:** Gráficos detalhados de distribuição de foco por grupos musculares primários, evolução de carga e métricas semanais de constância.
+*   **Gamificação V3:** Sistema de progressão com XP, níveis dinâmicos, conquistas (badges) raras e rankings competitivos entre membros da mesma unidade.
+*   **Ecossistema Gym Management:** Ferramentas dedicadas para donos de academia e personais, incluindo check-ins automatizados, anúncios da unidade e prescrição remota de treinos.
 
 ---
 
-##  Tecnologias Utilizadas
+## Funcionalidades Principais
 
-### Backend
+### Para o Aluno (User Experience)
+*   **Execução de Treino V3:** Interface otimizada para mobile com suporte a gestos (swipe), cronômetros circulares inteligentes e navegação intuitiva.
+*   **Evolução e Perfil:** Dashboard completo com histórico de peso, meta de objetivos e galeria de conquistas.
+*   **Social Hub:** Sistema de amizades, chat em tempo real via WebSockets e compartilhamento instantâneo de rotinas de treino.
 
-* Node.js
-* Express
-* Prisma ORM
-* PostgreSQL
-* JWT (autenticação)
-* Bcrypt (criptografia de senha)
-
-### Frontend (em evolução)
-
-* React / React Native
-* Zustand (gerenciamento de estado)
+### Para a Academia (B2B Features)
+*   **Gestão de Check-ins:** Controle de frequência com sistema de bônus de XP por sequência (streaks).
+*   **Comunicação Direta:** Mural de avisos e comunicados da academia com priorização de mensagens.
+*   **Suporte de Personais:** Chat dedicado para suporte entre instrutores e alunos matriculados.
 
 ---
 
-## Estrutura do Projeto
+## Roadmap e Visão de Futuro
 
-```id="3x9eho"
-backend/
- ├── src/
- │   ├── controllers/
- │   ├── routes/
- │   ├── services/
- │   └── server.ts
- ├── prisma/
- │   ├── schema.prisma
- │   └── seed.js
-```
+O projeto está em constante evolução, com as seguintes funcionalidades em fase de planejamento e desenvolvimento:
 
----
+### Expansão Mobile & Outdoor
+*   **Rastreamento via GPS:** Sistema nativo para monitoramento de corridas e atividades ao ar livre em tempo real.
+*   **Modo Duo e Equipes:** Funcionalidades sociais avançadas para treinos e corridas em conjunto.
+*   **Integração com Wearables:** Suporte para smartwatches e dispositivos de monitoramento cardíaco.
 
-##  Instalação e Execução
-
-###  Pré-requisitos
-
-* Node.js instalado
-* Banco de dados PostgreSQL configurado
-* npm ou yarn
-
-### Clonar o projeto
-
-```id="1b9rsy"
-git clone https://github.com/seu-usuario/seu-repo.git
-```
-
-### Instalar dependências
-
-```id="r89oqh"
-cd backend
-npm install
-```
-
-### Configurar banco (Prisma)
-
-```id="v4k6v5"
-npx prisma migrate dev
-```
-
-### Rodar seed
-
-```id="h2h7o6"
-node prisma/seed.js
-```
-
-### Rodar servidor
-
-```id="t5r9vd"
-npm run dev
-```
+### Competição e Economia
+*   **Torneios e Eventos:** Organização de competições internas entre alunos da mesma academia com premiações automatizadas.
+*   **Sistema de Pagamentos:** Integração de gateway para mensalidades e marketplace de produtos da unidade.
+*   **Rankings Expandidos:** Filtros globais, regionais e por categoria de XP (Semanal, Mensal e Anual).
 
 ---
 
-## Rotas da API (Amizades)
+## Tech Stack
 
-| Método | Rota             | Descrição           |
-| ------ | ---------------- | ------------------- |
-| POST   | /friends/request | Enviar solicitação  |
-| POST   | /friends/accept  | Aceitar solicitação |
-| POST   | /friends/reject  | Recusar solicitação |
-| GET    | /friends         | Listar amigos       |
-| GET    | /friends/pending | Listar pendentes    |
+### Backend (Core)
+*   **Linguagem:** Node.js com TypeScript
+*   **Framework:** Express
+*   **ORM:** Prisma
+*   **Banco de Dados:** PostgreSQL
+*   **Real-time:** Socket.io (Eventos e Chat)
+*   **Segurança:** JWT (Stateless Auth) & Bcrypt
 
----
-
-## Conceitos Aplicados
-
-* Arquitetura em camadas (Controller, Service)
-* ORM com Prisma
-* Banco de dados relacional (PostgreSQL)
-* Autenticação com JWT
-* Criptografia de senhas com bcrypt
-* Gerenciamento de estado com Zustand
-* Separação entre frontend e backend
-* Sistema relacional (usuários, amigos, exercícios)
+### Frontend (Web)
+*   **Linguagem:** React (JavaScript/TypeScript)
+*   **Estilização:** Vanilla CSS (Custom Properties & Glassmorphism)
+*   **Gráficos:** Recharts (Data Visualization)
+*   **Comunicação:** Axios
 
 ---
 
-## Funcionalidades Futuras
+## Arquitetura e Padrões
 
-* 📍 Sistema de GPS para rastreamento de corridas em tempo real
-* 🏆 Torneios com premiação
-* 🧑‍🤝‍🧑 Corridas em equipe (modo Duo)
-* 💰 Sistema de pagamentos
-* 📊 Dashboard com gráficos
-* 🌙 Tema dark/light
-* 📱 App mobile completo (React Native)
-* 💬 Compartilhamento de treinos entre amigos via chat
-* 🥇 Ranking por XP:
-
-  * Semanal
-  * Mensal
-  * Anual
+*   **Service Layer Pattern:** Lógica de negócio isolada para reaproveitamento entre controllers.
+*   **Repository Pattern:** Abstração da camada de dados para facilitar testes e trocas de ORM/Banco.
+*   **Responsive Design:** Foco absoluto em "Mobile First", garantindo experiência fluida em qualquer dispositivo.
+*   **Real-time Synchronization:** Sincronização de estado entre cliente e servidor via WebSockets.
 
 ---
 
-## Autor
+## Guia de Instalação
 
-Desenvolvido por:
+### Pré-requisitos
+*   Node.js (v18+)
+*   Docker (ou instância local do PostgreSQL)
 
-Paulo César(Frontend e Backend)
-Lucas (Backend)
-Fernando(Frontend)
-Gabriel(Frontend)
+### Passos Rápidos
+1.  **Clone o Repositório:**
+    ```bash
+    git clone https://github.com/seu-usuario/fitnapp-gymclub.git
+    ```
+2.  **Configuração de Ambiente:**
+    Crie um arquivo `.env` na pasta `backend/` seguindo o modelo `.env.example`.
+3.  **Instale as Dependências:**
+    ```bash
+    npm install
+    ```
+4.  **Banco de Dados:**
+    ```bash
+    npx prisma migrate dev
+    npx prisma db seed
+    ```
+5.  **Inicie o Servidor:**
+    ```bash
+    npm run dev
+    ```
+
+---
+
+## Equipe de Desenvolvimento
+
+*   Paulo César, Lucas, Fernando, Gabriel.
+
 ---
 
 ## Status do Projeto
-
-Em desenvolvimento
-
----
-
-## Observações
-
-O sistema de corridas será implementado na fase mobile utilizando React Native, aproveitando recursos nativos como GPS para rastreamento preciso.
-
-A autenticação já está implementada utilizando JWT e bcrypt, garantindo segurança no acesso dos usuários.
-
-O sistema de progressão com XP e badges será utilizado para aumentar o engajamento dos usuários, com rankings competitivos planejados para diferentes períodos.
-
-Este projeto faz parte da evolução prática em desenvolvimento full stack, com foco em aplicações reais e escaláveis.
+**Fase Atual:** Expansão das capacidades de Inteligência Artificial e estruturação do módulo de GPS.
 
 ---
+*Este projeto demonstra competências avançadas em desenvolvimento Full Stack, UI/UX Design e integração de Inteligência Artificial em produtos digitais.*

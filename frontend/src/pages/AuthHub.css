@@ -1,0 +1,194 @@
+.auth-hub-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, var(--bg-card-alt) 0%, var(--bg-main) 100%);
+  font-family: var(--font-primary);
+  padding: 1rem;
+}
+
+.auth-hub-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(15px);
+  padding: 2.5rem;
+  border-radius: 24px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-main);
+  width: 100%;
+  max-width: 450px;
+  animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-hub-card.wide {
+  max-width: 950px;
+}
+
+.auth-mode-selector {
+  display: flex;
+  background: var(--bg-card-alt);
+  padding: 5px;
+  border-radius: 14px;
+  margin-bottom: 2.5rem;
+  border: 1px solid var(--border-color);
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.mode-btn.active {
+  background: var(--primary-color);
+  color: #fff;
+  box-shadow: 0 4px 12px var(--primary-glow);
+}
+
+.portal-selection {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.portal-card {
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 25px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.portal-card:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.portal-card.active {
+    background: var(--primary-glow);
+    border-color: var(--primary-color);
+}
+
+.portal-icon {
+  width: 60px;
+  height: 60px;
+  background: var(--bg-main);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-color);
+  font-size: 24px;
+  transition: all 0.3s ease;
+}
+
+.portal-card:hover .portal-icon {
+  background: var(--primary-color);
+  color: #fff;
+  transform: scale(1.1);
+}
+
+.portal-card h3 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin: 0;
+  color: var(--text-main);
+}
+
+.portal-card p {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.back-to-choice {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-card-alt);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+.back-to-choice:hover {
+    background: var(--bg-main);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    transform: translateX(-3px);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+.auth-select {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    background: var(--bg-card-alt);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1rem;
+}
+
+[data-theme='light'] .auth-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+.register-form-row {
+    display: flex;
+    gap: 10px;
+}
+
+.flex-1 {
+    flex: 1;
+}
+
+@media (max-width: 600px) {
+  .portal-selection {
+    grid-template-columns: 1fr;
+  }
+  
+  .register-form-row {
+      flex-direction: column;
+      gap: 0;
+  }
+
+  .auth-hub-card {
+      padding: 2rem 1.5rem;
+  }
+}
