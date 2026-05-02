@@ -31,7 +31,7 @@ export default function Home() {
   useEffect(() => {
     async function loadData() {
       try {
-        const userJson = localStorage.getItem("user");
+        const userJson = sessionStorage.getItem("user");
         if (userJson) {
           const user = JSON.parse(userJson);
           const userDetails = await getUser(user.id);

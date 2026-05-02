@@ -296,7 +296,7 @@ export class GymOwnerService {
       }
 
       const totalMembers = await prisma.user.count({
-        where: { gymId },
+        where: { gymId, role: Role.USER },
       });
 
       const totalPersonals = await prisma.gymPersonal.count({

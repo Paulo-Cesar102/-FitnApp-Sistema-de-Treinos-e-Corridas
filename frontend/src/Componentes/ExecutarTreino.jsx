@@ -133,7 +133,7 @@ export default function ExecutarTreino({ workout }) {
   };
 
   const handleFinalizarSerie = () => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const user = JSON.parse(sessionStorage.getItem("user") || "{}");
     const defaultRest = user.defaultRest || 60;
     const tempoDescanso = parseInt(currentItem?.rest) || defaultRest; 
     setRestTime(tempoDescanso);
@@ -141,10 +141,10 @@ export default function ExecutarTreino({ workout }) {
     setIsSetRunning(false);
   };
 
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const user = JSON.parse(sessionStorage.getItem("user") || "{}");
 
   useEffect(() => {
-    const personalId = user.personalSubscriptions?.[0] || localStorage.getItem("personalId");
+    const personalId = user.personalSubscriptions?.[0] || sessionStorage.getItem("personalId");
     if (treinoAtual?.id && socket && user.id && personalId) {
       socket.emit("student_activity", {
         personalId,
@@ -167,13 +167,13 @@ export default function ExecutarTreino({ workout }) {
 
     try {
       const result = await completeWorkout(treinoAtual.id);
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const user = JSON.parse(sessionStorage.getItem("user") || "{}");
       
       if (result.newXp) user.xp = result.newXp;
       if (result.newLevel) user.level = result.newLevel;
       if (result.streak) user.streak = result.streak;
       
-      localStorage.setItem("user", JSON.stringify(user));
+      sessionStorage.setItem("user", JSON.stringify(user));
       window.dispatchEvent(new Event('userDataUpdated'));
       
       setIsFinished(true);

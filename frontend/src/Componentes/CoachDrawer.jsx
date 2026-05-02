@@ -14,7 +14,7 @@ export default function CoachDrawer() {
   const navigate = useNavigate();
 
   const checkEnabled = () => {
-    const userJson = localStorage.getItem("user");
+    const userJson = sessionStorage.getItem("user");
     if (userJson) {
       const user = JSON.parse(userJson);
       // Padrão é true se o campo ainda não existir no cache local

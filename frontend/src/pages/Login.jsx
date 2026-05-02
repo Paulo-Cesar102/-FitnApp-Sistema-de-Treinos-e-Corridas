@@ -12,11 +12,11 @@ export default function Login() {
   const [alertConfig, setAlertConfig] = useState({ isOpen: false });
 
   const handleAuthSuccess = (response) => {
-    localStorage.setItem("token", response.token);
+    sessionStorage.setItem("token", response.token);
     const user = response.user;
-    localStorage.setItem("user", JSON.stringify(user));
-    localStorage.setItem("role", user.role);
-    localStorage.setItem("userId", user.id);
+    sessionStorage.setItem("user", JSON.stringify(user));
+    sessionStorage.setItem("role", user.role);
+    sessionStorage.setItem("userId", user.id);
 
     // Avisa o App.jsx para sincronizar dados (como gymId e gymName)
     window.dispatchEvent(new Event('userDataUpdated'));

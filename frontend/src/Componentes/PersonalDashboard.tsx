@@ -64,7 +64,7 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({ gymId, gym
 
     try {
       setLoading(true);
-      const userJson = localStorage.getItem("user");
+      const userJson = sessionStorage.getItem("user");
       if (!userJson) return;
       const user = JSON.parse(userJson);
       
@@ -96,6 +96,19 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({ gymId, gym
     setAlertConfig({
       isOpen: true, title, message, type,
       onConfirm: () => setAlertConfig({ isOpen: false })
+    });
+  };
+
+  const handleConfirmLogout = () => {
+    setAlertConfig({
+      isOpen: true,
+      title: "Encerrar Sessão",
+      message: "Deseja realmente sair do seu painel técnico?",
+      type: "error",
+      confirmText: "Sim, Sair",
+      cancelText: "Não, Manter",
+      onConfirm: onLogout,
+      onCancel: () => setAlertConfig({ isOpen: false })
     });
   };
 
@@ -139,9 +152,9 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({ gymId, gym
               <p className="gym-id-text">{gymName || "Academia"}</p>
             </div>
           </div>
-          <button className="btn-logout-sidebar" onClick={onLogout}>
+          <button className="btn-logout-sidebar" onClick={handleConfirmLogout}>
             <LogoutIcon />
-            <span>Sair do Painel</span>
+            <span>Sair da Conta</span>
           </button>
         </div>
       </aside>
@@ -154,7 +167,7 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({ gymId, gym
               <p>{activeTab === "students" ? "Acompanhe seus atletas em tempo real" : "Gerencie modelos de treinos"}</p>
            </div>
            <div className="top-nav-actions">
-              <button className="mobile-logout-btn" onClick={onLogout}>
+              <button className="mobile-logout-btn" onClick={handleConfirmLogout}>
                   <LogoutIcon />
               </button>
            </div>
@@ -315,7 +328,7 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({ gymId, gym
                                       <h4>Sair do Painel</h4>
                                       <p>Encerra sua sessão de instrutor.</p>
                                   </div>
-                                  <button className="btn-danger-dash" onClick={onLogout}>Sair Agora</button>
+                                  <button className="btn-danger-dash" onClick={handleConfirmLogout}>Sair Agora</button>
                               </div>
                           </section>
                       </div>

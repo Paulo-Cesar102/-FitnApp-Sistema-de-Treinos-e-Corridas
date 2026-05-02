@@ -34,7 +34,7 @@ export class UserController {
         name,
         email,
         password,
-        sex: sex.toUpperCase() as Sex,
+        sex: sex ? (sex.toUpperCase() as Sex) : Sex.M,
         role: role || "USER",
         gymId: gymId
       });
@@ -42,8 +42,9 @@ export class UserController {
       return res.status(201).json(user);
 
     } catch (error) {
+      console.error("🔥 Erro ao criar usuário:", error);
       return res.status(400).json({
-        error: (error as Error).message
+        message: (error as Error).message
       });
     }
   }
@@ -54,7 +55,7 @@ export class UserController {
       return res.json(users);
     } catch (error) {
       return res.status(500).json({
-        error: "Internal server error"
+        message: "Internal server error"
       });
     }
   }
@@ -63,13 +64,13 @@ export class UserController {
     try {
       const { q } = req.query;
       if (!q) {
-        return res.status(400).json({ error: "Query parameter 'q' is required" });
+        return res.status(400).json({ message: "Query parameter 'q' is required" });
       }
       const users = await this.userService.search(q as string);
       return res.json(users);
     } catch (error) {
       return res.status(500).json({
-        error: "Internal server error"
+        message: "Internal server error"
       });
     }
   }
@@ -91,7 +92,7 @@ export class UserController {
       return res.json(user);
     } catch (error) {
       return res.status(500).json({
-        error: "Internal server error"
+        message: "Internal server error"
       });
     }
   }
@@ -106,7 +107,7 @@ export class UserController {
       return res.status(204).send();
     } catch (error) {
       return res.status(500).json({
-        error: "Internal server error"
+        message: "Internal server error"
       });
     }
   }
@@ -120,7 +121,7 @@ export class UserController {
     } catch (error) {
       console.error("🔥 Erro ao atualizar usuário:", error);
       return res.status(400).json({
-        error: (error as Error).message
+        message: (error as Error).message
       });
     }
   }

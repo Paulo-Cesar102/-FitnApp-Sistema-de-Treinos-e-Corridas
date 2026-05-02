@@ -43,7 +43,7 @@ export default function Friends() {
         getChats()
       ]);
       
-      const currentUserId = localStorage.getItem("userId");
+      const currentUserId = sessionStorage.getItem("userId");
       const allChats = Array.isArray(chatsData) ? chatsData : [];
       const incomingGroups = allChats.filter(c => 
         c.isGroup === true || c.is_group === true || c.type === 'group' || c.group_id
@@ -86,7 +86,7 @@ export default function Friends() {
   };
 
   useEffect(() => {
-    const userId = localStorage.getItem("userId");
+    const userId = sessionStorage.getItem("userId");
     if (userId) {
       connectSocket(userId);
       socket.emit("identify", userId);

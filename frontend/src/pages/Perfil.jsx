@@ -64,7 +64,7 @@ export default function Perfil() {
   });
 
   const loadAllData = async () => {
-    const userFromStorage = JSON.parse(localStorage.getItem("user") || "{}");
+    const userFromStorage = JSON.parse(sessionStorage.getItem("user") || "{}");
     if (!userFromStorage?.id) return;
 
     try {
@@ -150,8 +150,8 @@ export default function Perfil() {
       });
       setUserData(prev => ({ ...prev, weightGoal: updatedUser.weightGoal }));
       setIsEditingGoal(false);
-      const userFromStorage = JSON.parse(localStorage.getItem("user") || "{}");
-      localStorage.setItem("user", JSON.stringify({ ...userFromStorage, weightGoal: updatedUser.weightGoal }));
+      const userFromStorage = JSON.parse(sessionStorage.getItem("user") || "{}");
+      sessionStorage.setItem("user", JSON.stringify({ ...userFromStorage, weightGoal: updatedUser.weightGoal }));
     } catch (error) {
       console.error("Erro ao atualizar meta", error);
     }
@@ -166,8 +166,8 @@ export default function Perfil() {
       });
       setUserData(prev => ({ ...prev, name: updatedUser.name, sex: updatedUser.sex }));
       setIsEditingProfile(false);
-      const userFromStorage = JSON.parse(localStorage.getItem("user") || "{}");
-      localStorage.setItem("user", JSON.stringify({ ...userFromStorage, name: updatedUser.name }));
+      const userFromStorage = JSON.parse(sessionStorage.getItem("user") || "{}");
+      sessionStorage.setItem("user", JSON.stringify({ ...userFromStorage, name: updatedUser.name }));
     } catch (error) {
       console.error("Erro ao atualizar perfil", error);
     }
@@ -183,15 +183,18 @@ export default function Perfil() {
   const handleLogout = () => {
     setAlertConfig({
       isOpen: true,
-      title: "Sair da Conta",
-      message: "Tem certeza que deseja desconectar?",
+      title: "Encerrar Sessão",
+      message: "Tem certeza que deseja sair da sua conta?",
       type: "error",
+      confirmText: "Sim, Sair",
+      cancelText: "Não, Cancelar",
       onConfirm: () => {
         googleLogout();
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("user");
         navigate("/login");
-      }
+      },
+      onCancel: () => setAlertConfig({ isOpen: false })
     });
   };
 

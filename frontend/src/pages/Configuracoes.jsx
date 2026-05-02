@@ -42,7 +42,7 @@ export default function Configuracoes() {
 
   useEffect(() => {
     async function loadUser() {
-      const userJson = localStorage.getItem("user");
+      const userJson = sessionStorage.getItem("user");
       if (userJson) {
         try {
           const user = JSON.parse(userJson);
@@ -72,7 +72,7 @@ export default function Configuracoes() {
   const handleUpdate = async () => {
     setLoading(true);
     try {
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const user = JSON.parse(sessionStorage.getItem("user") || "{}");
       const updatedUser = await updateUser(user.id, {
         name: userData.name,
         sex: userData.sex,
@@ -81,7 +81,7 @@ export default function Configuracoes() {
       });
       
       // Sincroniza cache local e notifica o App
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      sessionStorage.setItem("user", JSON.stringify(updatedUser));
       window.dispatchEvent(new Event("userDataUpdated"));
       
       setAlertConfig({
@@ -103,11 +103,11 @@ export default function Configuracoes() {
     setUserData(prev => ({ ...prev, [field]: newValue }));
     
     try {
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const user = JSON.parse(sessionStorage.getItem("user") || "{}");
       const updatedUser = await updateUser(user.id, { [field]: newValue });
       
       // Sincroniza cache local e notifica componentes
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      sessionStorage.setItem("user", JSON.stringify(updatedUser));
       window.dispatchEvent(new Event("userDataUpdated"));
       
       if (field === "isCoachEnabled") {
@@ -122,19 +122,22 @@ export default function Configuracoes() {
   const handleLogout = () => {
     setAlertConfig({
       isOpen: true,
-      title: "Sair da Conta",
-      message: "Deseja realmente desconectar?",
+      title: "Confirmar Saída",
+      message: "Tem certeza que deseja encerrar sua sessão atual?",
       type: "error",
+      confirmText: "Sim, Sair",
+      cancelText: "Não, Manter",
       onConfirm: () => {
         googleLogout();
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        localStorage.removeItem("role");
-        localStorage.removeItem("userId");
-        localStorage.removeItem("gymId");
-        localStorage.removeItem("gymName");
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("user");
+        sessionStorage.removeItem("role");
+        sessionStorage.removeItem("userId");
+        sessionStorage.removeItem("gymId");
+        sessionStorage.removeItem("gymName");
         navigate("/login");
-      }
+      },
+      onCancel: () => setAlertConfig({ isOpen: false })
     });
   };
 

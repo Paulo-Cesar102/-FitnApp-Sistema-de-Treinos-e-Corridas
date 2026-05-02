@@ -58,11 +58,11 @@ export default function AuthHub() {
     };
 
     const handleAuthSuccess = (response) => {
-        localStorage.setItem("token", response.token);
+        sessionStorage.setItem("token", response.token);
         const user = response.user;
-        localStorage.setItem("user", JSON.stringify(user));
-        localStorage.setItem("role", user.role);
-        localStorage.setItem("userId", user.id);
+        sessionStorage.setItem("user", JSON.stringify(user));
+        sessionStorage.setItem("role", user.role);
+        sessionStorage.setItem("userId", user.id);
 
         showAlert("Acesso Autorizado", `Bem-vindo, ${user.name}!`, "success", () => {
             setAlertConfig({ isOpen: false });
@@ -111,7 +111,7 @@ export default function AuthHub() {
                 email: regData.email,
                 password: regData.password,
                 sex: regData.gender === "male" ? "M" : "F",
-                gymId: regData.gymId,
+                gymId: foundGym?.id,
                 role: targetRole
             });
             showAlert("Sucesso!", `Sua conta de ${targetRole === "PERSONAL" ? "Personal" : "Atleta"} foi criada.`, "success", () => {

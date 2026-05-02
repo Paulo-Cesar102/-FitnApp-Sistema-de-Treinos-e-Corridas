@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 export const socket = io("http://localhost:3000", {
   autoConnect: false,
   auth: {
-    token: localStorage.getItem("token")
+    token: sessionStorage.getItem("token")
   }
 });
 
@@ -11,7 +11,7 @@ export const connectSocket = (userId) => {
   if (!userId) return;
 
   // Atualiza o token antes de tentar conectar
-  socket.auth.token = localStorage.getItem("token");
+  socket.auth.token = sessionStorage.getItem("token");
 
   if (socket.connected) {
     // Se já estiver conectado, apenas garante a identificação

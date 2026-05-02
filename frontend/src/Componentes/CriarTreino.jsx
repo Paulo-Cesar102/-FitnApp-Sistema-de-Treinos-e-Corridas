@@ -23,11 +23,11 @@ export default function CriarTreino({ onCreated, students = [] }) {
   const [selectedMuscle, setSelectedMuscle] = useState("ALL");
   const [showNameModal, setShowNameModal] = useState(false);
   const [alertConfig, setAlertConfig] = useState({ isOpen: false });
-  const [targetUserId, setTargetUserId] = useState(localStorage.getItem("userId"));
+  const [targetUserId, setTargetUserId] = useState(sessionStorage.getItem("userId"));
   const [studentSearch, setStudentSearch] = useState("");
   const [isFilterExpanded, setIsFilterExpanded] = useState(true);
 
-  const isPersonal = localStorage.getItem("role") === "PERSONAL";
+  const isPersonal = sessionStorage.getItem("role") === "PERSONAL";
 
   // Auto-recolher filtros ao rolar
   useEffect(() => {
@@ -150,7 +150,7 @@ export default function CriarTreino({ onCreated, students = [] }) {
                 className="student-search-input"
               />
               <select value={targetUserId} onChange={(e) => setTargetUserId(e.target.value)}>
-                <option value={localStorage.getItem("userId")}>Meu Próprio Perfil</option>
+                <option value={sessionStorage.getItem("userId")}>Meu Próprio Perfil</option>
                 {filteredStudents.map(s => (
                   <option key={s.id} value={s.id}>{s.name} (Aluno)</option>
                 ))}

@@ -16,7 +16,7 @@ export default function ChatBox({ chatId, friend, onClose }) {
   // --- RECUPERA USUÁRIO LOGADO ---
   const user = useMemo(() => {
     try {
-      const savedUser = localStorage.getItem("user");
+      const savedUser = sessionStorage.getItem("user");
       return savedUser ? JSON.parse(savedUser) : null;
     } catch (e) { return null; }
   }, []);

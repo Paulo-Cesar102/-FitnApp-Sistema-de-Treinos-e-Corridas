@@ -105,7 +105,7 @@ export default function MenuBar() {
   const menus = [
     { id: "home", label: "Início", path: "/home", icon: <HomeIcon /> },
     { id: "exercicio", label: "Treinos", path: "/exercicio", icon: <BarbellIcon /> },
-    { id: "academy", label: "Academia", path: "/academy", icon: <AcademyIcon /> },
+    { id: "academy", label: "Unidade", path: "/academy", icon: <AcademyIcon /> },
     { id: "friends", label: "Amigos", path: "/amigos", icon: <FriendsIcon />, hasBadge: true },
     { id: "perfil", label: "Perfil", path: "/perfil", icon: <UserIcon /> },
   ];

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { gymService } from "../api/gymService";
+import { gymAuthService } from "../api/gymAuthService";
 import "./OwnerDashboard.css";
 import CustomAlert from "./CustomAlert";
 
@@ -43,6 +44,13 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ gymId, gymName, 
   const [alertConfig, setAlertConfig] = useState({ isOpen: false });
   const [dashboardTheme, setDashboardTheme] = useState(localStorage.getItem("theme") || "dark");
   
+  const [isAddPersonalModalOpen, setIsAddPersonalModalOpen] = useState(false);
+  const [newPersonalData, setNewPersonalData] = useState({ name: "", email: "", password: "", specialization: "", bio: "", certifications: "" });
+
+  const [isAnnouncementModalOpen, setIsAnnouncementModalOpen] = useState(false);
+  const [editingAnnouncement, setEditingAnnouncement] = useState<any>(null);
+  const [announcementData, setAnnouncementData] = useState({ title: "", content: "", priority: 0 });
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -81,7 +89,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ gymId, gymName, 
 
   const showAlert = (title: string, message: string, type: "success" | "error" | "info") => {
     setAlertConfig({
-      isOpen: true, title, message, type,
+      isOpen: true, title: title, message: message, type: type,
       onConfirm: () => setAlertConfig({ isOpen: false })
     });
   };
@@ -92,7 +100,87 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ gymId, gymName, 
   );
 
   const handleAddPersonal = () => {
-      showAlert("Em Breve", "A funcionalidade de convite direto para personals está sendo finalizada.", "info");
+      setIsAddPersonalModalOpen(true);
+  };
+
+  const handleCloseAddPersonalModal = () => {
+      setIsAddPersonalModalOpen(false);
+      setNewPersonalData({ name: "", email: "", password: "", specialization: "", bio: "", certifications: "" });
+  };
+
+  const submitAddPersonal = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!gymId) return;
+      try {
+          await gymAuthService.createPersonal(gymId, newPersonalData);
+          showAlert("Sucesso", "Personal trainer cadastrado na equipe!", "success");
+          handleCloseAddPersonalModal();
+          loadDashboardData();
+      } catch (err: any) {
+          showAlert("Erro", err.response?.data?.error || "Erro ao cadastrar personal", "error");
+      }
+  };
+
+  const handleDeletePersonal = async (personalId: string) => {
+      if (!gymId) return;
+      const confirm = window.confirm("Tem certeza que deseja remover este personal da equipe?");
+      if (!confirm) return;
+      
+      try {
+          await gymAuthService.deletePersonal(gymId, personalId);
+          showAlert("Sucesso", "Personal removido da equipe.", "success");
+          loadDashboardData();
+      } catch (err: any) {
+          showAlert("Erro", err.response?.data?.error || "Erro ao remover personal", "error");
+      }
+  };
+
+  const handleAddAnnouncement = () => {
+      setEditingAnnouncement(null);
+      setAnnouncementData({ title: "", content: "", priority: 0 });
+      setIsAnnouncementModalOpen(true);
+  };
+
+  const handleEditAnnouncement = (announcement: any) => {
+      setEditingAnnouncement(announcement);
+      setAnnouncementData({ 
+          title: announcement.title, 
+          content: announcement.content, 
+          priority: announcement.priority 
+      });
+      setIsAnnouncementModalOpen(true);
+  };
+
+  const submitAnnouncement = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!gymId || gymId === "null") {
+          showAlert("Erro", "ID da academia não encontrado. Tente logar novamente.", "error");
+          return;
+      }
+      try {
+          if (editingAnnouncement) {
+              await gymService.updateAnnouncement(editingAnnouncement.id, announcementData);
+              showAlert("Sucesso", "Comunicado atualizado!", "success");
+          } else {
+              await gymService.createAnnouncement({ ...announcementData, gymId: gymId });
+              showAlert("Sucesso", "Comunicado publicado!", "success");
+          }
+          setIsAnnouncementModalOpen(false);
+          loadDashboardData();
+      } catch (err: any) {
+          showAlert("Erro", err.response?.data?.error || "Erro ao salvar comunicado", "error");
+      }
+  };
+
+  const handleDeleteAnnouncement = async (id: string) => {
+      if (!window.confirm("Deseja realmente excluir este comunicado?")) return;
+      try {
+          await gymService.deleteAnnouncement(id);
+          showAlert("Sucesso", "Comunicado removido.", "success");
+          loadDashboardData();
+      } catch (err: any) {
+          showAlert("Erro", "Erro ao excluir comunicado", "error");
+      }
   };
 
   const navItems = [
@@ -226,7 +314,10 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ gymId, gymName, 
                               </div>
                           </div>
                           <div className="quick-actions-grid">
-                              <button className="btn-quick-action" onClick={() => setActiveTab("announcements")}>
+                              <button className="btn-quick-action" onClick={() => {
+                                  setActiveTab("announcements");
+                                  handleAddAnnouncement();
+                              }}>
                                   <div className="action-icon-box"><BellIcon /></div>
                                   <div className="action-text-box">
                                       <span>Publicar Aviso</span>
@@ -273,6 +364,14 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ gymId, gymName, 
                                           <h3>{p.name || p.user?.name}</h3>
                                           <span className="spec-tag">{p.specialization || "Instrutor Geral"}</span>
                                       </div>
+                                      <button 
+                                        className="btn-danger-dash" 
+                                        style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem', marginLeft: 'auto' }}
+                                        onClick={() => handleDeletePersonal(p.id)}
+                                        title="Remover Professor"
+                                      >
+                                        Remover
+                                      </button>
                                   </div>
                                   <div className="card-footer">
                                       <UsersIcon />
@@ -289,20 +388,27 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ gymId, gymName, 
                   <div className="tab-fade-content">
                       <header className="content-sub-header">
                           <h2>Painel de Comunicados</h2>
-                          <button className="btn-primary-dash" onClick={() => showAlert("Info", "Editor mobile ativo. Desktop em breve.", "info")}>Criar Aviso</button>
+                          <p className="sub-info">Gerencie os avisos que aparecem para seus alunos.</p>
+                          <button className="btn-primary-dash" style={{ marginTop: '16px' }} onClick={handleAddAnnouncement}>
+                              Criar Novo Comunicado
+                          </button>
                       </header>
                       <div className="announcements-list">
                           {announcements.length === 0 ? (
                               <div className="empty-state"><p>Sem avisos no momento.</p></div>
                           ) : (
                               announcements.map(a => (
-                                  <div key={a.id} className={`announcement-card glass ${a.type || 'normal'}`}>
+                                  <div key={a.id} className={`announcement-card glass priority-${a.priority}`}>
                                       <div className="ann-header">
                                           <h3>{a.title}</h3>
                                           <span className="ann-date">{new Date(a.createdAt).toLocaleDateString()}</span>
                                       </div>
                                       <div className="ann-content">
                                           <p>{a.content}</p>
+                                      </div>
+                                      <div className="ann-actions">
+                                          <button className="btn-edit-ann" onClick={() => handleEditAnnouncement(a)}>Editar</button>
+                                          <button className="btn-delete-ann" onClick={() => handleDeleteAnnouncement(a.id)}>Excluir</button>
                                       </div>
                                   </div>
                               ))
@@ -381,8 +487,26 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ gymId, gymName, 
                                       <p>#{gymId?.substring(0, 8).toUpperCase()}</p>
                                   </div>
                                   <button className="btn-secondary-dash" onClick={() => {
-                                      if(gymId) navigator.clipboard.writeText(gymId);
-                                      showAlert("Copiado!", "ID copiado.", "success");
+                                      if(gymId) {
+                                          if (navigator.clipboard && navigator.clipboard.writeText) {
+                                              navigator.clipboard.writeText(gymId).then(() => {
+                                                  showAlert("Copiado!", "ID da academia copiado com sucesso.", "success");
+                                              });
+                                          } else {
+                                              // Fallback para navegadores sem suporte
+                                              const textArea = document.createElement("textarea");
+                                              textArea.value = gymId;
+                                              document.body.appendChild(textArea);
+                                              textArea.select();
+                                              try {
+                                                  document.execCommand('copy');
+                                                  showAlert("Copiado!", "ID da academia copiado (fallback).", "success");
+                                              } catch (err) {
+                                                  showAlert("Erro", "Não foi possível copiar o ID.", "error");
+                                              }
+                                              document.body.removeChild(textArea);
+                                          }
+                                      }
                                   }}>Copiar</button>
                               </div>
                           </section>
@@ -456,7 +580,18 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ gymId, gymName, 
                                       <h4>Sair do Painel</h4>
                                       <p>Finalizar acesso administrativo</p>
                                   </div>
-                                  <button className="btn-danger-dash" onClick={onLogout}>Logout</button>
+                                  <button className="btn-danger-dash" onClick={() => {
+                                      setAlertConfig({
+                                          isOpen: true,
+                                          title: "Encerrar Sessão",
+                                          message: "Deseja realmente sair do painel administrativo?",
+                                          type: "error",
+                                          confirmText: "Sim, Sair",
+                                          cancelText: "Não, Manter",
+                                          onConfirm: onLogout,
+                                          onCancel: () => setAlertConfig({ isOpen: false })
+                                      });
+                                  }}>Logout</button>
                               </div>
                           </section>
                       </div>
@@ -480,6 +615,132 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ gymId, gymName, 
           ))}
         </div>
       </nav>
+
+      {isAddPersonalModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2>Cadastrar Professor</h2>
+            <form onSubmit={submitAddPersonal} className="modal-form">
+              <div className="input-group">
+                <label>Nome Completo</label>
+                <input 
+                  type="text" 
+                  placeholder="Ex: João Silva" 
+                  required 
+                  value={newPersonalData.name} 
+                  onChange={(e) => setNewPersonalData({...newPersonalData, name: e.target.value})} 
+                  className="modal-input" 
+                />
+              </div>
+
+              <div className="input-group">
+                <label>E-mail Profissional</label>
+                <input 
+                  type="email" 
+                  placeholder="joao@academia.com" 
+                  required 
+                  value={newPersonalData.email} 
+                  onChange={(e) => setNewPersonalData({...newPersonalData, email: e.target.value})} 
+                  className="modal-input" 
+                />
+              </div>
+
+              <div className="input-group">
+                <label>Senha Temporária</label>
+                <input 
+                  type="password" 
+                  placeholder="••••••••" 
+                  required 
+                  value={newPersonalData.password} 
+                  onChange={(e) => setNewPersonalData({...newPersonalData, password: e.target.value})} 
+                  className="modal-input" 
+                />
+              </div>
+
+              <div className="input-group">
+                <label>Especialização</label>
+                <input 
+                  type="text" 
+                  placeholder="Ex: Musculação / Crossfit" 
+                  required 
+                  value={newPersonalData.specialization} 
+                  onChange={(e) => setNewPersonalData({...newPersonalData, specialization: e.target.value})} 
+                  className="modal-input" 
+                />
+              </div>
+
+              <div className="input-group">
+                <label>Biografia (Opcional)</label>
+                <textarea 
+                  placeholder="Fale um pouco sobre a experiência do professor..." 
+                  value={newPersonalData.bio} 
+                  onChange={(e) => setNewPersonalData({...newPersonalData, bio: e.target.value})} 
+                  className="modal-input" 
+                  style={{ minHeight: '80px', resize: 'vertical' }}
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" className="btn-secondary-dash" onClick={handleCloseAddPersonalModal}>Cancelar</button>
+                <button type="submit" className="btn-primary-dash">Cadastrar Equipe</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {isAnnouncementModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2>{editingAnnouncement ? "Editar Comunicado" : "Novo Comunicado"}</h2>
+            <form onSubmit={submitAnnouncement} className="modal-form">
+              <div className="input-group">
+                <label>Título do Aviso</label>
+                <input 
+                  type="text" 
+                  placeholder="Ex: Manutenção da Área de Cardio" 
+                  required 
+                  value={announcementData.title} 
+                  onChange={(e) => setAnnouncementData({...announcementData, title: e.target.value})} 
+                  className="modal-input" 
+                />
+              </div>
+
+              <div className="input-group">
+                <label>Conteúdo</label>
+                <textarea 
+                  placeholder="Descreva os detalhes para seus alunos..." 
+                  required
+                  value={announcementData.content} 
+                  onChange={(e) => setAnnouncementData({...announcementData, content: e.target.value})} 
+                  className="modal-input" 
+                  style={{ minHeight: '120px', resize: 'vertical' }}
+                />
+              </div>
+
+              <div className="input-group">
+                <label>Nível de Prioridade</label>
+                <select 
+                  className="modal-input"
+                  value={announcementData.priority}
+                  onChange={(e) => setAnnouncementData({...announcementData, priority: parseInt(e.target.value)})}
+                >
+                  <option value={0}>Normal (Cinza)</option>
+                  <option value={1}>Importante (Laranja)</option>
+                  <option value={2}>Urgente (Vermelho)</option>
+                </select>
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" className="btn-secondary-dash" onClick={() => setIsAnnouncementModalOpen(false)}>Cancelar</button>
+                <button type="submit" className="btn-primary-dash">
+                    {editingAnnouncement ? "Salvar Alterações" : "Publicar Agora"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <CustomAlert config={alertConfig} />
     </div>

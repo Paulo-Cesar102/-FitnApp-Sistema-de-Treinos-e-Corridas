@@ -1,4 +1,6 @@
 import { GymAnnouncementRepository } from "../repository/GymAnnouncementRepository";
+import { NotificationRepository } from "../repository/NotificationRepository";
+import { prisma } from "../database/prisma";
 import { io } from "../../server";
 
 interface CreateAnnouncementRequest {
@@ -19,9 +21,11 @@ interface UpdateAnnouncementRequest {
 
 export class GymAnnouncementService {
   private announcementRepository: GymAnnouncementRepository;
+  private notificationRepository: NotificationRepository;
 
   constructor() {
     this.announcementRepository = new GymAnnouncementRepository();
+    this.notificationRepository = new NotificationRepository();
   }
 
   async createAnnouncement(data: CreateAnnouncementRequest) {
@@ -43,6 +47,28 @@ export class GymAnnouncementService {
 
     // 🔥 Notificar via Socket
     io.to(`gym_${data.gymId}`).emit("announcement_updated", { gymId: data.gymId });
+
+    // 🔥 Criar Notificações para todos os alunos da academia
+    try {
+      const students = await prisma.user.findMany({
+        where: { gymId: data.gymId, role: "USER" },
+        select: { id: true }
+      });
+
+      // Cria notificações em lote (ou uma por uma se preferir usar o repository)
+      const notificationPromises = students.map(student => 
+        this.notificationRepository.create({
+          userId: student.id,
+          title: `Aviso: ${data.title}`,
+          message: data.content.substring(0, 100) + (data.content.length > 100 ? "..." : ""),
+          type: "GYM_ANNOUNCEMENT"
+        })
+      );
+      
+      await Promise.all(notificationPromises);
+    } catch (err) {
+      console.error("Erro ao gerar notificações de aviso:", err);
+    }
 
     return announcement;
   }

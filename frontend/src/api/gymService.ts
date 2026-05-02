@@ -107,7 +107,7 @@ export const gymService = {
   },
 
   updateAnnouncement: async (id: string, data: any) => {
-    const response = await api.put(`/gym/announcement/${id}`);
+    const response = await api.put(`/gym/announcement/${id}`, data);
     return response.data;
   },
 

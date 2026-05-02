@@ -24,15 +24,15 @@ import { getUser } from "./api/userService";
 
 function Layout({ children }) {
   const location = useLocation();
-  const role = localStorage.getItem("role");
+  const role = sessionStorage.getItem("role");
   const [showCompleteProfile, setShowCompleteProfile] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [alertConfig, setAlertConfig] = useState({ isOpen: false });
   
   // Função para sincronizar dados com a API
   const syncUserData = async () => {
-    const userJson = localStorage.getItem("user");
-    const token = localStorage.getItem("token");
+    const userJson = sessionStorage.getItem("user");
+    const token = sessionStorage.getItem("token");
 
     if (!userJson || !token) {
       setShowCompleteProfile(false);
@@ -45,16 +45,19 @@ function Layout({ children }) {
       const freshUser = await getUser(user.id);
       
       if (freshUser) {
-        // Atualiza o localStorage com os dados mais recentes
-        localStorage.setItem("user", JSON.stringify(freshUser));
-        localStorage.setItem("role", freshUser.role);
-        localStorage.setItem("userId", freshUser.id);
+        // Verifica se houve mudança real para evitar loops de eventos
+        const oldGymId = sessionStorage.getItem("gymId");
+        const newGymId = freshUser.gymId || freshUser.gym?.id || "";
+        
+        // Atualiza o sessionStorage com os dados mais recentes
+        sessionStorage.setItem("user", JSON.stringify(freshUser));
+        sessionStorage.setItem("role", freshUser.role);
+        sessionStorage.setItem("userId", freshUser.id);
 
         // Garante que gymId e gymName estejam sincronizados
-        const gId = freshUser.gymId || freshUser.gym?.id || "";
         const gName = freshUser.gymName || freshUser.gym?.name || "";
-        localStorage.setItem("gymId", gId);
-        localStorage.setItem("gymName", gName);
+        sessionStorage.setItem("gymId", newGymId);
+        sessionStorage.setItem("gymName", gName);
 
         setCurrentUser(freshUser);
         
@@ -65,8 +68,10 @@ function Layout({ children }) {
           setShowCompleteProfile(false);
         }
 
-        // Avisa outros componentes que os dados foram atualizados
-        window.dispatchEvent(new Event('userDataUpdated'));
+        // Só dispara se algo mudou ou se não foi disparado por um evento externo recente
+        if (oldGymId !== newGymId) {
+            window.dispatchEvent(new Event('userDataUpdated'));
+        }
       }
     } catch (error) {
       console.error("Erro ao sincronizar dados do usuário:", error);
@@ -200,7 +205,7 @@ function Layout({ children }) {
 
 const AppContent = React.memo(() => {
   useEffect(() => {
-    const userJson = localStorage.getItem("user");
+    const userJson = sessionStorage.getItem("user");
     if (userJson) {
       try {
         const user = JSON.parse(userJson);

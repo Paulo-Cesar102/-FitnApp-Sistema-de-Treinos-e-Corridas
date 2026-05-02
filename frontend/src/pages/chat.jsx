@@ -26,8 +26,8 @@ export default function Friends() {
 
   // 1. Efeito para Conexão Socket e Identificação
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userId = localStorage.getItem("userId"); // Certifique-se de salvar o userId no Login!
+    const token = sessionStorage.getItem("token");
+    const userId = sessionStorage.getItem("userId"); // Certifique-se de salvar o userId no Login!
 
     if (!token) {
       navigate("/login");
