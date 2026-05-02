@@ -64,6 +64,9 @@ function Layout({ children }) {
         } else {
           setShowCompleteProfile(false);
         }
+
+        // Avisa outros componentes que os dados foram atualizados
+        window.dispatchEvent(new Event('userDataUpdated'));
       }
     } catch (error) {
       console.error("Erro ao sincronizar dados do usuário:", error);

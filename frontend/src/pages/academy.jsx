@@ -18,6 +18,26 @@ export default function Academy() {
   const [token] = useState(localStorage.getItem("token"));
   const [activeTab, setActiveTab] = useState("checkin");
 
+  // Sincroniza dados do localStorage (importante para carregar após o login sem F5)
+  useEffect(() => {
+    const syncLocalStorage = () => {
+      setRole(localStorage.getItem("role"));
+      setGymId(localStorage.getItem("gymId"));
+      setGymName(localStorage.getItem("gymName") || "Minha Academia");
+    };
+
+    // Tenta sincronizar imediatamente caso o App.jsx tenha acabado de atualizar
+    syncLocalStorage();
+
+    window.addEventListener('storage', syncLocalStorage);
+    window.addEventListener('userDataUpdated', syncLocalStorage);
+
+    return () => {
+      window.removeEventListener('storage', syncLocalStorage);
+      window.removeEventListener('userDataUpdated', syncLocalStorage);
+    };
+  }, []);
+
   const tabs = [
     { id: "checkin", label: "Check-in" },
     { id: "ranking", label: "Ranking" },

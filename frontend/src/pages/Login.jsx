@@ -18,6 +18,9 @@ export default function Login() {
     localStorage.setItem("role", user.role);
     localStorage.setItem("userId", user.id);
 
+    // Avisa o App.jsx para sincronizar dados (como gymId e gymName)
+    window.dispatchEvent(new Event('userDataUpdated'));
+
     showAlert(
       "Acesso Autorizado",
       "Bem-vindo de volta ao seu centro de treinamento.",
