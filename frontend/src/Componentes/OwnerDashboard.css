@@ -183,15 +183,37 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 10px;
-  border-radius: 10px;
-  background: rgba(255, 69, 0, 0.05);
-  border: 1px solid rgba(255, 69, 0, 0.1);
-  color: #ff4500;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(255, 69, 0, 0.08);
+  border: 1px solid rgba(255, 69, 0, 0.15);
+  color: var(--primary-color);
   cursor: pointer;
-  transition: all 0.2s;
-  font-weight: 700;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 850;
   font-size: 0.8rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.owner-dashboard-container .btn-logout-sidebar:hover {
+  background: var(--primary-color);
+  color: #fff;
+  border-color: var(--primary-color);
+  box-shadow: 0 8px 20px var(--primary-glow);
+  transform: translateY(-2px);
+}
+
+.owner-dashboard-container .btn-logout-sidebar:active {
+  transform: translateY(0);
+}
+
+.owner-dashboard-container .btn-logout-sidebar svg {
+  transition: transform 0.2s;
+}
+
+.owner-dashboard-container .btn-logout-sidebar:hover svg {
+  transform: translateX(3px);
 }
 
 /* CONTEÚDO PRINCIPAL */

@@ -32,8 +32,8 @@ export default function Academy() {
   const [gymName, setGymName] = useState(sessionStorage.getItem("gymName") || "Minha Academia");
   const [token] = useState(sessionStorage.getItem("token"));
   
-  // Inicializa na aba correta se houver redirecionamento via estado (ex: notificações)
   const [activeTab, setActiveTab] = useState(location.state?.activeTab || "info");
+  const [alertConfig, setAlertConfig] = useState({ isOpen: false });
 
   useEffect(() => {
     if (location.state?.activeTab) {
@@ -72,26 +72,33 @@ export default function Academy() {
   };
 
   const handleLeaveGym = () => {
-    if (window.confirm("Deseja realmente sair desta unidade? Seus dados de ranking local serão perdidos.")) {
-      sessionStorage.removeItem("gymId");
-      sessionStorage.removeItem("gymName");
-      setGymId(null);
-      // Aqui você poderia chamar um endpoint para remover o gymId do usuário no banco
-      window.dispatchEvent(new Event("userDataUpdated"));
-    }
+    setAlertConfig({
+      isOpen: true,
+      title: "Sair da Unidade",
+      message: "Deseja realmente sair desta unidade? Seus dados de ranking local serão perdidos.",
+      type: "error",
+      confirmText: "Sim, Sair",
+      cancelText: "Não, Manter",
+      onConfirm: () => {
+        sessionStorage.removeItem("gymId");
+        sessionStorage.removeItem("gymName");
+        setGymId(null);
+        window.dispatchEvent(new Event("userDataUpdated"));
+        setAlertConfig({ isOpen: false });
+      },
+      onCancel: () => setAlertConfig({ isOpen: false })
+    });
   };
 
   const handleLogout = () => {
-    if (window.confirm("Deseja realmente sair da sua conta?")) {
-      googleLogout();
-      sessionStorage.removeItem("token");
-      sessionStorage.removeItem("user");
-      sessionStorage.removeItem("role");
-      sessionStorage.removeItem("gymId");
-      sessionStorage.removeItem("gymName");
-      sessionStorage.removeItem("userId");
-      navigate("/login");
-    }
+    googleLogout();
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
+    sessionStorage.removeItem("role");
+    sessionStorage.removeItem("gymId");
+    sessionStorage.removeItem("gymName");
+    sessionStorage.removeItem("userId");
+    navigate("/login");
   };
 
   // ÁREA DE GESTÃO (SEPARADA TOTALMENTE)
