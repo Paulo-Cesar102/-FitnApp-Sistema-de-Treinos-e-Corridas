@@ -13,6 +13,35 @@ export class GymOwnerController {
   }
 
   /**
+   * Verifica se um email já está cadastrado
+   * GET /owner/check-email/:email
+   */
+  async checkEmail(req: Request, res: Response) {
+    try {
+      const { email } = req.params;
+
+      if (!email) {
+        return res.status(400).json({ error: "Email é obrigatório" });
+      }
+
+      const user = await this.gymOwnerService.checkEmail(email);
+
+      return res.json({
+        exists: !!user,
+        user: user ? {
+          name: user.name,
+          role: user.role
+        } : null
+      });
+    } catch (error: any) {
+      console.error("Erro no checkEmail:", error);
+      return res.status(400).json({
+        error: error.message || "Erro ao verificar email",
+      });
+    }
+  }
+
+  /**
    * Cadastra um novo personal na academia
    * POST /owner/personals
    * Body: { name, email, password, specialization, bio, certifications }

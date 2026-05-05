@@ -28,6 +28,11 @@ export const gymAuthService = {
   },
 
   // Owner Protected
+  checkEmail: async (email: string) => {
+    const response = await api.get(`/auth-gym/owner/check-email/${email}`);
+    return response.data;
+  },
+
   createPersonal: async (gymId: string, data: any) => {
     const response = await api.post(`/auth-gym/owner/${gymId}/personals`, data);
     return response.data;

@@ -56,6 +56,16 @@ authRoutes.get("/gym/:gymId", (req, res) =>
 // =========================
 
 /**
+ * Verifica se um email já está cadastrado
+ * GET /api/auth-gym/owner/check-email/:email
+ */
+authRoutes.get(
+  "/owner/check-email/:email",
+  authMiddleware,
+  (req, res) => gymOwnerController.checkEmail(req, res)
+);
+
+/**
  * Cadastra um novo personal na academia
  * POST /api/owner/:gymId/personals
  */

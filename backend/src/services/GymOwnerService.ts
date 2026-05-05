@@ -22,6 +22,23 @@ export class GymOwnerService {
    */
 
   /**
+   * Verifica se um email já está cadastrado no sistema
+   */
+  async checkEmail(email: string) {
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true
+      }
+    });
+
+    return user;
+  }
+
+  /**
    * Cadastra um novo personal na academia
    * Apenas o proprietário pode fazer isso
    */
@@ -241,13 +258,25 @@ export class GymOwnerService {
   /**
    * Lista todos os membros da academia (alunos)
    */
-  async listGymMembers(gymId: string, ownerIdValidation: string, search?: string) {
+  async listGymMembers(gymId: string, userIdValidation: string, search?: string) {
     try {
+      const userRequester = await prisma.user.findUnique({
+        where: { id: userIdValidation },
+        select: { role: true, gymId: true }
+      });
+
       const gym = await prisma.gym.findUnique({
         where: { id: gymId },
       });
 
-      if (!gym || gym.ownerId !== ownerIdValidation) {
+      if (!gym) throw new Error("Academia não encontrada");
+
+      // Permite se for o dono, se for admin, ou se for personal daquela academia
+      const isOwner = gym.ownerId === userIdValidation;
+      const isAdmin = userRequester?.role === Role.ADMIN;
+      const isPersonalOfGym = userRequester?.role === Role.PERSONAL && userRequester?.gymId === gymId;
+
+      if (!isOwner && !isAdmin && !isPersonalOfGym) {
         throw new Error("Sem permissão para ver membros desta academia");
       }
 
@@ -264,6 +293,7 @@ export class GymOwnerService {
           id: true,
           name: true,
           email: true,
+          role: true,
           level: true,
           xp: true,
           streak: true,

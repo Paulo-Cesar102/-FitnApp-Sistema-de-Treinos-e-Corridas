@@ -7,6 +7,7 @@ import "./PersonalDashboard.css";
 import CustomAlert from "./CustomAlert";
 
 // Ícones Minimalistas Premium (Stroke 2)
+const BarChartIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>;
 const UsersIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
 const ClipboardIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>;
 const LogoutIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>;
@@ -20,6 +21,10 @@ const PaletteIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="
 const ShieldIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
 const LockIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>;
 const MailIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>;
+const ChatIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>;
+const ActivityIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>;
+const PlusIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>;
+const ChevronRightIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>;
 
 interface PersonalDashboardProps {
   gymId: string;
@@ -28,7 +33,7 @@ interface PersonalDashboardProps {
 }
 
 export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({ gymId, gymName, onLogout }) => {
-  const [activeTab, setActiveTab] = useState<"students" | "workouts" | "settings">("students");
+  const [activeTab, setActiveTab] = useState<"stats" | "students" | "workouts" | "settings">("stats");
   const [students, setStudents] = useState<any[]>([]);
   const [liveActivities, setLiveActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +42,10 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({ gymId, gym
   const [studentHistory, setStudentHistory] = useState<any[]>([]);
   const [alertConfig, setAlertConfig] = useState({ isOpen: false });
   const [dashboardTheme, setDashboardTheme] = useState(localStorage.getItem("theme") || "dark");
+  const [personalInfo, setPersonalInfo] = useState<any>(null);
+  const [isLinkingModalOpen, setIsLinkingModalOpen] = useState(false);
+  const [allGymMembers, setAllGymMembers] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   
   const navigate = useNavigate();
 
@@ -70,6 +79,7 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({ gymId, gym
       
       const personalProfile = await gymService.getPersonalByUserId(user.id);
       if (personalProfile) {
+        setPersonalInfo(personalProfile);
         const data = await gymService.getPersonalStudents(personalProfile.id);
         setStudents(data || []);
       }
@@ -77,6 +87,34 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({ gymId, gym
       console.error("Erro ao carregar dashboard personal:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadGymMembers = async () => {
+    try {
+      setLoading(true);
+      const members = await gymService.getGymMembers(gymId);
+      // Filtrar membros que já são alunos do personal
+      const filtered = (members || []).filter((m: any) => 
+        !students.some(s => s.student?.id === m.id)
+      );
+      setAllGymMembers(filtered);
+    } catch (err) {
+      console.error("Erro ao carregar membros da academia:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAssignStudent = async (studentId: string) => {
+    if (!personalInfo) return;
+    try {
+      await gymService.assignStudent(personalInfo.id, studentId);
+      showAlert("Sucesso", "Aluno vinculado com sucesso!", "success");
+      setIsLinkingModalOpen(false);
+      loadDashboardData();
+    } catch (err: any) {
+      showAlert("Erro", err.response?.data?.error || "Erro ao vincular aluno", "error");
     }
   };
 
@@ -113,13 +151,19 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({ gymId, gym
   };
 
   const navItems = [
+    { id: "stats", label: "Visão Geral", icon: <BarChartIcon /> },
     { id: "students", label: "Meus Alunos", icon: <UsersIcon /> },
     { id: "workouts", label: "Biblioteca", icon: <ClipboardIcon /> },
+    { id: "chat", label: "Suporte", icon: <ChatIcon />, soon: true },
     { id: "agenda", label: "Agenda", icon: <CalendarIcon />, soon: true },
     { id: "evaluation", label: "Avaliação", icon: <RulerIcon />, soon: true },
     { id: "nutrition", label: "Nutrição", icon: <AppleIcon />, soon: true },
     { id: "settings", label: "Configurações", icon: <SettingsIcon /> },
   ];
+
+  const onlineStudents = students.filter(item => 
+    liveActivities.some(act => act.studentName === item.student.name && act.status === "started")
+  );
 
   return (
     <div className="personal-dashboard-container">
@@ -127,7 +171,7 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({ gymId, gym
       <aside className="dashboard-sidebar">
         <div className="sidebar-header">
           <div className="app-logo">Gym<span>Club</span></div>
-          <p className="sidebar-subtitle">Portal Personal</p>
+          <p className="sidebar-subtitle">Painel Técnico</p>
         </div>
 
         <nav className="sidebar-nav">
@@ -146,9 +190,9 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({ gymId, gym
 
         <div className="sidebar-footer">
           <div className="gym-info-mini">
-            <div className="gym-avatar personal">P</div>
+            <div className="gym-avatar personal">{personalInfo?.user?.name?.charAt(0) || "P"}</div>
             <div className="gym-details">
-              <p className="gym-name-text">Área do Instrutor</p>
+              <p className="gym-name-text">{personalInfo?.user?.name || "Instrutor"}</p>
               <p className="gym-id-text">{gymName || "Academia"}</p>
             </div>
           </div>
@@ -161,22 +205,133 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({ gymId, gym
 
       {/* CONTEÚDO PRINCIPAL */}
       <main className="dashboard-main-content">
-        <header className="dashboard-top-nav">
-           <div className="page-title-section">
-              <h1>{navItems.find(i => i.id === activeTab)?.label}</h1>
-              <p>{activeTab === "students" ? "Acompanhe seus atletas em tempo real" : "Gerencie modelos de treinos"}</p>
-           </div>
-           <div className="top-nav-actions">
-              <button className="mobile-logout-btn" onClick={handleConfirmLogout}>
-                  <LogoutIcon />
-              </button>
-           </div>
-        </header>
-
         <div className="content-scroll-area">
           <div className="content-container fade-in">
+            {activeTab === "stats" && (
+                <div className="tab-fade-content">
+                    {/* WELCOME BANNER */}
+                    <div className="welcome-banner-personal">
+                        <div className="welcome-text">
+                            <h2>Olá, Prof. {personalInfo?.user?.name?.split(' ')[0] || "Instrutor"}!</h2>
+                            <p>Você tem <strong>{onlineStudents.length} alunos</strong> treinando agora. Mantenha o foco na performance!</p>
+                        </div>
+                        <div className="welcome-stats-mini">
+                            <div className="mini-stat">
+                                <span>Hoje</span>
+                                <strong>{new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="metrics-grid-personal">
+                        <div className="metric-card-personal">
+                            <div className="metric-icon students"><UsersIcon /></div>
+                            <div className="metric-data">
+                                <span className="label">Total de Alunos</span>
+                                <span className="value">{students.length}</span>
+                                <span className="trend positive">+2 esta semana</span>
+                            </div>
+                        </div>
+                        <div className="metric-card-personal">
+                            <div className="metric-icon active"><ActivityIcon /></div>
+                            <div className="metric-data">
+                                <span className="label">Ativos Agora</span>
+                                <span className="value">{onlineStudents.length}</span>
+                                <span className="trend neutral">Pico às 18h</span>
+                            </div>
+                        </div>
+                        <div className="metric-card-personal">
+                            <div className="metric-icon workouts"><ClipboardIcon /></div>
+                            <div className="metric-data">
+                                <span className="label">Treinos do Mês</span>
+                                <span className="value">24</span>
+                                <span className="trend positive">↑ 12%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="personal-grid-secondary">
+                        <section className="panel-card-personal">
+                            <div className="panel-header">
+                                <div className="panel-title">
+                                    <ActivityIcon />
+                                    <h3>Monitoramento ao Vivo</h3>
+                                </div>
+                                <span className="live-indicator">LIVE</span>
+                            </div>
+                            <div className="activity-list-rich">
+                                {liveActivities.length === 0 ? (
+                                    <div className="empty-mini">
+                                        <p>Nenhuma atividade detectada nos últimos minutos.</p>
+                                    </div>
+                                ) : (
+                                    liveActivities.slice(0, 6).map((act, i) => (
+                                        <div key={i} className="activity-item-rich">
+                                            <div className="act-avatar">{act.studentName.charAt(0)}</div>
+                                            <div className="act-details">
+                                                <div className="act-top">
+                                                    <strong>{act.studentName}</strong>
+                                                    <span className="act-time">agora</span>
+                                                </div>
+                                                <p>{act.status === 'started' ? 'Iniciou uma nova sessão de treino' : 'Finalizou o treino e registrou feedback'}</p>
+                                            </div>
+                                            <div className={`act-status-pill ${act.status}`}>
+                                                {act.status === 'started' ? 'TREINANDO' : 'CONCLUÍDO'}
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </section>
+
+                        <section className="panel-card-personal quick-actions-personal">
+                            <div className="panel-header">
+                                <h3>Gestão Técnica</h3>
+                            </div>
+                            <div className="action-list-clean">
+                                <button className="action-item-btn" onClick={() => setActiveTab("workouts")}>
+                                    <div className="action-icon-main"><PlusIcon /></div>
+                                    <div className="action-info-main">
+                                        <span>Criar Modelo</span>
+                                        <p>Novos treinos base</p>
+                                    </div>
+                                    <div className="action-chevron"><ChevronRightIcon /></div>
+                                </button>
+                                
+                                <button className="action-item-btn" onClick={() => setActiveTab("students")}>
+                                    <div className="action-icon-main"><ClipboardIcon /></div>
+                                    <div className="action-info-main">
+                                        <span>Prescrever Treino</span>
+                                        <p>Montar ficha de aluno</p>
+                                    </div>
+                                    <div className="action-chevron"><ChevronRightIcon /></div>
+                                </button>
+                                
+                                <button className="action-item-btn soon-action" onClick={() => showAlert("Em Breve", "O sistema de avaliações está em desenvolvimento.", "info")}>
+                                    <div className="action-icon-main"><RulerIcon /></div>
+                                    <div className="action-info-main">
+                                        <span>Avaliação Física</span>
+                                        <p>Registrar medidas</p>
+                                    </div>
+                                    <div className="action-chevron"><ChevronRightIcon /></div>
+                                </button>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            )}
+
             {activeTab === "students" && (
               <div className="tab-fade-content">
+                 <header className="content-sub-header">
+                     <h2>Meus Atletas</h2>
+                     <button className="btn-primary-dash" onClick={() => {
+                         setIsLinkingModalOpen(true);
+                         loadGymMembers();
+                     }}>
+                         Vincular Aluno
+                     </button>
+                 </header>
                  <div className="students-grid">
                      {loading ? (
                         <p>Carregando atletas...</p>
@@ -187,34 +342,46 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({ gymId, gym
                          </div>
                      ) : (
                          students.map((item) => {
-                           const isOnline = liveActivities.some(act => act.studentName === item.student.name && act.status === "started");
+                           const isOnline = liveActivities.some(act => act.studentName === item.student?.name && act.status === "started");
                            return (
-                             <div key={item.id} className={`student-card ${isOnline ? 'online' : ''}`}>
-                                 {isOnline && <span className="online-badge">EM ATIVIDADE</span>}
-                                 <div className="student-header-row">
-                                    <div className="student-avatar-box">
-                                        {item.student.name.charAt(0)}
+                             <div key={item.id} className={`student-card-modern ${isOnline ? 'online' : ''}`}>
+                                 {isOnline && <div className="online-indicator-pulse"><span>Ao Vivo</span></div>}
+                                 
+                                 <div className="student-card-header">
+                                    <div className="student-avatar-main">
+                                        {item.student?.name?.charAt(0) || "A"}
                                     </div>
-                                    <div className="student-main-info">
-                                        <h3>{item.student.name}</h3>
-                                        <p>Lvl {item.student.level} • {item.student.xp} XP</p>
+                                    <div className="student-info-center">
+                                        <h3>{item.student?.name || "Aluno"}</h3>
+                                        <div className="student-badges-row">
+                                            <span className="lvl-badge">Lvl {item.student?.level || 0}</span>
+                                            <span className="xp-text">{item.student?.xp || 0} XP</span>
+                                        </div>
                                     </div>
                                  </div>
-                                 <div className="student-stats-row">
-                                     <div className="stat-item">
-                                         <span className="stat-label">Desde</span>
-                                         <span className="stat-value">{new Date(item.assignedAt).toLocaleDateString()}</span>
+
+                                 <div className="student-card-metrics">
+                                     <div className="card-metric">
+                                         <span className="m-label">Vínculo</span>
+                                         <span className="m-value">{new Date(item.assignedAt).toLocaleDateString()}</span>
                                      </div>
                                  </div>
-                                 <div className="card-actions">
+
+                                 <div className="student-card-actions-grid">
                                    <button 
-                                     className="btn-action-view"
+                                     className="btn-profile-secondary"
                                      onClick={() => {
                                         setSelectedStudent(item.student);
                                         loadStudentHistory(item.student.id);
                                      }}
                                    >
-                                     Ver Evolução
+                                     Ver Perfil
+                                   </button>
+                                   <button 
+                                     className="btn-prescribe-mini"
+                                     onClick={() => navigate("/criar-treino", { state: { studentId: item.student.id } })}
+                                   >
+                                     Prescrever
                                    </button>
                                  </div>
                              </div>
@@ -227,12 +394,6 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({ gymId, gym
 
             {activeTab === "workouts" && (
                 <div className="tab-fade-content">
-                    <header className="content-sub-header">
-                        <h2>Biblioteca de Modelos</h2>
-                        <button className="btn-primary-dash" onClick={() => navigate("/criar-treino")}>
-                            Criar Novo
-                        </button>
-                    </header>
                     <div className="empty-state">
                         <ClipboardIcon />
                         <p>A funcionalidade de biblioteca de modelos está sendo otimizada.</p>
@@ -243,10 +404,6 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({ gymId, gym
 
             {activeTab === "settings" && (
                   <div className="tab-fade-content">
-                      <header className="content-sub-header">
-                          <h2>Ajustes do Perfil</h2>
-                      </header>
-                      
                       <div className="settings-grid-dash">
                           {/* SESSÃO: PERFIL */}
                           <section className="settings-card">
@@ -258,14 +415,14 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({ gymId, gym
                               </div>
                               <div className="setting-row">
                                   <div className="setting-info">
-                                      <h4>Vinculado à Academia</h4>
+                                      <h4>Unidade</h4>
                                       <p>{gymName}</p>
                                   </div>
                               </div>
                               <div className="setting-row">
                                   <div className="setting-info">
-                                      <h4>Status de Instrutor</h4>
-                                      <p>Verificado pela Unidade</p>
+                                      <h4>Especialização</h4>
+                                      <p>{personalInfo?.specialization || "Instrutor Geral"}</p>
                                   </div>
                               </div>
                           </section>
@@ -358,10 +515,10 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({ gymId, gym
               <div className="student-detail-modal glass" onClick={e => e.stopPropagation()}>
                   <header className="modal-top">
                       <div className="student-header-info">
-                          <div className="avatar-large">{selectedStudent.name.charAt(0)}</div>
+                          <div className="avatar-large">{selectedStudent?.name?.charAt(0) || "A"}</div>
                           <div className="modal-title-box">
-                              <h2>{selectedStudent.name}</h2>
-                              <p>{selectedStudent.email}</p>
+                              <h2>{selectedStudent?.name || "Aluno"}</h2>
+                              <p>{selectedStudent?.email || "Sem e-mail"}</p>
                           </div>
                       </div>
                       <button className="btn-close" onClick={() => setSelectedStudent(null)}>&times;</button>
@@ -375,8 +532,13 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({ gymId, gym
                           ) : (
                               studentHistory.map(treino => (
                                   <div key={treino.id} className="history-card-personal glass">
-                                      <h4>{treino.name}</h4>
-                                      <p>{new Date(treino.createdAt).toLocaleDateString()}</p>
+                                      <div className="history-card-info">
+                                          <h4>{treino.name}</h4>
+                                          <p>{new Date(treino.createdAt).toLocaleDateString()}</p>
+                                      </div>
+                                      <span className={`status-pill ${treino.completed ? 'completed' : 'pending'}`}>
+                                          {treino.completed ? 'CONCLUÍDO' : 'PENDENTE'}
+                                      </span>
                                   </div>
                               ))
                           )}
@@ -387,6 +549,59 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({ gymId, gym
                   </div>
               </div>
           </div>
+      )}
+
+      {isLinkingModalOpen && (
+        <div className="student-detail-overlay fade-in" onClick={() => setIsLinkingModalOpen(false)}>
+          <div className="student-detail-modal glass" onClick={e => e.stopPropagation()}>
+            <header className="modal-top">
+              <div className="modal-title-box">
+                <h2>Vincular Novo Aluno</h2>
+                <p>Selecione um membro da academia para acompanhar</p>
+              </div>
+              <button className="btn-close" onClick={() => setIsLinkingModalOpen(false)}>&times;</button>
+            </header>
+
+            <div className="modal-body-personal">
+              <div className="search-bar-dash">
+                <input 
+                  type="text" 
+                  placeholder="Buscar por nome ou e-mail..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+
+              <div className="members-list-link">
+                {loading ? (
+                  <p>Buscando membros...</p>
+                ) : allGymMembers.length === 0 ? (
+                  <p className="empty-text-mini">Nenhum membro disponível para vínculo.</p>
+                ) : (
+                  allGymMembers
+                    .filter(m => 
+                      (m.name?.toLowerCase() || "").includes(searchQuery.toLowerCase()) || 
+                      (m.email?.toLowerCase() || "").includes(searchQuery.toLowerCase())
+                    )
+                    .map((member) => (
+                    <div key={member.id} className="member-link-card">
+                      <div className="member-info-mini">
+                        <div className="member-avatar-mini">{member.name.charAt(0)}</div>
+                        <div className="member-text-mini">
+                          <strong>{member.name}</strong>
+                          <span>{member.email}</span>
+                        </div>
+                      </div>
+                      <button className="btn-link-action" onClick={() => handleAssignStudent(member.id)}>
+                        Vincular
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       <CustomAlert config={alertConfig} />

@@ -46,6 +46,9 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ gymId, gymName, 
   
   const [isAddPersonalModalOpen, setIsAddPersonalModalOpen] = useState(false);
   const [newPersonalData, setNewPersonalData] = useState({ name: "", email: "", password: "", specialization: "", bio: "", certifications: "" });
+  const [emailCheckLoading, setEmailCheckLoading] = useState(false);
+  const [emailExists, setEmailExists] = useState(false);
+  const [existingUserName, setExistingUserName] = useState("");
 
   const [isAnnouncementModalOpen, setIsAnnouncementModalOpen] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState<any>(null);
@@ -106,6 +109,34 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ gymId, gymName, 
   const handleCloseAddPersonalModal = () => {
       setIsAddPersonalModalOpen(false);
       setNewPersonalData({ name: "", email: "", password: "", specialization: "", bio: "", certifications: "" });
+      setEmailExists(false);
+      setExistingUserName("");
+      setEmailCheckLoading(false);
+  };
+
+  const handleEmailBlur = async () => {
+    const email = newPersonalData.email;
+    if (!email || !email.includes("@")) return;
+
+    try {
+      setEmailCheckLoading(true);
+      const result = await gymAuthService.checkEmail(email);
+      if (result.exists) {
+        setEmailExists(true);
+        setExistingUserName(result.user.name);
+        setNewPersonalData(prev => ({ ...prev, name: result.user.name, password: "EXISTING_USER" }));
+      } else {
+        setEmailExists(false);
+        setExistingUserName("");
+        if (newPersonalData.password === "EXISTING_USER") {
+          setNewPersonalData(prev => ({ ...prev, password: "" }));
+        }
+      }
+    } catch (err) {
+      console.error("Erro ao verificar email:", err);
+    } finally {
+      setEmailCheckLoading(false);
+    }
   };
 
   const submitAddPersonal = async (e: React.FormEvent) => {
@@ -622,40 +653,56 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ gymId, gymName, 
             <h2>Cadastrar Professor</h2>
             <form onSubmit={submitAddPersonal} className="modal-form">
               <div className="input-group">
-                <label>Nome Completo</label>
-                <input 
-                  type="text" 
-                  placeholder="Ex: João Silva" 
-                  required 
-                  value={newPersonalData.name} 
-                  onChange={(e) => setNewPersonalData({...newPersonalData, name: e.target.value})} 
-                  className="modal-input" 
-                />
-              </div>
-
-              <div className="input-group">
                 <label>E-mail Profissional</label>
-                <input 
-                  type="email" 
-                  placeholder="joao@academia.com" 
-                  required 
-                  value={newPersonalData.email} 
-                  onChange={(e) => setNewPersonalData({...newPersonalData, email: e.target.value})} 
-                  className="modal-input" 
-                />
+                <div style={{ position: 'relative' }}>
+                  <input 
+                    type="email" 
+                    placeholder="joao@academia.com" 
+                    required 
+                    value={newPersonalData.email} 
+                    onChange={(e) => {
+                      setNewPersonalData({...newPersonalData, email: e.target.value});
+                      if (emailExists) setEmailExists(false);
+                    }} 
+                    onBlur={handleEmailBlur}
+                    className="modal-input" 
+                  />
+                  {emailCheckLoading && <div className="input-loader-mini"></div>}
+                </div>
+                {emailExists && (
+                  <p className="input-helper-success">
+                    Usuário encontrado: <strong>{existingUserName}</strong>. Ele será vinculado à sua academia.
+                  </p>
+                )}
               </div>
 
-              <div className="input-group">
-                <label>Senha Temporária</label>
-                <input 
-                  type="password" 
-                  placeholder="••••••••" 
-                  required 
-                  value={newPersonalData.password} 
-                  onChange={(e) => setNewPersonalData({...newPersonalData, password: e.target.value})} 
-                  className="modal-input" 
-                />
-              </div>
+              {!emailExists && (
+                <>
+                  <div className="input-group">
+                    <label>Nome Completo</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ex: João Silva" 
+                      required 
+                      value={newPersonalData.name} 
+                      onChange={(e) => setNewPersonalData({...newPersonalData, name: e.target.value})} 
+                      className="modal-input" 
+                    />
+                  </div>
+
+                  <div className="input-group">
+                    <label>Senha Temporária</label>
+                    <input 
+                      type="password" 
+                      placeholder="••••••••" 
+                      required 
+                      value={newPersonalData.password} 
+                      onChange={(e) => setNewPersonalData({...newPersonalData, password: e.target.value})} 
+                      className="modal-input" 
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="input-group">
                 <label>Especialização</label>

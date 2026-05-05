@@ -851,6 +851,31 @@
   box-shadow: 0 0 0 3px rgba(255, 69, 0, 0.1);
 }
 
+.owner-dashboard-container .input-loader-mini {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.owner-dashboard-container .input-helper-success {
+  font-size: 0.75rem;
+  color: #00ff7f;
+  margin-top: 4px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+@keyframes spin {
+  to { transform: translateY(-50%) rotate(360deg); }
+}
+
 .owner-dashboard-container .modal-actions {
   display: flex;
   justify-content: flex-end;
